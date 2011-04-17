@@ -1,0 +1,18 @@
+# This is the Virtual Host entry you will need to run your site locally, or if
+# you are administrating your own alpha and/or production installation.
+
+# Development Installation Instructions:
+# on Mac OS X, insert the content of this file into /opt/local/apache2/conf/extra/httpd-vhosts.conf
+# add 127.0.0.1  {site_id} to /etc/hosts
+<VirtualHost *:80>
+    ServerAdmin {webmaster}
+    DocumentRoot "{server_doc_root}/{site_id}"
+    ServerName {site_id}
+#    ServerAlias {site_id}.local
+    ErrorLog {server_log_root}/{site_id}-errors
+    CustomLog {server_log_root}/{site_id}-custom common
+    <Directory "{server_doc_root}/{site_id}">
+      AllowOverride All
+			DirectoryIndex index.php
+    </Directory>
+</VirtualHost>

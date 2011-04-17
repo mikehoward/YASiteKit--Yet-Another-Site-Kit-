@@ -1,0 +1,85 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Parameters.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> Parameters.php &#8211; permenent storage for class variables</h1>
+
+<p>Created by  on 2010&#8211;04-27.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p><strong>Parameters</strong> provides persistent storage of per-AClass parameters.</p>
+
+<h2>Instantiation</h2>
+
+<pre>$p_obj = new Parameters($dbaccess, $class_name);
+</pre>
+
+<p>where:</p>
+
+<ul>
+<li>dbaccess &#8211; DBAccess object &#8211; required</li>
+<li>class_name &#8211; string &#8211; required &#8211; is the class name the parameters belong to</li>
+</ul>
+
+<h2>Attributes</h2>
+
+<p>All attributes belong to the class. Create them by writing:</p>
+
+<pre>$p_obj-&gt;attribute = value;
+</pre>
+
+<p>Access them by using <em>$p_obj->attribute</em>.</p>
+
+<p>Check for existence using <strong>isset()</strong> and remove using <strong>unset()</strong>.</p>
+
+<p>The class is very conservative: each time a parameter is defined, modified, or unset,
+the result is written to the database. It is essentially a write-through permanent
+store.</p>
+
+<h2>Class Methods</h2>
+
+<ul>
+<li>php_create_string($dbaccess, $dump_dir) &#8211; dumps contents and table creations <span class="caps">PHP</span> code
+into <em>$dump_dir</em> / Parameters.dump</li>
+</ul>
+
+<h2>Instance Methods</h2>
+
+<ul>
+<li>attributes() &#8211; array of strings &#8211; returns array of attribute names</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

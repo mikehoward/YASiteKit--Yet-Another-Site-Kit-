@@ -1,0 +1,35 @@
+# enables php-cgiwrapd for this site
+Action application/x-pair-sphp5 /cgi-sys/php-cgiwrap/mikehow/php5.cgi/
+#Action application/x-pair-sphp5 /cgi-sys/php-cgiwrapd/mikehow/php5.cgi/users/
+#Action application/x-pair-sphp5 /cgi-sys/php-cgiwrap/mikehow/php5.cgi/users/
+AddType application/x-pair-sphp5 .php
+#
+
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_php5.c>
+  php_value magic_quotes_gpc 0
+  php_value magic_quotes_runtime 0
+  php_value magic_quotes_sybase 0
+#  php_flag 
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine on
+
+  RewriteRule ^ajax/([^/?#]+)/([^/?#]*)  index.php?renderer=render_ajax.php&data_format=$1&ajax_request=$2 [L,QSA]
+
+  RewriteRule ^(json|xml|rss|atom)/([^/?]*)  index.php?renderer=render_web_service.php&service_command=$2&service_type=$1&residual=$3 [L,QSA]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} article/([-\._a-z0-9]+)$
+  RewriteRule article/([-\._a-z0-9]+)$ index.php?renderer=render_page.php&page_name=DisplayArticle.php&article=$1 [L,QSA]
+	
+  # Rewrite URLs of the form 'index.php?q=x'.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ index.php?page_name=$1 [L,QSA]
+  
+</IfModule>

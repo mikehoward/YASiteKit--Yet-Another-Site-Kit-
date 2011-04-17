@@ -1,0 +1,55 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Article.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> Article.php &#8211; Individual Articles</h1>
+
+<p>Created by  on 2010&#8211;02-13.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<h2>Article Fields</h2>
+
+<ul>
+<li>name &#8211; varchar(255) &#8211; Perma Link &#8211; name of article. Used as a permanent link in <span class="caps">URL</span></li>
+<li>article_group &#8211; join(ArticleGroup.title) &#8211; Article Group &#8211; Article Group</li>
+<li>follow_index &#8211; enum(Y,N) &#8211; Follow/Index &#8211; Set Y to have internet robots index and follow links</li>
+<li>article_date &#8211; date &#8211; Article Date &#8211; Date article created</li>
+<li>title &#8211; varchar(255) &#8211; Headline &#8211; Headline, aka title</li>
+<li>description &#8211; varchar(255) &#8211; Description &#8211; short description</li>
+<li>article_body &#8211; text &#8211; Body &#8211; actual body of article</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

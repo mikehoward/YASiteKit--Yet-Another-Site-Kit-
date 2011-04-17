@@ -1,0 +1,80 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>product_manage_paypal_buttons.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>product_manage_paypal_buttons.php &#8211; AJAXifies PayPal Button Creation/Update and Delete</h1>
+
+<blockquote>
+<p>Copyright Mike Howard, 2010&#8211;04-19. All rights reserved</p>
+</blockquote>
+
+<p>This module implements creating, updating, and deleting paypal buttons
+for Product products.</p>
+
+<p>This program accepts one <span class="caps">POST</span> argument named <em>paypal_button_ajax</em>
+which is a string of the form: &#8216;func_name:product_name&#8217;, where:</p>
+
+<ul>
+<li>func_name &#8211; string &#8211; required &#8211; is the name of the Product class method to call
+without arguments</li>
+<li>product_name &#8211; string &#8211; required &#8211; is the name of an existing Product object.</li>
+</ul>
+
+<p>All paypal actions are performed using methods defined in the Product class:
+<em>create_paypal_buy_now_button(), update_paypal_buy_now_button()</em>,
+<em>delete_paypal_buy_no_button()</em>, <em>create_paypal_add_to_cart_button()</em>,
+<em>update_paypal_add_to_cart_button()</em>, and <em>delete_paypal_add_to_cart_button()</em>.</p>
+
+<p>Returns a <span class="caps">JSON</span> object with the following fields fields.</p>
+
+<ul>
+<li>result &#8211; always returns one of:
+<ul>
+<li>no-authority &#8211; insufficient authority to create paypal buttons for the supplied image</li>
+<li>no-image &#8211; specified image <em>name</em> does not exist in database</li>
+<li>success &#8211; button created, updated, or deleted</li>
+<li>failure &#8211; button not created, update or deleted successfully. Requires further
+investigation by administrator.</li>
+<li>internal-error &#8211; a bad thing was detected in the program</li>
+</ul>
+</li>
+<li>explanation &#8211; some hopefully helpful text expanding on the content of <em>result</em></li>
+<li>paypal_buy_now_buttonid &#8211; only returned if image object is defined and sufficient
+authority is available to perform the action. Thus, only defined if the <em>result</em>
+key has the value <em>success</em> or <em>failure</em>. If returned will <em>always</em> contain the
+value of the <em>paypal_buy_now_buttonid</em> field of the image object instance.</li>
+<li>paypal_add_to_cart_buttonid &#8211; similar to paypal_buy_now_buttonid</li>
+<li>diag &#8211; diagnostic information &#8211; which may or may not be null (a mysterious
+anomoly)</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

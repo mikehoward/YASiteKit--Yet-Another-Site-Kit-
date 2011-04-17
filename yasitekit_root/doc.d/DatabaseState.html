@@ -1,0 +1,470 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>DatabaseState.textile</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1 style="margin-left:.5em;">Database-States &#8211; <span class="caps">OBSOLETE</span>: Database States and State Transitions &#8211; how we change the DB w/o blowing it away</h1>
+
+<p style="clear:both;" class="advisory"><span class="caps">NOTE</span>: This is an Old Design and has been superceeded. It didn&#8217;t work
+well enough.</p>
+
+<p style="clear:both;text-decoration:line-through;" class="advisory"><span class="caps">NOTE</span>: This is a Work In Progress. This Document is
+a Draft Document.</p>
+
+<p style="clear:both;">Database activity, allowable access, etc is continuously monitored and summarized
+in the &#8220;Database State&#8221;.</p>
+
+<p>This allows a developer to safely modify Persistent data definitions without unintentionally
+losing data. Modifications which are managed:</p>
+
+<ul>
+<li>renaming fields</li>
+<li>deleting fields</li>
+<li>changing field definitions</li>
+</ul>
+
+<p>Adding new persistent objects is more or less automatic &#8211; in that the tables magically appear
+and &#8211; if the code works &#8211; so do the management objects.</p>
+
+<p><strong>Deleting persistent data objects automatically is <em>not</em> supported.</strong> To delete an object, remove
+it from the <span class="caps">PHP</span> include paths and delete the table. If the object participates in AJoin
+style joins, then it is probably good to at least empty its join tables. Finally, if
+you&#8217;re sure you&#8217;ll never want to reconstitute its, then you can remove the row in
+the <strong>_encrpytors</strong> table for that object. This must be all done by hand and &#8211; so &#8211; it&#8217;s
+prone to error.</p>
+
+<p><strong><span class="caps">WARNING</span>:</strong> deleting objects from the <em>system / objects</em> directory can be futile, but is also
+possible. If you ever upgrade the site, those objects and their management interfaces will
+probably come back. [upgrading a site involves copying a new <em>system</em> hierarchy over the
+existing one.] In order to do it, you must manually remove the objects and their management
+interfaces (from <em>system / pages</em>) and (possibly) edit them out of the <em>system / page_structure</em>
+menus.</p>
+
+<p>If you do this, take good notes so you can do it after upgrading.</p>
+
+<p>It&#8217;s easier just to not use the deleted object.</p>
+
+<p>There are probably some other hacks you can do. Go ahead. It&#8217;s your site. If you find something
+clever and at least semi-automated, send it to me for possible inclusion.</p>
+
+<p>Topics covered here are:</p>
+
+<ul>
+<li><a href="#site_state">Site State</a> &#8211; The visible states for the web site.</li>
+<li><a href="#database_state">Database State</a> &#8211; what the state is, what it means, where and how
+it is maintained.</li>
+<li><a href="#legal_states">Legal &amp; Illegal States</a> &#8211; Legal and Illegal combinations of State Variables</li>
+</ul>
+
+<h2 style="clear:both;" id="site_state">Site State</h2>
+
+<p><a href="img/StateTransitions.jpg?target=:blank"><img src="img/StateTransitions.jpg" style="width:30%;clear:both;float:right;" title="Site State Transition Diagram" alt="Site State Transition Diagram" class="right" /></a></p>
+
+<p>The Site state is pretty simple. It tracks the value of the database <em>on_line</em> state variable.
+The site states are:</p>
+
+<ul>
+<li><strong>online</strong> &#8211; the site is useable as it is expected to be</li>
+<li><strong>read-only</strong> &#8211; the site can be accessed, but cannot be modified &#8211; except data updates to
+specified metadata tables [initially &#8216;_dbaccess&#8217; and &#8216;sessions&#8217;]</li>
+<li><strong>offline</strong> &#8211; the site is down for some sort of maintenance. This can be a full database
+reload or simply a software upgrade.</li>
+<li><strong id="illegal_edit">illegal edit detected</strong> &#8211; the site is unusable and cannot be rebuilt until the edit is
+corrected. This is not so much a state as a condition. When an illegal edit is
+detected, the database can&#8217;t be rebuilt nor the site brought back on line until it is
+corrected. An illegal edit is something which breaks persistent data object access. At
+present, all illegal edits involve mucking with persistent object key fields: deleting
+keys, renaming keys, changing their data types, or adding keys.</li>
+</ul>
+
+<p>Each state change is accompanied by a change in one or more Database State Variables.</p>
+
+<p>Each arrow connecting a state change is labelled by an indication of the event or
+action which occurred. The rest of this section expands each of those details.</p>
+
+<h3>model mismatch</h3>
+
+<p>This happens when a developer removes, renames, or adds a field to a persistent object.
+See <a href="#model_mismatch">below</a> for details</p>
+
+<h3>take offline</h3>
+
+<p>This is an action initiated by someone with Administrator privilege. It manually takes
+the database and site off line.</p>
+
+<h3>archive database</h3>
+
+<p>This is an action initiated by someone with Administrator privilege. Normally this is
+done using the ReloadDB.php administrative page. It may also be commanded by running
+the dbaccess_attributes.php script in the <em>installation</em> directory.</p>
+
+<p>The archiving script will always save static infrastructure and data, but will only
+save down the model structure and table definitions <em>only</em> if <em>model_mismatch</em> is &#8216;F&#8217;.
+This preserves the state of the database models across manual edits and is necessary
+to create a database map function and to detect illegal edits.</p>
+
+<h3>need map</h3>
+
+<p>This action results automatically when running the administrative page ReloadDB.php.
+The script automatically checks to see if a map function will be required and presents
+a form which allows the operator to create one.</p>
+
+<h3>create map</h3>
+
+<p>This action occurs as a result of selecting the Create Map option in the ReloadDB.php
+administrative page. It creates a map function as <span class="caps">PHP</span> code which is stored in the
+archive <em>dump</em> directory.</p>
+
+<h3>Manual Edit</h3>
+
+<p>This is not a programmatically supported action.</p>
+
+<p>It occurs when a developer mucks up and has to go in and fix it.</p>
+
+<p>After editing, the developer must start up the <strong>Reload Database</strong> script via
+the &#8216;Administrative Tools&#8217; menu. The script will then re-check the model
+against the database and reset the <em>model_mismatch</em>  state variable.</p>
+
+<p><strong><span class="caps">IMPORTANT</span>:</strong> fix your code. Don&#8217;t try to muck with the archive.</p>
+
+<h3>rebuild infrastructure</h3>
+
+<p>This action occurs as a result of an administrator choosing the &#8216;Rebuild Infrastructure&#8217;
+option in the ReloadDB.php page. This action creates critical, non-persistent object tables
+(the exception being the table for the Account object, which is required for admin access).
+Most of these are tables have names beginning with an underscore character(_). The exceptions
+are the <em>sessions</em> and <em>account</em> tables. See
+<a href="/doc.d/system-includes/aclass.html">aclass.php</a> for details of the Encryptors and AJoin
+support tables; see <a href="/doc.d/system-objects/Parameters.html">Parameters.php</a> for details
+of the _parameters table; see <a href="/doc.d/system-includes/dbaccess.html">DBAccess</a> for
+details about the _dbaccess table.</p>
+
+<h3>reload database</h3>
+
+<p>This action occurs when the administrator chooses the &#8216;Reload Database&#8217; option from
+the ReloadDB.php page. It reloads all of the persistent data object data into
+the database from the current database archive files. If a map function exists, then
+it is applied &#8211; on an object by object basis &#8211; to implement field renamings.</p>
+
+<h3>db rebuild complete</h3>
+
+<p>This action occurs automatically as a result of successfully completing the reload database
+operation &#8211; above.</p>
+
+<h2 style="clear:both;" id="database_state">Database State</h2>
+
+<p>Database state is maintained in a table named <strong>_dbaccess</strong>, consisting of the following
+single character flags:</p>
+
+<ul>
+<li><a href="#on_line">on_line</a> &#8211; F, T, R &#8211; This controls &#8211; to a very large extent &#8211; what database actions may
+be performed.</li>
+<li><a href="#database_valid">database_valid</a> &#8211; T or F &#8211; A transitional state used in database rebuilds. If T, then
+it means the database is in a consistent state</li>
+<li><a href="#archive_stale">archive_stale</a> &#8211; T or F &#8211; indicates the current database archive is out of date</li>
+<li><a href="#model_mismatch">model_mismatch</a> &#8211; T, F or X &#8211; set to T if, when any object is loaded, an attribute is detected in the database which is not in the current data model. It is set
+to X if the map building logic in ReloadDB.php detects an <a href="#illegal_edit">illegal edit</a></li>
+</ul>
+
+<h3>Database State Variables in Detail</h3>
+
+<p>This section defines (in boring detail) the possible values and their meanings for each
+state variable <span class="caps">AND</span> the transition rules &#8211; i.e. the events which cause the transitions
+to occur and the pre-requisites for making the transitions.</p>
+
+<p>All state transitions are intended to be made serially &#8211; that is, one at a time.
+This is to simplify understanding the logic. The intent is that all legal state
+changes are completely defined by these rules.</p>
+
+<p>State transitions are specified in the tables below. Each row is color coded:</p>
+
+<table>
+<tr>
+<td>transition color codes</td>
+</tr>
+<tr style="background:lightgreen;">
+<td>legal transition w/o prerequisites</td>
+</tr>
+<tr style="background:#f08000;">
+<td>legal transition if prerequisites are met</td>
+</tr>
+<tr style="background:red;">
+<td>illegal transition</td>
+</tr>
+</table>
+
+<p>The <strong>Prerequisites</strong> column specifies specific conditions on other state variables
+for a transition. Multiple conditions are separated by semi-colons (;); the semi-colon
+is interpreted as <span class="caps">AND</span>. These conditions are of the form:</p>
+
+<ul>
+<li>state_variable : value &#8211; e.g. database_valid:T &#8211; Must BE &#8216;T&#8217;</li>
+<li>state_variable : ~value &#8211; e.g. model_mismatch:~F &#8211; anything <span class="caps">EXCEPT</span> &#8216;F&#8217;</li>
+</ul>
+
+<p><span class="caps">NOTE</span>: that some <strong>prequisites</strong> are implied by a transitive relationship between
+states. For example, <em>database_valid:T</em> requires <em>model_mismatch:F</em>, so that
+requirement is implicit in the <strong>prerequisite</strong> for transitioning <em>on_line</em> from
+&#8216;F&#8217; to &#8216;T&#8217;.</p>
+
+<p>Various combinations of states are Illegal. If the database is found in one of these
+Illegal states, then the database must be marked offline and invalid by setting
+<em>on_line</em> to &#8216;F&#8217; and <em>database_valid</em> to &#8216;F&#8217;. This should also generate an e-mail
+to the site administrator warning of this condition.</p>
+
+<h4 id="on_line">on_line</h4>
+
+<p>Meaning:</p>
+
+<ul>
+<li>F &#8211; not on line. Anything (no matter how horrible) may be done to the database and it&#8217;s data.</li>
+<li>T &#8211; Database is online. Table definitions may not be modified or dropped. Data may be read or written</li>
+<li>R &#8211; Database is Read Only. Table definitions may not be modified, dropped, but may be created.
+Data may not be modified &#8211; except for specified metadata tables.</li>
+</ul>
+
+<p>Transition Rules:</p>
+
+<table>
+<tr>
+<th>From</th>
+<th>To</th>
+<th>Prerequisites</th>
+<th>Comment</th>
+</tr>
+<tr style="background:#f08000;">
+<td>F</td>
+<td>T</td>
+<td>database_valid:T</td>
+<td></td>
+</tr>
+<tr style="background-color:red;">
+<td>F</td>
+<td>R</td>
+<td>-</td>
+<td>Illegal</td>
+</tr>
+<tr style="background:lightgreen;">
+<td>T</td>
+<td>F</td>
+<td>-</td>
+<td>takes site offline</td>
+</tr>
+<tr style="background:#f08000;">
+<td>T</td>
+<td>R</td>
+<td>database_valid:T;model_mismatch:T</td>
+<td>Database becomes Readonly</td>
+</tr>
+<tr style="background:lightgreen;">
+<td>R</td>
+<td>F</td>
+<td>-</td>
+<td>takes site offline</td>
+</tr>
+<tr style="background-color:red;">
+<td>R</td>
+<td>T</td>
+<td>-</td>
+<td>Illegal</td>
+</tr>
+</table>
+
+<h4 id="database_valid">database_valid</h4>
+
+<p>Values and Meaning:</p>
+
+<ul>
+<li>T &#8211; database may be archived, read, written.</li>
+<li>F &#8211; database is being reconstructed, so not all tables may be valid. Not database is not useable.</li>
+</ul>
+
+<p>Transition Rules:</p>
+
+<table>
+<tr>
+<th>From</th>
+<th>To</th>
+<th>Prerequisites</th>
+<th>Comment</th>
+</tr>
+<tr style="background:#f08000;">
+<td>F</td>
+<td>T</td>
+<td>on_line:F;model_mismatch:F</td>
+<td>successful reload of database</td>
+</tr>
+<tr style="background:#f08000;">
+<td>T</td>
+<td>F</td>
+<td>on_line:F;model_mismatch:F</td>
+<td>any modification of database structure</td>
+</tr>
+</table>
+
+<h4 id="archive_stale">archive_stale</h4>
+
+<p>Values and Meaning:</p>
+
+<ul>
+<li>T &#8211; Set on first data modification committed to database after an archive operation
+has completed. Indicates that the current archive is out of date.</li>
+<li>F &#8211; Set after an archive operation has completed.</li>
+</ul>
+
+<p>Transition Rules:</p>
+
+<table>
+<tr>
+<th>From</th>
+<th>To</th>
+<th>Prerequisites</th>
+<th>Comment</th>
+</tr>
+<tr style="background:#f08000;">
+<td>F</td>
+<td>T</td>
+<td>on_line:T</td>
+<td>database data modified</td>
+</tr>
+<tr style="background:#f08000;">
+<td>T</td>
+<td>F</td>
+<td>on_line:F</td>
+<td>successful database archive</td>
+</tr>
+</table>
+
+<h4 id="model_mismatch">model_mismatch</h4>
+
+<p>While the database (and site) is on-line (<em>on_line</em> == T),
+consistency between the database table and the AClass object definitions is continuously
+monitored. Two tests are performed: one for changes to field names or data types
+and the other for illegal edits. Both use an MD5 hash of field names and data types.</p>
+
+<p>If a change in field name or data type is detected, then the key field hash is checked
+to see if there has been an illegal edit. If there has not, then the <em>model_mismatch</em>
+flag is set to &#8216;T&#8217; and the site goes into read only mode by setting <em>on_line</em> to &#8216;R&#8217;.
+If an illegal edit has been detected, then the <em>model_mismatch</em> flag is set to &#8216;X&#8217;
+and the <em>on_line</em> flag is set to &#8216;F&#8217; &#8211; taking the site offline.</p>
+
+<p>In Read-Only mode, the site continues to run, but it may not be updated. Fields which are
+defined in the database, but not in the objects, are ignored. Fields in objects which are
+not in the database are initialized to &#8216;null&#8217; values (empty strings, 0 integers, etc),
+but &#8211; inasmuch as the database is in read-only mode &#8211; these &#8216;null&#8217; values are never stored.</p>
+
+<p>When the site is in Off-Line mode, it can only be accessed by an administrator and
+the database must be rebuilt interactively to bring the model and data into
+proper synchronization.</p>
+
+<p>Values and Meaning:</p>
+
+<ul>
+<li>T &#8211; At least one Persistent object field is in the database and not in the object
+definition or vice versa.</li>
+<li>X &#8211; An Illegal Edit was detected</li>
+<li>F &#8211; No inconsistencies have been detected.</li>
+</ul>
+
+<p>Transition Rules:</p>
+
+<table>
+<tr>
+<th>From</th>
+<th>To</th>
+<th>Prerequisites</th>
+<th>Comment</th>
+</tr>
+<tr style="background:lightgreen;">
+<td>F</td>
+<td>T</td>
+<td></td>
+<td>if on_line == T, then causes on_line:T -> on_line:R</td>
+</tr>
+<tr style="background:lightgreen;">
+<td>F</td>
+<td>X</td>
+<td></td>
+<td>Illegal Edit detected</td>
+</tr>
+<tr style="background:#f08000;">
+<td>T</td>
+<td>F</td>
+<td>on_line:F</td>
+<td>coincident with database infrastructure rebuild</td>
+</tr>
+<tr style="background:lightgreen;">
+<td>T</td>
+<td>X</td>
+<td></td>
+<td>Illegal Edit detected</td>
+</tr>
+<tr style="background:#f08000;">
+<td>X</td>
+<td>F or T</td>
+<td>on_line:F</td>
+<td>code correction &#8211; see diagram</td>
+</tr>
+</table>
+
+<h2 id="legal_states">Legal and Illegal combinations of State Variables</h2>
+
+<h3 id="legal_on_line">on_line</h3>
+
+<ul>
+<li>F &#8211; valid with any other state</li>
+<li>T &#8211; invalid with database_valid:F / model_mismatch:T or X</li>
+<li>R &#8211; invalid with database_valid:F / model_mismatch:F or X</li>
+</ul>
+
+<h3 id="legal_database_valid">database_valid</h3>
+
+<ul>
+<li>F &#8211; invalid with on_line:T or R or archive_stale:T or model_mismatch: T or X</li>
+<li>T &#8211; generally valid</li>
+</ul>
+
+<h3 id="legal_archive_stale">archive_stale</h3>
+
+<ul>
+<li>F &#8211; generally valid</li>
+<li>T &#8211; invalid if database_valid:T</li>
+</ul>
+
+<h3 id="legal_model_mismatch">model_mismatch</h3>
+
+<ul>
+<li>F &#8211; invalid with on_line:R</li>
+<li>T &#8211; invalid with on_line:T</li>
+<li>X &#8211; invalid with on_line:R and T</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

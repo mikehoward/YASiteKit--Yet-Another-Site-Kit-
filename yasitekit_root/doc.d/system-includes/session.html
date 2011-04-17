@@ -1,0 +1,171 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>session.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> session &#8211; Encapsulates all Session handling into an Object</h1>
+
+<p>Created by  on 2010&#8211;02-28.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<h2>Session Object</h2>
+
+<p>The Session Object packages up <span class="caps">PHP</span> session management into a nice, neat
+bundle, providing a uniform interface to configuration, access to session
+variables, etc.</p>
+
+<p>The Session object implements a Singleton pattern to create a single
+entry point to all session data and functioning.</p>
+
+<h3>Attributes</h3>
+
+<p>Session variables are mapped to attributes of the Session object. One
+feature of this is that only specific session variables are allowed &#8211; thus trapping spelling errors.</p>
+
+<p>Here they are</p>
+
+<h4>diagnostic keys</h4>
+
+<ul>
+<li>account_dump &#8211; boolean &#8211; turns on diagnostic stuff if <span class="caps">TRUE</span></li>
+<li>divert_track &#8211; string &#8211; an accumlation of page diversions. This allows
+tracking page redirects. This is used in <em>includes.php</em> functions <em>IncludeUtilities::redirect_to_with_return()</em>
+and <em>IncludeUtilities::redirect_to()</em></li>
+<li>rc_track &#8211; string &#8211; contains a dump of the request cleaner at each stage of page
+redirecting. This helps diagnosing errors in redirecting code</li>
+</ul>
+
+<h4>infrastructure keys</h4>
+
+<ul>
+<li>cookie_request_retries &#8211; count of number of attempts to get user to turn
+on cookies.</li>
+<li>reserved_page_name &#8211; name of page which was redirected from &#8211; saved automatically
+by the function <em>IncludeUtilities::redirect_to_with_return()</em> in <em>includes.php</em></li>
+<li>user_cookie_value &#8211; value of application cookie</li>
+<li>detector_cookie_value &#8211; value of <em>last</em> detector cookie sent to client</li>
+<li>javascript_ok &#8211; boolean &#8211; <span class="caps">TRUE</span> if user agen allows Javascript</li>
+</ul>
+
+<h4>user keys</h4>
+
+<ul>
+<li>logged_in &#8211; boolean &#8211; True if user is logged in. Should duplicate return of
+Globals::$account_obj->logged_in()</li>
+<li>userid &#8211; string &#8211; userid associated with the current value of <em>user_cookie_value</em></li>
+<li>time_now &#8211; int &#8211; time value of when the current request was received by the server</li>
+<li>timeout &#8211; int &#8211; time value after which the current request is <em>stale</em>. This is used
+to time out the logged in status of the current account. Is set by the previous
+request to <em>time_now</em> + Globals::$inactivity_timeout</li>
+</ul>
+
+<h4>Category keys</h4>
+
+<p>see <a href="/doc.d/system-objects/Category.html">Category.php</a> for details</p>
+
+<ul>
+<li>category_defaults &#8211; associative array &#8211; maps Category parents to paths</li>
+</ul>
+
+<h4>normal information and naviagation keys</h4>
+
+<ul>
+<li>product_name &#8211; string &#8211; name of current image &#8211; used to restore image when returning
+to DisplayProduct.php</li>
+<li>product_gallery_style &#8211; string &#8211; either &#8216;list&#8217; or &#8216;table&#8217;</li>
+<li>product_gallery_sort_by &#8211; string &#8211; name of sort field &#8211; defaults to &#8216;title&#8217;</li>
+<li>product_gallery_max_per_page &#8211; int &#8211; defaults to 20</li>
+<li>product_gallery_page_number &#8211; int &#8211;  defaults to 0 (I think)</li>
+<li>shopping_cart_order_number &#8211; string &#8211; current shopping cart</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<p>The constructor is private, so cannot be called directly.</p>
+
+<p><strong>Session::get_session(debug_flag = <span class="caps">FALSE</span>)</strong> &#8211; returns the single Session instance.</p>
+
+<ul>
+<li>use_cookies &#8211; boolean &#8211; if <span class="caps">TRUE</span>, then the session id is retrieved from the user
+via the session cookie. If <span class="caps">FALSE</span>, then it is embedded in the <span class="caps">URL</span></li>
+<li>debug_flag &#8211; boolean &#8211; turns on debugging via the session attributes described above.</li>
+</ul>
+
+<h3>Instance Methods</h3>
+
+<h4>Error Message Handling</h4>
+
+<p>Error messages may be communicated between page loads by putting them away in the
+session data. One method is available to add messages to the session data and
+two methods for display.</p>
+
+<p>These methods directly manipulate the super global $_SESSION. These messages
+are <em>not</em> available as object attributes.</p>
+
+<ul>
+<li>add_message($msg) &#8211; appends the message to the super global $_SESSION under
+the key &#8216;messages&#8217;. If <em>$msg</em> does not end in a new line, one is appended.</li>
+<li>clear_messages() &#8211; unsets $_SESSION[&#8216;messages&#8217;].</li>
+<li>render_messages($element = &lt;div&gt;) &#8211; returns $_SESSION[&#8216;messages&#8217;]
+it it is set, otherwise the empty string: &#8217;&#8217;. If <em>$element</em> is an <span class="caps">HTML</span> element start tag,
+then the corresponding end tag is created and the return string is enclosed in the
+element. If <em>$element</em> is <em>not</em> an <span class="caps">HTML</span> element (no leading &#8217;<&#8217;), then it is still
+prepended to the return string, but no trailing text is synthesized and added.</li>
+<li>render_messages_and_clear($element = &lt;div&gt;) &#8211; is identical
+with <em>render_messages()</em> except that it also unsets $_SESSION[&#8216;messages&#8217;].</li>
+</ul>
+
+<p>These methods allow failure counts to be accumulated in a session:</p>
+
+<ul>
+<li>clear_failure_count() &#8211; sets the failure count to 0. This should be called on a
+known good event, before a <em>bad thing</em> happens</li>
+<li>increment_failure_count() &#8211; adds 1 to the failure_count variable</li>
+<li>anti_dos_delay() &#8211; approximates a quadratic delay function &#8211; to increasingly
+slow down responses failure conditions.</li>
+</ul>
+
+<h4>Session Handling and Diagnostics</h4>
+
+<ul>
+<li>start_session() &#8211; starts the session, if it not already running. Returns <span class="caps">TRUE</span>
+if it did something, <span class="caps">FALSE</span> if the session was already up.</li>
+<li>dump(msg) &#8211; displays the session variables wrapped in a <em>div</em> with class &#8216;dump-output&#8217;</li>
+<li>close_session() &#8211; just calls <em>session_write_close()</em></li>
+<li>viciously_destroy_session() &#8211; destroys the session as recommended in the
+<a href="http://www.php.net/manual/en/function.session-destroy.php"><span class="caps">PHP</span> manual</a></li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

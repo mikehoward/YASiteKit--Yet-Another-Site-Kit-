@@ -1,0 +1,305 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>athemer.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>athemer.php &#8211; implements parsing and stuff for YATheme</h1>
+
+<p>Implements basic YATheme compilation to mixed <span class="caps">PHP</span> / <span class="caps">HTML</span>.</p>
+
+<ul>
+<li><a href="#ya_php_var_scanner">YAPHPVarScanner</a> &#8211; wraps the <a href="http://php.net/manual/en/book.tokenizer.php"><span class="caps">PHP</span> tokenizer</a>
+in a YAScannerBase extension so it can be used with the Parser class</li>
+<li><a href="#ya_theme_parser">YAThemeParser</a> &#8211; defines the scanners and grammars needed to parse
+mixed <span class="caps">PHP</span> / <span class="caps">HTML</span> / YATheme text and render them to mixed <span class="caps">PHP</span> / <span class="caps">HTML</span>.</li>
+</ul>
+
+<h2 id="ya_php_var_scanner">YAPHPVarScanner</h2>
+
+<p>This info is for documentation only. It&#8217;s unlikely that you will ever instatiate
+or use this class directly.</p>
+
+<p>This class wraps the <span class="caps">PHP</span> Tokenizer. It works by running the tokenizer on the
+entire supplied string and creates an array of YAScanner compatable &#8216;chunks&#8217;.</p>
+
+<p>These chunks are 3 element arrays: array(tag, value, line number).
+Where the tokenizer returns an array, the tag is supplied by the <span class="caps">PHP</span> function <em>token_name()</em>
+and the value is the string.</p>
+
+<p>Where the tokenizer returns a single character &#8211; certain punctuation marks &#8211; the
+tag is taken from the array <em>$char_token_names</em> and the value is the punctuation mark.</p>
+
+<p>Thus, if the tokenizer returns &#8217;$&#8217; from line 12, the array is array(&#8216;T_DOLLAR_SIGN&#8217;, &#8217;$&#8217;, 12).</p>
+
+<h3>Instantiation</h3>
+
+<pre>$foo = new YAPHPVarScanner(NULL, NULL);
+</pre>
+
+<p>This is the instantiation signature of YAScannerBase, so something must be
+supplied for the two parameters &#8211; which are ignored by this scanner</p>
+
+<h3>Attributes</h3>
+
+<p>See <a href="/doc.d/system-includes/yascanner.html">YAScannerBase</a> for the full list.</p>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<p>See <a href="/doc.d/system-includes/yascanner.html">YAScannerBase</a> for the default list.</p>
+
+<p>This class only implements the constructor, process(), and dump().</p>
+
+<h2 id="ya_theme_parser">YAThemeParser</h2>
+
+<p>The YAThemeParser class defines the grammar and YAScanner state transition array for
+the YATheme theme language in the static variables YAThemeParser::$yatheme_grammar and
+YAThemeParser::$yatheme_states, respectively. It also defines a grammar and scanner for
+parsing <span class="caps">PHP</span> variables &#8211; YAThemeParser::$ya_phpvar_grammar
+and the YAPHPVarScanner object.</p>
+
+<h3>Instantiation</h3>
+
+<pre>$foo = new YAThemeParser($file_name);
+</pre>
+
+<p>where <em>$file_name</em> is the name of a file which is on the current include path.
+<span class="caps">NOTE</span>: Any path information is stripped by passing <em>$file_name</em> through <em>basename()</em>.</p>
+
+<h3>Instance Attributes</h3>
+
+<p>Attributes which are set by the object instance</p>
+
+<ul>
+<li>rendered_content &#8211; string &#8211; content of file being processed by <em>this</em> YAThemeParser instance</li>
+<li>file_name &#8211; string &#8211; file name of file used to instantiate this instance</li>
+<li>file_path &#8211; string &#8211; absolute path to file</li>
+<li>parse_result &#8211; boolean &#8211; <span class="caps">TRUE</span> if <em>file_name</em> has been parsed correctly. Parsing occurs automatically</li>
+<li>phpvar_parser &#8211; Parser instance &#8211; parses <span class="caps">PHP</span> variables, object instance attributes, and
+class static variables. Creates a list of all variables which have to exist in order
+to evaluate the variable.</li>
+<li>phpvar_scanner &#8211; YAScannerBase instance &#8211; translates <span class="caps">PHP</span> tokenizer results into YAScanner
+tokens.</li>
+<li>verbose &#8211; boolean &#8211; controls diagnostic output</li>
+<li>yatheme_parser &#8211; Parser instance &#8211; the Parser object which parses the file content</li>
+<li>yatheme_scanner &#8211; YAScannerBase instance &#8211; the YAScanner object which provides lexical scanning</li>
+</ul>
+
+<p>Attributes set by YATheme files via YATheme commands</p>
+
+<ul>
+<li>required_authority &#8211; string &#8211; required authority to view page. Is stored as defined in the
+<em>authority</em> control statement. YASiteKit expects this to be a comma separated list
+of authority tokens. See <a href="/doc.d/system-objects/Account.html">Account.php</a></li>
+<li>errors &#8211; string &#8211; current error handling method: &#8216;display&#8217;, &#8216;email&#8217;, or &#8216;ignore&#8217;</li>
+<li>errors_email &#8211; string &#8211; email address errors are sent to if <em>errors</em> is &#8216;email&#8217;</li>
+<li>guards &#8211; string &#8211; defines how variable/attribute instances are guarded.
+It may be &#8216;paranoid&#8217;, &#8216;normal&#8217; or &#8216;off&#8217; &#8211; which correspond to different levels of variable name
+(and class name) testing.</li>
+<li>scope &#8211; array &#8211; current scope setting as an array of scope strings. Scopes are set once using the <em>set-scope</em> command as a comma separated list.
+if the instance is created with an accessible file OR if <em>parse_str()</em> is called
+directly. <span class="caps">FALSE</span> if nothing has been parsed yet or the parsing process failed.</li>
+<li>scope &#8211; array OR <span class="caps">NULL</span> &#8211; array of scope strings, if scope has been set</li>
+<li>template_file &#8211; string &#8211; argment of the <em>yatemplate</em> command. If set, then the the template file will be rendered with the rendering of the current object inserted in place of the <em>yatemplate-content</em> statement. If not set, then the current file will be rendered as is.</li>
+<li>variables &#8211; array &#8211; associative array of YATheme <em>var</em> variables.</li>
+<li>yatemplate_content &#8211; string &#8211; rendering of <em>this</em> object which will be inserted in it&#8217;s template file. Only defined if <em>template_file</em> is defined</li>
+<li>yatheme &#8211; string &#8211; turns YATheme parsing on and off. Has one of two values: &#8216;on&#8217; or &#8216;off&#8217;</li>
+</ul>
+
+<p>Attributes which collect information resulting from rendering the page</p>
+
+<ul>
+<li>all_file_names &#8211; array &#8211; array of all files used in constructing this page. These
+are the basenames of the files, not paths, because YAThemeParser only finds files on
+the include path.</li>
+<li>class_names &#8211; array &#8211; array of all accumlated class names</li>
+<li>processing_results &#8211; Result of the latest parsing action</li>
+<li>variable_names &#8211; array &#8211; array of all accumulated variable names</li>
+</ul>
+
+<p>Attributes which access stacks in the stack system:</p>
+
+<ul>
+<li>array_ref &#8211; array &#8211; current &#8216;array_ref&#8217; stack</li>
+<li>attr &#8211; array &#8211; current &#8216;attr&#8217; stack</li>
+<li>class_name &#8211; array &#8211; current &#8216;class_name&#8217; stack</li>
+<li>cond_var &#8211; array &#8211; current &#8216;cond_var&#8217; stack</li>
+<li>sq_bracket &#8211; array &#8211; current &#8216;sq_bracket&#8217; stack</li>
+<li>tmp &#8211; array &#8211; current &#8216;tmp&#8217; stack</li>
+<li>variable_name &#8211; array &#8211; current &#8216;variable_name&#8217; stack</li>
+</ul>
+
+<ul>
+<li>stacks &#8211; array &#8211; readonly &#8211; all of the stacks</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<p>None.</p>
+
+<h3>Instance Methods</h3>
+
+<p>The usual magic methods plus <em>dump()</em>.</p>
+
+<p>Support for the YATheme language constructs</p>
+
+<ul>
+<li>include_file($file_name) &#8211; string &#8211; implements the <em>include</em> command. Returns a complete
+rendering of the named file.</li>
+<li>syntax_check() &#8211; boolean &#8211; a utility which passes the result of <em>$this->render()</em> through
+the <span class="caps">PHP</span> <span class="caps">CLI</span> processor for a syntax check. Returns <span class="caps">TRUE</span> or <span class="caps">FALSE</span>.</li>
+<li>include_file(file_name) &#8211; implements the YATheme <em>include</em> command.</li>
+<li>add_class_name($name) &#8211; appends <em>$name</em> to the class names list. Supports gathering of
+class names by parser.</li>
+<li>add_variable_name($name) &#8211; appends <em>$name</em> to the variable name list. Supports gathering
+of variable names by the parser.</li>
+<li>add_css($path, $media), add_style($script, $media), add_javascript($path), add_script($script),
+add_meta($name, $content) &#8211; support adding the associated data type to a page.</li>
+<li>render_css(), render_javascript(), render_meta() &#8211; all return strings which contain
+<span class="caps">HTML</span> appropriate for the type of elements indicated.</li>
+<li>private add_helper(array-name, data) &#8211; used by the various add_&#8230;() methods to
+uniquely add <em>data</em> to the array <em>array-name</em>.</li>
+</ul>
+
+<p>Page file dependencies</p>
+
+<ul>
+<li>add_file_name($arg) &#8211; adds one or more file names to <em>all_file_names</em>. <em>$arg</em> can be
+either a single file name (string) or an array of file names.</li>
+</ul>
+
+<p>Rendering support</p>
+
+<ul>
+<li>render() &#8211; string &#8211; returns the rendering of the currently existing parse tree. If no tree
+exists &#8211; nothing has been parsed or the file doesn&#8217;t exist &#8211; then returns an error message.</li>
+<li>esc_dollar_func($str) &#8211; string &#8211; replaces leading &#8217;$&#8217; symbols of variable names
+with &#8217;\$&#8217; so they will be printed rather than evaluated.</li>
+<li>render_attribute($attribute_str) &#8211; string &#8211; wraps <em>$attribute_str</em> string around the
+appropriate guards to test for variable existence.</li>
+<li>paranoid_guards($attribute_str) &#8211; string &#8211; wraps <em>$attribute_str</em> in some
+really paranoid checks.</li>
+<li>render_as_php($str) &#8211; string &#8211; wraps <em>$str</em> in <span class="caps">PHP</span> process escape tags</li>
+<li>render_error($error_msg, $quote = <span class="caps">TRUE</span>) &#8211; string &#8211; implments the YATheme <em>guards</em>
+action by wrapping, emailing, or ignoring the supplied error message.
+If <em>errors</em> is &#8216;display&#8217;, then <em>$error_msg</em> is wrapped in a <em>div</em> element
+with class &#8216;yatheme-error&#8217; <span class="caps">AND</span> then <em>$quote</em> comes into play.
+If <span class="caps">TRUE</span>  then the return is a single quoted string
+suitable for including in a <span class="caps">PHP</span> segment; othewise it is <span class="caps">HTML</span> text.</li>
+</ul>
+
+<p>Document Parsing.</p>
+
+<ul>
+<li>parse_str($str, $file_name = &#8217;-&#8217;) &#8211; boolean &#8211; parses the supplied string and returns
+<span class="caps">TRUE</span> on success, <span class="caps">FALSE</span> on failure. <em>basename($file_name)</em> is passed to the scanner and
+is used in error messages.</li>
+<li>parse_file($file_name) &#8211; boolean &#8211; reads the content of <em>$file_name</em>, if it can be
+found on the include path. Then we pass its content to the parser. Returns <span class="caps">TRUE</span> if successful.
+Returns <span class="caps">FALSE</span> if the parse fails or <em>$file_name</em> cannot be read.</li>
+</ul>
+
+<h4>The Stack System</h4>
+
+<p>The stack system is a stackable collection of stack/queue structures which support
+the normal stack and queue operations plus a few convenience functions.</p>
+
+<p>The collection is stackable because the entire current collection of stacks may
+be pushed on the &#8216;stacks_stack&#8217; (which is independent of the rest of the system)
+to create a clean context by calling _push_context().
+The immediate previous context can be (destructively) restored by calling <em>pop_context()</em>.
+There is no fixed limit on the depth of this stack.</p>
+
+<p>All operations are implemented by method calls of the form: <em>&lt;operation&gt;</em>&lt;stack&gt;(args)_.
+Where</p>
+
+<ul>
+<li>operation is one of: pushstack, popstack, push, pop, enqueue, dequeue, top,
+addprefix, clear, mergeresult, flatten, or display.</li>
+<li>stack name is one of: array_ref, attr, class_name, cond_var,
+sq_bracket, tmp, or variable_name.</li>
+<li>args depend on the operation, but always have an optional last argument for
+stack operation tracing. This optional argument is a string which will be
+printed if the <em>verbose</em> attribute of the YATheme instance is <span class="caps">TRUE</span>. (or, in plain
+english: if the YATheme object has <strong>vebose</strong> set).</li>
+</ul>
+
+<h5>Stacks</h5>
+
+<ul>
+<li>array_ref &#8211; used to hold array element reference fragments &#8211; that is
+the stuff which looks like &#8217;<sup class="footnote"><a href="#fn12">12</a></sup>&#8217; and &#8217;[$idx]&#8217;</li>
+<li>attr &#8211; used to hold object attribute references &#8211; stuff which looks
+like &#8217;<del>>a&#8217;, &#8217;</del>>$b->x<sup class="footnote"><a href="#fn12">12</a></sup>&#8217;, etc</li>
+<li>class_name &#8211; used to hold class names for static class variables. Contains
+both symbols and variables &#8211; for example, &#8216;Foo&#8217;, &#8217;$class_name&#8217;, etc</li>
+<li>sq_bracket &#8211; used for building a list of array references which must
+exist. This holds the &#8216;square bracket&#8217; part.</li>
+<li>tmp &#8211; a temporary stack</li>
+<li>variable_name &#8211; temporary storage for variable names. See the grammar
+for details.</li>
+</ul>
+
+<h5>Stack Operations</h5>
+
+<p>All stack operations are implemented using <em>private</em> functions. The public
+methods are created dynamically by conjoining the operation with the stack name. &#8211; as in <em>push_tmp(&#8216;something&#8217;)</em>. This function does not actually exist, but the call
+is intercepted by the __call() magic method, argument list modified and then
+routed to the correct function.</p>
+
+<p>The implementation functions are:</p>
+
+<ul>
+<li>pushstack($stack, $msg = &#8217;&#8217;) &#8211; pushes the entire stack and creates a new,
+empty stack.</li>
+<li>popstack($stack, $msg = &#8217;&#8217;) &#8211; pops and discards the contents of <em>$stack</em>,
+recovering the next stack below it (if any).</li>
+<li>push($stack, $value, $msg = &#8217;&#8217;) &#8211; pushes <em>$value</em> onto the top of <em>$stack</em></li>
+<li>pop($stack, $msg = &#8217;&#8217;) &#8211; removes and returns the top of <em>$stack</em> or returns
+<span class="caps">FALSE</span> if <em>$stack</em> is empty.</li>
+<li>top($stack, $msg = &#8217;&#8217;) &#8211; returns the value on the top of <em>$stack</em> or <span class="caps">FALSE</span> if
+<em>$stack</em> is empty. Does not modify <em>$stack</em></li>
+<li>enqueue($stack, $value, $msg = &#8217;&#8217;) &#8211; enqueues <em>$value</em> onto the tail of <em>$stack</em></li>
+<li>dequeue($stack, $msg = &#8217;&#8217;) &#8211; removes and returns the tail of <em>$stack</em> or returns
+<span class="caps">FALSE</span> if <em>$stack</em> is empty</li>
+<li>addprefix($stack, $prefix, $msg = &#8217;&#8217;) &#8211; prepends <em>$prefix</em> to every value
+of <em>$stack</em></li>
+<li>clear($stack, $msg = &#8217;&#8217;) &#8211; empties <em>$stack</em></li>
+<li>flatten($stack, $msg = &#8217;&#8217;) &#8211; merges all stacks of <em>$stack</em></li>
+<li>display($stack, $level, $msg = &#8217;&#8217;) &#8211; prints the specified level of <em>$stack</em>.
+Level 0 is the top-most (current) level.</li>
+<li>displaystack($stack, $msg = &#8217;&#8217;) &#8211; prints all levels of the given stack</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

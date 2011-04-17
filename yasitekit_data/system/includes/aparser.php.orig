@@ -1,0 +1,1397 @@
+<?php
+
+/*
+#begin-doc
+h1. aparser.php - A Parser for little languages
+
+This is top-down, recursive parser in PHP
+
+Parser is a PHP 5 object which takes a *right, recursive language specification*
+in more-or-less yacc/bison format and magically becomes a top-down, recursive
+descent, predictive parser. If the grammer is written properly, it even works.
+
+*Note:* yacc/bison and most other parser generators are use a _shift-reduce_
+algorithmn and so they require *left recursive* grammars to keep the parser
+from going into an infinite loop. Recursive descent - on the other hand -
+needs the grammar to be *right recursive*. [Go read the Dragon book if you
+want more detail - or even to correct any garbage I may be slinging]
+
+This module defines several helper classes:
+
+* "ParserNode":#parsernode - nodes which are created by the parser when
+parsing a sentense in the target language
+* "ParserLangNode":#parserlangnode - nodes used by the Parser and ParsesrLangDefParser
+in parsing the target language definition. These are used by the Parser in
+running the parse (phew)
+* "ParserLangDefParser":#parserlangdefparser - the object which parses the
+target language definition and prepares the table which drives the parser. It
+produces an array of ParserLangNodes.
+
+h2. Grammar Specification Rules
+
+*Comments* may be inserted anywhere in a grammer by enclosing them in
+C-style comment markers: '/&#42; ..... &#42;/'. Everything following, and including,
+the first '/&#42;' is discarded up _through_ the first '&#42;/'. *Comments* do _not_
+next.
+
+*Terminals* start with a capital letter OR are single quote enclosed punctuation marks.
+
+bq. T, TERMINAL, Terminal, ':', ','
+
+*non-terminals* start with a lower case letters and contain lower case letters, digits
+and underscore characters (_).
+
+bq. foo, bar, foo_bar10
+
+*Directives* start with a percent prefixed keyword. There are only a limited number.
+
+* %start &lt;non-terminal&gt; - optional - defines the start non-terminal
+* %action_prefix{ _php code_ %} - optional - defines code which prefixes
+_every_ action. This is where you put global variables and other stuff.
+NOTE: '%action_prefix{' is all one word - no interior blanks.
+* %action_suffix{ _php code_ %} - optional - code which is appended
+to _every_ action.
+
+*non-terminal definitions:*
+all non-terminals are uniquely defined by a set of production definitions.
+non-terminal definitions start with the non-terminal, followed by a colon (:),
+followed by one or more productions (separated by pipe symbols (|)), and terminated
+by a semicolon (;)
+
+bq. The syntax is: non-terminal ':' production | production | production | ... ;
+
+*productions* are sequences of symbols, semantic_name declarations, and semantic actions.
+For example 'A B ( C ) {some action}'.
+
+A production may be empty. An empty production
+should always be the last production in a non-terminal definition. It is symbolized
+by only putting white space between the production separator (|) and the definition
+terminator.
+
+bq. foo: A foo | ;
+
+*semantic_names* are identifiers enclosed in parenthesis. _identifiers_ satisfy
+the regular expression [a-zA-Z]\w*.
+
+bq. Examples: (A), (foo), (foo_bar_1)
+
+*semantic_actions* are text enclosed in braces. This is expected to
+be raw PHP. Everything inside the braces is opaque to the parser, so
+you can actually put about anything in there you want. The only caviate
+is that any embedded braces must match. That is '{ ... {...}...} is OK,
+but { { } and { } } are not.
+
+semantic actions are executed when the parser's _execute()_ method is run.
+This contrasts with other parsers which ususally perform semantic actions
+while parsing is in progress.
+
+*special variable names* in semantic actions refer to symbols which occur in the same production,
+augmented by the non-terminal being defined. In other words, in 'foo: A B {action1} | C D { action2 }',
+the code _action2_ will may refer to the values of C and D, but not A or B. It may assign a
+value to _foo_. Similarly, action1 may refer to values of A and B, but not C and D. Again,
+it can assign a value to _foo_
+
+*special variables names* can be EITHER _semantic_names_
+or a speical form which mimics the convention used in yacc, bison, lemon, and many
+other parser generators:
+
+* @@ refers to the non-terminal being defined. This is a read-write variable.
+* @1, @2, ... refer to the preceeding symbols and semantic actions in the rule,
+as defined above. These are _read-only_ variables.
+
+If a *semantic action* returns a value, it is assigned to the action and may be used
+by other actions to the right and in the same production. Othewise it is assigned
+the value NULL.
+
+h2. Instantiation
+
+pre. $foo = new Parser(language_def_string, YAScannerBase scanner, verbose = FALSE), node_class_name = NULL;
+
+* _language_def_string_ is string containing the language definition - as specified above.
+* scanner - a scanner object which extends YAScannerBase.
+(found in "ascanner.php":/doc.d/system-includes/ascanner.html).
+* node_class_name - the name of a class of nodes which implements the ParserNode
+to populate the parse tree.
+
+h2. Attributes
+
+<!-- case 'indent': -->
+Attributes you might be interested in. All attributes except _verbose_ are read-only.
+
+* language - ParserLangDefParser instance which defines the language being parsed.
+* root - this is the root node of the parse tree. That is where _render()_ and
+_execute()_ start.
+* str - the string the Parser instance can parse. Is set by calling the _parse()_ method
+* str_valid - boolean - TRUE if the string parsed correctly, else FALSE
+* verbose - boolean - turn it on or off.
+
+Internal attributes. You should never need to even know about these.
+
+* cur_node - node_class_name (defaults to ParserNode) - the current node which is being
+examined during the parse. Used internally and not something to mess with.
+* node_stack - stack of node_class_name instances being manipulated during the parse
+* productions - this is a copy of language->language_ar: an associative array of
+production arrays used by the parser and created by a ParserLangDefParser object.
+Don't mess with them.
+* scanner - The scanner object which was passed in.
+
+h2. Class methods
+
+None
+
+h2. Instance Methods
+
+Magic methods plus _dump(msg)_ and . . .
+
+* parse(str) - parses the string according to the language specification. Returns TRUE on
+a successful parse and FALSE on an error.
+* productions - each production in the grammar has a method associated with it using
+the nonterminal name and taking no arguments. It's pointless to call them from outside
+the object, but you can if you want.
+* render($tree = NULL) - returns the rendering of the specified parse tree or,
+if NULL, the current parse tree in the Parser instance.
+* execute($tree = NULL) - similar to _render()_ but executes the _execute_value_ of each
+node. This is less well defined. Basically, _execution_ can mean anything the node
+wants it to mean.
+#end-doc
+*/
+
+require_once('ascanner.php');
+
+/*
+#begin-doc
+h2(#parsernode). ParserNode
+
+These are nodes created by the Parser when parsing a sentense in the target
+language. The final result of the parse is a tree of these nodes.
+
+h3. Instantiation
+
+pre. $foo = new ParserNode($type, $value);
+
+h3. Attributes
+
+* execution_code - string which will be executed if _execute()_ is called on this node
+* execution_value - the value returned from the latest execution of _execution_code_
+* my_index - int - the nodes index into the table of subnodes of it's parent
+* next - ParserNode - left sybling in subnodes of parent or NULL
+* parent - ParserNode - parent node or NULL
+* previous - ParserNode - right sybling in subnodes of parent orN NULL
+* render_value - string which will be returned if _render()_ is called on this node
+* semantic_name - symbolic name this execution value will be assigned to, so it can
+be used in semantic actions
+* subnodes - array of subnodes living under this node. Only valid for productions
+* type - type of node: production / literal / action / message
+* value - arbitrary stuff which is not used
+
+h3. Class Methods
+
+None
+
+h3. Instance Methods
+
+* add_node(node) - appends _node_ to the _subnodes_ attribute;
+* discard_modes() - discards all subnodes. Leaves it up to PHP to actually
+destroy them.
+* render() - renders this node and recursively renders all subnodes.
+* execute() - does something brilliant and I don't know what it is yet.
+
+#end-doc
+*/
+
+class ParserNodeException extends Exception {}
+
+class ParserNode {
+  const PRODUCTION = 'production';
+  const LITERAL = 'literal';
+  const ACTION = 'action';
+  const MESSAGE = 'message';
+
+  // these two attributes hold references to the language element matched by this node
+  //  and the token from the scanner which holds the language instance data
+  private $language_node;
+  private $scanner_node;
+
+  public $action_prefix = '';
+  public $action_suffix = '';
+  private $execution_code;
+  private $execution_value;
+  private $my_index = FALSE;
+  private $next = NULL;
+  private $parent = NULL;
+  private $previous = NULL;
+  private $render_value;
+  private $semantic_name;
+  private $subnodes = array();
+  private $type;
+  private $value;
+  private $verbose = FALSE;
+  
+  // public function __construct($type, $value, $render_value, $execution_code, $semantic_name) {
+  public function __construct($language_node, $scanner_node) {
+    $this->language_node = $language_node;
+    $this->scanner_node = $scanner_node;
+    // $this->type = $type;
+    // $this->value = $value;
+    // $this->render_value = $render_value;
+    // $this->execution_code = $execution_code;
+    // $this->semantic_name = $semantic_name;
+    // switch ($type) {
+    //   case ParserNode::PRODUCTION:
+    //     $this->execution_value = '';
+    //     break;
+    //   case ParserNode::LITERAL:
+    //     $this->execution_value = $render_value;
+    //     break;
+    //   case ParserNode::ACTION:
+    //     $this->execution_value = '';
+    //     break;
+    //   case ParserNode::MESSAGE:
+    //     $this->execution_value = $render_value;
+    //     break;
+    // }
+  } // end of __construct()
+  
+  public function __toString() {
+    return "($this->type, '$this->value')";
+  } // end of __toString()
+  
+  public function __get($name) {
+    switch ($name){
+      case 'type':
+      case 'value':
+      case 'semantic_name':
+      case 'productions':
+        return $this->language_node->$name;
+      case 'tag':
+      case 'char_value':
+      case 'syntatic_value':
+      case 'semantic_value':
+      case 'line_no':
+      case 'line_count':
+      case 'char_start':
+      case 'char_count':
+        return $this->scanner_node->$name;
+      // case 'action_prefix':
+      // case 'action_suffix':
+      case 'execution_code':
+      case 'execution_value':
+      case 'my_index':
+      case 'next':
+      case 'parent':
+      case 'previous':
+      case 'render_value':
+      case 'subnodes':
+      // case 'type':
+      // case 'value':
+      case 'verbose':
+        return $this->$name;
+      default:
+        throw new ParserNodeException(__CLASS__ . "::__get($name): illegal attribute name '$name'");
+    }
+  } // end of __get()
+  
+  public function __set($name, $value) {
+    switch ($name){
+      // case 'action_prefix':
+      // case 'action_suffix':
+      //   $this->$name = $value;
+      //   break;
+      // lanugage node attributes
+      case 'type':
+      case 'value':
+      case 'semantic_name':
+      case 'productions':
+
+      // scanner_node attributes
+      case 'tag':
+      case 'char_value':
+      case 'syntatic_value':
+      case 'semantic_value':
+      case 'line_no':
+      case 'line_count':
+      case 'char_start':
+      case 'char_count':
+
+      case 'execution_code':
+      case 'my_index':
+      case 'parent':
+      case 'render_value':
+      case 'semantic_name':
+      case 'subnodes':
+      case 'type':
+        throw new ParserNodeException(__CLASS__ . "::__set(): attempt to set read only attribute '$name'");
+      case 'execution_value':
+      case 'next':
+      case 'previous':
+      case 'value':
+        $this->$name = $value;
+        break;
+      case 'verbose':
+        $this->$name = $value ? TRUE : FALSE;
+        break;
+      default:
+        throw new ParserNodeException(__CLASS__ . "::__set($name): illegal attribute name '$name'");
+    }
+  } // end of __set()
+  
+  public function __isset($name) {
+    switch ($name){
+      // case 'action_prefix':
+      // case 'action_suffix':
+      // language node attributes
+      case 'type':
+      case 'value':
+      case 'semantic_name':
+      case 'productions':
+        return isset($this->language_node->$name);
+      // scanner_node attributes
+      case 'tag':
+      case 'char_value':
+      case 'syntatic_value':
+      case 'semantic_value':
+      case 'line_no':
+      case 'line_count':
+      case 'char_start':
+      case 'char_count':
+        return isset($this->scanner_node->$name);
+
+      case 'execution_code':
+      case 'execution_value':
+      case 'my_index':
+      case 'next':
+      case 'parent':
+      case 'previous':
+      case 'render_value':
+      case 'semantic_name':
+      case 'subnodes':
+      case 'type':
+      case 'value':
+      case 'verbose':
+        return isset($this->$name);
+      default:
+        throw new ParserNodeException(__CLASS__ . "::__issest($name): illegal attribute name '$name'");
+    }
+  } // end of __isset()
+  
+  public function __unset($name) {
+    switch ($name){
+      // case 'action_prefix':
+      // case 'action_suffix':
+      // language node attributes
+      case 'type':
+      case 'value':
+      case 'semantic_name':
+      case 'productions':
+        unset($this->language_node->$name);
+        break;
+      // scanner_node attributes
+      case 'tag':
+      case 'char_value':
+      case 'syntatic_value':
+      case 'semantic_value':
+      case 'line_no':
+      case 'line_count':
+      case 'char_start':
+      case 'char_count':
+        unset($this->scanner_node->$name);
+        break;q
+
+      case 'execution_code':
+      case 'execution_value':
+      case 'my_index':
+      case 'next':
+      case 'parent':
+      case 'previous':
+      case 'render_value':
+      case 'semantic_name':
+      case 'subnodes':
+      case 'type':
+      case 'value':
+      case 'verbose':
+        throw new ParserNodeException(__CLASS__ . "::__unset($name): attempt to unset attribute '$name'");
+      default:
+        throw new ParserNodeException(__CLASS__ . "::__unset($name): illegal attribute name '$name'");
+    }
+  } // end of __unset()
+
+  public function add_node($node) {
+    $node->parent = $this;
+    $node->previous = ($tmp = count($this->subnodes)) ? $this->subnodes[$tmp - 1] : NULL;
+    if ($node->previous) {
+      $node->previous->next = $node;
+    }
+    $node->next = NULL;
+    $node->my_index = count($this->subnodes);
+    $this->subnodes[] = $node;
+  } // end of add_node()
+
+  // recursively discard nodes
+  public function discard_nodes() {
+    foreach ($this->subnodes as $node) {
+      $node->discard_nodes();
+      unset($node);
+    }
+    $this->subnodes = array();
+  } // end of discard_nodes()
+  
+  public function render() {
+    $str = $this->render_value;
+    foreach ($this->subnodes as $node) {
+      $str .= $node->render();
+    }
+    return $str;
+  } // end of render()
+  
+  public function execute() {
+    switch ($this->type) {
+      case ParserNode::PRODUCTION:
+        $str = '';
+        foreach ($this->subnodes as $subnode) {
+          switch ($subnode->type) {
+            case ParserNode::PRODUCTION:
+            case ParserNode::ACTION:
+              $subnode->execute();
+              break;
+            default:
+              break;
+          }
+        }
+        return $str;
+      case ParserNode::LITERAL:
+        return $this->execution_value;
+      case ParserNode::ACTION:
+        if (!$this->parent) {
+          throw new ParserNodeException(__CLASS__ . "::execute(): semantic action w/o parent - internal error");
+        }
+        // build dictionary
+        $targets = array();
+        $replacements = array();
+
+        if ($this->verbose) echo $this->parent->dump("\n parent node");
+
+        $targets[] = '/(?<!@)@@(?!@)/';
+        $replacements[] = '$__non_terminal';
+        if ($this->parent && $this->parent->semantic_name) {
+          $targets[] = '/\b' . $this->parent->semantic_name . '\b/';
+          $replacements[] = '$__non_terminal';
+        }
+
+        // leading symbol values
+        $idx = 1;
+        for ($idx = 0;$idx < $this->my_index; $idx += 1 ) {
+          $node_tmp = $this->parent->subnodes[$idx];
+          if ($this->verbose) echo $node_tmp->dump("\n node $idx");
+          $targets[] = '/@' . ($idx + 1) . '(?!\d)/';
+          $replacements[] = "{$node_tmp->execution_value}";
+          if ($node_tmp->semantic_name) {
+            $targets[] = '/\b' . $node_tmp->semantic_name . '\b/';
+            $replacements[] = "{$node_tmp->execution_value}";
+          }
+        }
+        $execution_string = preg_replace($targets, $replacements, $this->action_prefix .  $this->execution_code
+            . $this->action_suffix);
+
+        if ($this->verbose) {
+          echo $this->dump("\n I am node {$this->my_index}");
+          echo "targets: "; var_dump($targets);
+          echo "replacements: "; var_dump($replacements);
+          echo "execution_string: "; var_dump($execution_string);
+        }
+        
+        if (($func = create_function('&$__non_terminal', $execution_string)) === FALSE) {
+          throw new ParserNodeException(__CLASS__ . "::execute(): Parse error in function body; $this; execution_string: '$execution_string' [$this->execution_code]");
+        }
+        
+        $parent_value = NULL;
+        $this->execution_value = call_user_func($func, &$parent_value);
+        $this->parent->execution_value = $parent_value;
+
+        return $this->execution_value;
+      case ParserNode::MESSAGE:
+        return $this->execution_value;
+      default:
+        return "Bad Node: illegal type: {$this->type}";
+    }
+  } // end of execute()
+  
+  public function dump($msg = '') {
+    $str = $msg ? "$msg\n" : '';
+    $str .= get_class($this) . ": $this->type; value: $this->value\n";
+    $str .= "render_value: " . substr($this->render_value, 0, 60) . "\n";
+    $str .= "execution_code: " . substr($this->execution_code, 0, 60) . "\n";
+    $str .= "execution_value: " . substr($this->execution_value, 0, 60) . "\n";
+    $str .= "semantic_name: " . ($this->semantic_name ? $this->semantic_name : '(not set)') . "\n";
+    $str .= "parent: " . ($this->parent?"$this->parent": "none") . "\n";
+    $str .= "previous: " . ($this->previous?"$this->previous": "none") . "\n";
+    $str .= "next: " . ($this->next?"$this->next": "none") . "\n";
+    foreach ($this->subnodes as $subnode) {
+      $str .= $subnode->dump(">> subnode " . $msg);
+    }
+    return $str;
+  } // end of dump()
+}
+
+/*
+#begin-doc
+h2(#parserlangnode). ParserLangNode - holds information about a legal language definition
+symbol
+
+h3. Instantiation
+
+pre. $foo = new ParserLangNode($type, $value);
+
+where the arugments are defined below in Attributes.
+
+h3. Attributes
+
+* type - type of node. Types are:
+** production - then the value is the name of the non-terminal
+** terminal - a terminal symbol
+** non_terminal - a non terminal occuring in a production rule
+** semantic_action - some PHP to be executed. May contain references to the
+symbols previously occurring _in this rule_. References can be $$, $1, ... as
+in yacc and bison OR assigned _semantic_names_.
+** error - error messages
+* value - value of node. For productions, terminal, and non_terminal, the value is
+the name of the symbol. For semantic actions, the value is the supplied PHP code.
+For errors, the value is the error message.
+* semantic_name - either a string or NULL
+* productions - array() - only defined for type == 'production' nodes. Is an array
+of productions for this non-terminal.
+
+h3. Class Methods
+
+None
+
+h3. Instance Methods
+
+* sort_productions(callback) - sorts the _productions_ array or throws an exception
+if _this_ is not a _production_
+* production_as_string(production array) - returns the production as a comma separated
+string. Throws an exception if _this_ is not a PRODUCTION node.
+* production_as_string_by_index(index) - returns the 'index'th production as a comma
+separated string.
+
+#end-doc
+*/
+
+
+class ParserLangNodeException extends Exception {}
+
+class ParserLangNode {
+  private $type;
+  private $value;
+  private $semantic_name = NULL;
+  private $productions = NULL;  // in case this node is a production rather than an entry in a production
+  public function __construct($type, $value) {
+    $this->type = $type;
+    $this->value = $value;
+    if ($type == ParserLangDefParser::PRODUCTION) {
+      $this->productions = array();
+    }
+  } // end of __construct()
+  
+  public function __toString() {
+    switch ($this->type) {
+      case ParserLangDefParser::PRODUCTION:
+        $str = "$this->value" . ($this->semantic_name ? " ($this->semantic_name) :\n" : " :\n");
+        $str .= "     {$this->production_as_string_by_index(0)}\n";
+        for ($idx=1;$idx<count($this->productions);$idx++) {
+          $str .= "   | {$this->production_as_string_by_index($idx)}\n";
+        }
+        $str .= "   ;\n";
+        return $str;
+      case ParserLangDefParser::TERMINAL:
+      case ParserLangDefParser::NONTERMINAL:
+        return "$this->value" . ($this->semantic_name ? " ($this->semantic_name)" : "");
+      case ParserLangDefParser::SEMANTIC_ACTION:
+        return "{{$this->value}}" . ($this->semantic_name ? " ($this->semantic_name)" : "");
+      case ParserLangDefParser::ERROR:
+        return "ERROR: $this->value";
+      default:
+        return $this->dump("Unknown Type: ");
+    }
+    return "ParserLangNode($this->type / " . substr($this->value, 0, 40) . ")";
+  } // end of __toString()
+
+  public function production_as_string_by_index($idx) {
+    if ($this->type != ParserLangDefParser::PRODUCTION) {
+      throw new ParserLangNodeException("ParserLangNode::production_as_string($idx): this is not a PRODUCTION node");
+    }
+    if ($idx < 0 || $idx >= count($this->productions)) {
+      throw new ParserLangNodeException("ParserLangNode::production_as_string($idx): index '$idx' out of range");
+    }
+    return $this->production_as_string($this->productions[$idx]);
+  } // end of production_as_string()
+  
+  public function production_as_string($production) {
+    if ($this->type != ParserLangDefParser::PRODUCTION) {
+      throw new ParserLangNodeException("ParserLangNode::production_as_string($idx): this is not a PRODUCTION node");
+    }
+    return implode(' ', array_map(create_function('$s', 'return "$s";'), $production));
+  } // end of production_as_string()
+
+  public function __get($name) {
+    switch ($name) {
+      case 'type':
+      case 'value':
+      case 'semantic_name':
+      case 'productions':
+        return $this->$name;
+      default:
+        throw new ParserLangNodeException("ParserLangNode::__get($name): illegal attribute name '$name'");
+    }
+  } // end of __get()
+  
+  public function __set($name, $value) {
+    switch ($name) {
+      case 'type':
+      case 'value':
+        throw new ParserLangNodeException("ParserLangNode::__set($name, value): attempt to set read only attribute '$name'");
+      case 'productions':
+        if ($this->type != ParserLangDefParser::PRODUCTION) {
+          throw new ParserLangNodeException("ParserLangNode::__set(): attempt to add production definition to non-production: $this");
+        }
+        $this->productions[] = $value;
+        break;
+      case 'semantic_name':
+        if (!$this->$name) {
+          $this->$name = $value;
+        } else {
+          throw new ParserLangNodeException("ParserLangNode::__set($name, value): attempt to set write once attribute '$name'");
+        }
+        break;
+      default:
+        throw new ParserLangNodeException("ParserLangNode::__set($name): illegal attribute name '$name'");
+    }
+  } // end of __set()
+  
+  public function __isset($name) {
+    switch ($name) {
+
+      case 'value':
+      case 'semantic_name':
+      case 'productions':
+        return isset($this->$name) && $this->$name;
+      default:
+        throw new ParserLangNodeException("ParserLangNode::__isset($name): illegal attribute name '$name'");
+    }
+  } // end of __isset()
+  
+  public function __unset($name) {
+    switch ($name) {
+      case 'type':
+      case 'value':
+      case 'semantic_name':
+      case 'productions':
+        throw new ParserLangNodeException("ParserLangNode::__unset($name): attempt to unset attribute '$name'");
+      default:
+        throw new ParserLangNodeException("ParserLangNode::__unset($name): illegal attribute name '$name'");
+    }
+  } // end of __unset()
+
+  public function sort_productions($callback) {
+    usort($this->productions, $callback);
+    if (in_array(array(), $this->productions)) {
+      $this->productions = array_filter($this->productions, create_function('$x', 'return $x != array();'));
+      $this->productions[] = array();
+    }
+  } // end of sort_productions()
+  
+  public function dump($msg = '') {
+    $str = $msg ? "$msg: " : "";
+    $str .= "$this->type: ";
+    if ($this->semantic_name) {
+      $str .= "({$this->semantic_name}) ";
+    }
+    $str .= strlen($this->value) > 40 ? "'" . substr($this->value, 0, 40) . " . . .'\n" : "'$this->value'\n";
+    if ($this->type == ParserLangDefParser::PRODUCTION) {
+      foreach ($this->productions as $prod) {
+        $node_leader = "  | ";
+        if ($prod) {
+          foreach ($prod as $node) {
+            $str .= $node->dump($node_leader);
+            $node_leader = '    ';
+          }
+        } else {
+          $str .= "  |\n";
+        }
+      }
+      $str .= "  ;\n";
+    } 
+    return $str;
+  } // end of dump()
+}
+
+/*
+#begin-doc
+h2(#parserlangdefparser). ParserLangDefParser - parses language definitions
+
+h3. Instantiation
+
+h3. Attributes
+
+* language_def - original string passed to object
+* language_ar - array of arrays of ParserLangNode instances which implement
+the language definition. Keys are by production names.
+* start_symbol - string - the starting production for the language. This will
+Either be the first production encountered OR the value taken from the
+phrase '%start non-terminal', where _non-terminal_ is a non_terminal of the
+language.
+
+h3. Class Methods
+
+None
+
+h3. Instance Methods
+
+Usual magic methods, dump(), and . . .
+
+Recursive descent parsers - like all parsers - are very sensitive to the order in which
+productions are tested. For example, for the language 'foo: A | A foo;', when
+presented with the string 'AAAA', the parser will announce completion after seeing
+the first 'A' and will ignore the trailing 'AAA'. If the grammar is rewritten
+as 'foo: A foo | A;', then the parser will recognize 'AAAA' and finish processing
+the string. This is a good thing.
+
+So we provide (crude) sorting support for fixing sloppily written (or edited) grammars.
+Calling _sort()_ is optional, so one strategy for testing to see if your grammar
+is really what you want is:
+
+# feed your grammar to ParserLangDefParser - by creating an instance.
+# print the instance as a string - this will print out your grammar in a nicely
+indented display.
+# invoke the _sort()_ method on your instance.
+# print out the instance as a string (again) and compare it with the first printout.
+# then do something which you think is a good idea.
+
+* sort(cmp_func = ParserLangDefParser::cmp_productions) - sorts the language productions
+using the comparision function. The default comparison function sorts the products
+so that:
+** the productions with the most non-terminals are tested first. The order is in reverse
+of the number of non-terminals in a production. For example foo: a b c | T b c | T S c | T
+** within productions with the same number of non-terminals, they are sorted so that
+the longest are tested first.
+** if any empty productions exist, they are deleted and a single empty production is
+tested last.
+* cmp_productions(p1, p2) - used to sort the production array. returns -1, 0, or 1
+if p1 < p2, p1 == p2, or p1 > p2 as determined by the number of non-terminals
+in each production and - for equal numbers of non-terminals - which is longer.
+In all cases, -1 means p1 is more complex than p2.
+
+#end-doc
+*/
+
+class ParserLangDefParserException extends Exception {}
+
+class ParserLangDefParser {
+  const PRODUCTION = 'production';
+  const PRODUCTION_NEW = 'new_production';
+  const PRODUCTION_END = 'production_end';
+  const TERMINAL = 'terminal';
+  const NONTERMINAL = 'non_terminal';
+  const SEMANTIC_ACTION = 'semantic_action';
+  const SEMANTIC_NAME = 'semantic_name';
+  const START_SYMBOL = 'start_symbol';
+  const CODE = 'code';
+  const CODE_START = 'code_start';
+  const CODE_END = 'code_end';
+  const ERROR = 'error';
+  
+  static public $parser_language_states = array(
+    array('init', 'emit_error.no legal symbol recognized',
+      array('/^\s*%start\s+(\w+)/', 'init', 'push_tag.start_symbol,add_matched.1,emit,pop_tag'),
+      array('/^\s*%(action_prefix|action_suffix)\{/', 'code', 'push_tag.code_start, add_matched.1,emit,pop_tag'),
+      array('/^\s*([a-z]\w*)\s*:(?!>:)/', 'init', 'push_tag.production,add_matched.1,emit,pop_tag, push_tag.new_production,add_literal.:,emit,pop_tag'),
+      array('/^\s*([a-z]\w*)\s*\(\s*(\w+)\s*\)\s*:(?!>:)/', 'init',
+        'push_tag.production,add_matched.1,emit,pop_tag, push_tag.semantic_name,add_matched.2,emit,pop_tag, push_tag.new_production,add_literal.:,emit,pop_tag'),
+      array('/^\s*([A-Z]\w*)/', 'init', 'push_tag.terminal, add_matched.1, emit, pop_tag'),
+      array('/^\s*\'([[:punct:]])\'/', 'init', 'push_tag.terminal,add_matched.1,emit,pop_tag'),
+      array('/^\s*([a-z]\w*)/', 'init', 'push_tag.non_terminal, add_matched.1, emit, pop_tag'),
+      array('/^\s*\(\s*(\w+)\s*\)/', 'init', 'push_tag.semantic_name, add_matched.1, emit, pop_tag'),
+      array('/^\s*;\s*/', 'init', 'push_tag.production_end, add_literal.;,emit,pop_tag'),
+      array('/^\s*\|\s*/', 'init', 'push_tag.new_production, add_literal.|, emit, pop_tag'),
+      array('/^\s*{/', 'semantic', 'discard_matched, init_counter'),
+      array('|(?s)^\s*/\*.*\*/|', 'init', 'discard_matched'),  // discard comments
+    ),
+    array('semantic', 'emit_error.error in scanning semantic action',
+      array('/^\s*{/', 'semantic', 'inc_counter, add_matched'),
+      array('/^\s*}\s*/', 'semantic', 'dec_counter, add_matched_if_counter, stop_if_counter, push_tag.semantic_action, emit, pop_tag, new_state.init'),
+      array('/^[^}{]*/', 'semantic', 'add_matched'),
+    ),
+    array('code', 'emit_error.error scanning code',
+      array('/^\s*%}/', 'init', 'push_tag.code,emit,pop_tag, push_tag.code_end,add_literal.%},emit,pop_tag'),
+      array('/(?sU).*(?=%})/', 'code', 'add_matched'),
+    ),
+  );
+  
+  private $language_ar;
+  private $language_def;
+  private $start_symbol = NULL;
+  public $action_prefix = '';
+  public $action_suffix = '';
+  private $verbose = FALSE;
+
+  public function __construct($language_def, $verbose = FALSE) {
+    $this->language_def = $language_def;
+    $this->verbose = $verbose;
+    $scanner = new YAScanner('init', ParserLangDefParser::$parser_language_states);
+    if (!is_string($language_def)) {
+      throw new ParserLangDefParserException("ParserLangDefParser::__construct(def): language definition is not a string");
+    }
+    $this->language_ar = array();
+    $cur_production = NULL;
+    $cur_production_ar = FALSE;
+    $scanner->process($language_def);
+    
+    while (($token = $scanner->token())) {
+// echo "------- $token / $value\n";
+      switch ($token->tag) {
+        case ParserLangDefParser::START_SYMBOL:
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found %start\n";
+          $this->start_symbol = $token->syntactic_value;
+          break;
+        case ParserLangDefParser::CODE_END:
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found %}\n";
+          break;
+        case ParserLangDefParser::CODE_START:
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found %{$value}{\n";
+          $cur_code_section = $value;
+          break;
+        case ParserLangDefParser::CODE:
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found code body\n";
+          $this->$cur_code_section = $value;
+          break;
+        case ParserLangDefParser::PRODUCTION:
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found definition for non-terminal '$value'\n";
+          if ($cur_production) {
+            throw new ParserLangDefParserException("ParserLangDefParser::__construct(): production def started w/o finishing previous def: {$scanner->token()}");
+          }
+          $cur_production =
+            $cur_node = new ParserLangNode($token->tag, $token->syntactic_value);
+          $this->language_ar[$token->syntactic_value] = $cur_production;
+          if (!$this->start_symbol) {
+            $this->start_symbol = $token->syntactic_value;
+          }
+          break;
+        case ParserLangDefParser::PRODUCTION_NEW:
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found production start for $cur_production->value\n";
+          if (!$cur_production) {
+            throw new ParserLangDefParserException("ParserLangDefParser::__construct(): production def start encountered w/o production defined: {$scanner->token()}");
+          }
+          if ($cur_production_ar !== FALSE) {
+            $cur_production->productions = $cur_production_ar;
+          }
+          $cur_production_ar = array();
+          $cur_node = NULL;
+          break;
+        case ParserLangDefParser::PRODUCTION_END:  // encountered a ';'
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found production end for $cur_production->value\n";
+          if (!$cur_production) {
+            throw new ParserLangDefParserException("ParserLangDefParser::__construct(): production def end encountered w/o production defined: {$scanner->token()}");
+          }
+          $cur_production->productions = $cur_production_ar;
+          $cur_production = NULL;
+          $cur_production_ar = FALSE;
+          $cur_node = NULL;
+          break;
+        case ParserLangDefParser::TERMINAL:
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found terminal '$token->syntactic_value'\n";
+          if (!$cur_production) {
+            throw new ParserLangDefParserException("ParserLangDefParser::__construct(): TOKEN end encountered w/o production defined: {$scanner->token()}");
+          }
+          $cur_production_ar[] =
+            $cur_node = new ParserLangNode(ParserLangDefParser::TERMINAL, $token->syntactic_value);
+          break;
+        case ParserLangDefParser::NONTERMINAL:
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found non-terminal '$token->syntactic_value' reference\n";
+          if (!$cur_production) {
+            throw new ParserLangDefParserException("ParserLangDefParser::__construct(): Non-Terminal end encountered w/o production defined: {$scanner->token()}");
+          }
+          $cur_production_ar[] =
+            $cur_node = new ParserLangNode(ParserLangDefParser::NONTERMINAL, $token->syntactic_value);
+          break;
+        case ParserLangDefParser::SEMANTIC_ACTION:
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found semantic action\n";
+          if (!$cur_production) {
+            throw new ParserLangDefParserException("ParserLangDefParser::__construct(): Semantic Action end encountered w/o production defined: {$scanner->token()}");
+          }
+          $cur_production_ar[] =
+            $cur_node = new ParserLangNode(ParserLangDefParser::SEMANTIC_ACTION, $token->syntactic_value);
+          break;
+        case ParserLangDefParser::SEMANTIC_NAME:
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found semantic name '$token->syntactic_value'\n";
+          if (!$cur_production) {
+            throw new ParserLangDefParserException("ParserLangDefParser::__construct(): Semantic Name encountered w/o production defined: {$scanner->token()}");
+          } elseif (!$cur_node) {
+            throw new ParserLangDefParserException("ParserLangDefParser::__construct(): Semantic Name encountered w/o node defined: {$scanner->token()}");
+          } elseif (isset($cur_node->semantic_name)) {
+            throw new ParserLangDefParserException("ParserLangDefParser::__construct(): Semantic Name for node already defined: {$scanner->token()}");            
+          } else {
+            $cur_node->semantic_name = $token->syntactic_value;
+          }
+          break;
+        case ParserLangDefParser::ERROR:
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found error\n";
+          throw new ParserLangDefParserException("ParserLangDefParser::__construct(): Language Definition Scan Error encountered: $token->syntactic_value");
+        default:
+          if ($this->verbose) echo "$scanner->file_name: $token->line_no: found illegal value\n";
+          throw new ParserLangDefParserException("ParserLangDefParser::__construct(def): Illegal token encountered '$token'");
+      }
+      $scanner->advance();
+    }
+    
+    // check for proper termination of definition
+    if ($cur_production) {
+      $scanner->push_back();
+      throw new ParserLangDefParserException("ParserLangDefParser::__construct(): improperly terminated language - missing production end symbol: {$scanner->token()}");
+    }
+    if (!array_key_exists($this->start_symbol, $this->language_ar)) {
+      throw new ParserLangDefParserException("ParserLangDefParser::__construct(): Specified start symbol '$this->start_symbol' is NOT a known non-terminal");
+    }
+  }
+    
+    // sort language
+    // we want to sort the productions so that we process them in the 'right order'.
+    // We want all the productions with non-terminals on top and those which are prefixes of
+    //  rules, below the rules they are a prefix of. We accomplish this by sorting 
+  public function sort($cmp = NULL) {
+    // echo $this->dump("Before Sorting");
+    foreach ($this->language_ar as $key => $node) {
+      $node->sort_productions($cmp ? $cmp : array($this, 'cmp_productions'));
+    }
+  } // end of __construct()
+
+  public function cmp_productions($p1, $p2) {
+    // static $is_terminal = NULL;
+    static $is_nonterminal = NULL;
+    static $is_symbol = NULL;
+    // static $is_action = NULL;
+
+    if (!$is_symbol) {
+      // $is_terminal = create_function('$n', 'return $n->type == "terminal";');
+      $is_nonterminal = create_function('$n', 'return $n->type == "non_terminal";');
+      $is_symbol = create_function('$n', 'return $n->type == "non_terminal" || $n->type == "terminal";');
+      // $is_action = create_function('$n', 'return $n->type == "semantic_action";');
+    }
+    
+    // more non-terminals goes up
+    $c1_nonterminals = count(array_filter($p1, $is_nonterminal));
+    $c2_nonterminals = count(array_filter($p2, $is_nonterminal));
+    if ($c1_nonterminals != $c2_nonterminals) {
+      return $c1_nonterminals > $c2_nonterminals ? -1 : 1;
+    }
+    // at this point, p1 and p2 have the same number of nonterminals, so sort in symbol count order
+    //   NOTE: this automatically moves prefixes down the stack
+    $c1_symbols = count(array_filter($p1, $is_symbol));
+    $c2_symbols = count(array_filter($p2, $is_symbol));
+    if ($c1_symbols != $c2_symbols) {
+      return $c1_symbols > $c2_symbols ? -1 : 1;
+    }
+    
+    // I think we're done at this point.
+    return 0;
+  } // end of cmp_productions()
+
+  public function __toString() {
+    $str = "%start {$this->start_symbol}\n";
+    foreach ($this->language_ar as $node) {
+      $str .= (string)$node;
+    }
+    return $str;
+  } // end of __toString()
+  
+  public function __get($name) {
+    switch ($name) {
+      // case 'action_prefix':
+      // case 'action_suffix':
+      case 'language_def':
+      case 'language_ar':
+      case 'start_symbol':
+      case 'verbose':
+        return $this->$name;
+      default:
+        throw new ParserLangDefParserException("ParserLangDefParser::__get(): attempt to get illegal attribute '$name'");
+    }
+  } // end of __get()
+
+  public function __set($name, $value) {
+    switch ($name) {
+      case 'verbose':
+        $this->$name = $value;
+        break;
+      default:
+        throw new ParserLangDefParserException("ParserLangDefParser::__set(): attempt to set read only or illegal attribute '$name'");
+    }
+  } // end of __set()
+  
+  public function __isset($name) {
+    switch ($name) {
+      // case 'action_prefix':
+      // case 'action_suffix':
+      case 'language_ar':
+      case 'language_def':
+      case 'start_symbol':
+      case 'verbose':
+        return isset($this->$name);
+      default:
+      throw new ParserLangDefParserException("ParserLangDefParser::__isset(): isset tested on illegal attribute '$name'");
+    }
+  } // end of __isset()
+  
+  public function __unset($name) {
+    throw new ParserLangDefParserException("ParserLangDefParser::__unset(): attempt to unset read only or illegal attribute '$name'");
+  } // end of __unset()
+  
+  public function dump($msg = '') {
+    $str = $msg ? "$msg:\n" : '';
+    foreach ($this->language_ar as $nonterminal => $node) {
+      $str .= $node->dump($nonterminal);
+    }
+    return $str;
+  } // end of dump()
+}
+
+class ParserException extends Exception {}
+
+class Parser {
+  private $lang;
+  private $str;
+  private $ptr = 0;
+  private $node_class_name;
+  private $node_stack = array();
+  private $token_pointer_stack = array();
+  private $str_valid = FALSE;
+  
+  private $language;
+  private $productions;
+  private $scanner;
+  
+  // output control
+  public $verbose = FALSE;
+  public $indent = '';
+  
+  public function __construct($language_def, YAScannerBase $scanner, $verbose = FALSE, $node_class_name = 'ParserNode') {
+    $this->language = new ParserLangDefParser($language_def);
+    $this->productions = $this->language->language_ar;
+    $this->node_class_name = $node_class_name ? $node_class_name : 'ParserNode';
+    if (!class_exists($this->node_class_name)) {
+      require_once($this->node_class_name . ".php");
+    }
+    $this->scanner = $scanner;
+    $this->str = NULL;
+    $this->verbose = $verbose;
+  } // end of __construct()
+  
+  public function __toString() {
+    return "Parser(" . substr($this->language->language_def, 0, 60) . ")";
+  } // end of __toString()
+  
+  public function __get($name) {
+    switch ($name) {
+      case 'indent':
+      case 'language':
+      case 'node_stack':
+      case 'productions':
+      case 'scanner':
+      case 'str':
+      case 'str_valid':
+      case 'verbose':
+        return $this->$name;
+        break;
+      case 'cur_node':
+        return $this->node_stack[0];
+      case 'root':
+        if (!$this->node_stack) {
+          throw new ParserException("Parser::__get(): attempt to get 'root' on empty stack");
+        }
+        return $this->node_stack[count($this->node_stack) - 1];
+      default:
+        throw new ParserException("Parser::__get($name): illegal attribute name '$name'");
+    }
+  } // end of __get()
+  
+  public function __set($name, $set) {
+    switch ($name) {
+      case 'cur_node':
+      case 'indent':
+      case 'language':
+      case 'node_stack':
+      case 'productions':
+      case 'scanner':
+      case 'str':
+      case 'str_valid':
+        throw new ParserException("Parser::__set($name, value): attempt to set read-only attribute '$name'");
+      case 'verbose':
+        $this->$name = $value;
+        break;
+      default:
+        throw new ParserException("Parser::__set($name): illegal attribute name '$name'");
+    }
+  } // end of __set()
+  
+  public function __isset($name) {
+    switch ($name) {
+      case 'indent':
+      case 'language':
+      case 'node_stack':
+      case 'productions':
+      case 'scanner':
+      case 'str':
+      case 'str_valid':
+      case 'verbose':
+        return isset($this->$name);
+        break;
+      case 'cur_node':
+        return isset($this->node_stack[0]);
+        break;
+      default:
+        throw new ParserException("Parser::__isset($name): illegal attribute name '$name'");
+    }
+  } // end of __isset()
+  
+  public function __unset($name) {
+    switch ($name) {
+      case 'cur_node':
+      case 'indent':
+      case 'language':
+      case 'node_stack':
+      case 'productions':
+      case 'scanner':
+      case 'str':
+      case 'str_valid':
+      case 'verbose':
+        throw new ParserException("Parser::__unset(): attempt to unset read-only attribute '$name'");
+        break;
+      default:
+        throw new ParserException("Parser::__unset($name): illegal attribute name '$name'");
+    }
+  } // end of __unset()
+
+  public function __call($name, $args) {
+    if (!array_key_exists($name, $this->language->language_ar)) {
+      throw new ParserException("Parser::__call($name, args): illegal production name '$name'");
+    }
+    return $this->production($name);
+  } // end of __call()
+
+  // node handling
+  private function push_node($node) {
+    array_unshift($this->node_stack, $node);
+  } // end of push_node()
+  
+  private function pop_node() {
+    if (count($this->node_stack) <= 0) {
+      throw new ParserException("Parser::pop_node(): attempt to pop empty node stack");
+    }
+    return array_shift($this->node_stack);
+  } // end of pop_node()
+  
+  // here's where we always start
+  public function parse($str) {
+    $this->str = $str;
+    $this->scanner->process($str);
+    $this->ptr = 0;
+    $this->node_stack = array();
+    $this->token_pointer_stack = array();
+    $this->indent = '';
+    $start_nt_node = $this->language->language_ar[$this->language->start_symbol];
+    $root_token = new YASToken('start', 0, 0);
+    $root_token->syntactic_value = $start_nt_node->value;
+    $root_parser_node = new $this->node_class_name(ParserNode::PRODUCTION, $start_nt_node->value, '', '',
+        $start_nt_node->semantic_name);
+    $root_parser_node->verbose = $this->verbose;
+    if (!$root_parser_node instanceof ParserNode) {
+      throw new ParerException("Parser::parse(): Supplied Parser Node is not an extension of ParserNode - cannot proceed");
+    }
+    $this->push_node($root_parser_node);
+    $this->str_valid = $this->start();
+
+    return $this->str_valid;
+  } // end of parse()
+
+  private function start() {
+    if ($this->verbose) {
+      echo "\nParsing String: '$this->str':\n";
+      echo "{$this->indent}Language " . $this->language->language_def . "\n";
+    }
+
+    // return TRUE if a prefix in _str_ parsed correctly AND the entire string was used
+    return $this->{"{$this->language->start_symbol}"}()
+      && $this->scanner->token() === FALSE
+      ;
+    // return $this->{"$this->lang_func"}() && $this->ptr == strlen($this->str);
+  } // end of start()
+  
+
+  private function production($nonterminal_name) {
+    if ($this->verbose) echo "\n{$this->indent}===========entering production($nonterminal_name)===========\n";
+    // we try to detect infinite recursion by checking to see (1) if this production is in
+    //  process (occurs lower on the node stack) AND (2) that the token_pointer has not advanced
+    //  since that last occurance.
+    if (isset($this->token_pointer_stack[$nonterminal_name])) {
+      if ($this->token_pointer_stack[$nonterminal_name]
+            && $this->token_pointer_stack[$nonterminal_name][0] >= $this->scanner->token_pointer) {
+        throw new ParserException("Parser::production($nonterminal_name): infinite recursion detected for nonterminal $nonterminal_name");
+      } else {
+        array_unshift($this->token_pointer_stack[$nonterminal_name], $this->scanner->token_pointer);
+      }
+    } else {
+      $this->token_pointer_stack[$nonterminal_name] = array($this->scanner->token_pointer);
+    }
+
+    // nt_node stands for 'non_terminal node'
+    $nt_node = $this->productions[$nonterminal_name];
+    
+    if ($this->verbose) echo $this->display_parser_state("starting production $nonterminal_name");
+
+    // check all leading non-terminals
+    if ($this->scanner->token() === FALSE) {
+      if (in_array(array(), $nt_node->productions)) {
+        if ($this->verbose) echo "{$this->indent}accept: no tokens and empty production found\n";
+        if ($this->verbose) echo "{$this->indent}===========leaving production()===========\n";
+        array_shift($this->token_pointer_stack[$nonterminal_name]);
+        return TRUE;
+      } {
+        if ($this->verbose) echo "{$this->indent}fail: no tokens and NO empty production found\n";
+        if ($this->verbose) echo "{$this->indent}===========leaving production()===========\n";
+        array_shift($this->token_pointer_stack[$nonterminal_name]);
+        return FALSE;
+      }
+    }
+
+    // have tokens, so check non-empty transitions
+    foreach ($nt_node->productions as $production) {
+      if ($this->verbose) echo "\n=========Checking production: {$nt_node->production_as_string($production)}\n";
+
+      // there are tokens, so check them
+      foreach ($production as $symbol) {
+        $token = $this->scanner->token();
+        // list($token_type, $token_value, $line_no) = $this->scanner->token();
+        switch ($symbol->type) {
+          case ParserLangDefParser::TERMINAL:
+            if ($token->syntactic_value == $symbol->value) {
+              if ($this->verbose) echo $this->display_parser_state("  terminal '$symbol' found: line " . __LINE__);
+              // $type, $value, $render_value, $execution_code, $semantic_name
+              $nd = new $this->node_class_name(ParserNode::LITERAL, $token->syntactic_value, $token->syntactic_value,
+                  $symbol->semantic_value, $symbol->semantic_name);
+              $nd->verbose = $this->verbose;
+              $this->cur_node->add_node($nd);
+              $this->scanner->advance();
+            } else {
+              if ($this->verbose) echo $this->display_parser_state("  terminal '$symbol' not found: line " . __LINE__);
+              $this->cur_node->discard_nodes();
+              $this->scanner->push_back($this->scanner->token_pointer - $this->token_pointer_stack[$nonterminal_name][0]);
+              continue 3;
+            }
+            break;
+          case ParserLangDefParser::NONTERMINAL:
+            // if ($this->verbose) echo $this->display_parser_state("checking for non-terminal $symbol: line " . __LINE__);
+            $nt_node_tmp = $this->productions[$symbol->value];
+            $nd = new $this->node_class_name(ParserNode::PRODUCTION, $nt_node_tmp->value, '', '', $nt_node_tmp->semantic_name);
+            $nd->verbose = $this->verbose;
+            $this->cur_node->add_node($nd);
+            // make 'cur_node'
+            $this->push_node($nd);
+            // if ($this->verbose) echo $this->display_parser_state("after creating node for non-terminal $symbol: line " . __LINE__);
+            if ($this->{"{$symbol->value}"}($symbol->value)) {
+              $this->pop_node();
+              if ($this->verbose) echo $this->display_parser_state("  production $symbol found: line " . __LINE__);
+            } else {
+              // if ($this->verbose) echo $this->display_parser_state("  production '$symbol' not found: line " . __LINE__);
+              // rewind the scanner
+              $this->scanner->push_back($this->scanner->token_pointer - $this->token_pointer_stack[$nonterminal_name][0]);
+              // pop off the node wejust checked
+              $this->pop_node();
+              // now cur_node is the guy we were appending nodes to, so we need to discard everything
+              //   we added in the current, failed production
+              $this->cur_node->discard_nodes();
+              if ($this->verbose) echo $this->display_parser_state("  Production $symbol not found: line " . __LINE__);
+              continue 3;
+            }
+            break;
+          case ParserLangDefParser::SEMANTIC_ACTION:
+            if ($this->verbose) echo $this->display_parser_state("  semantic action '$symbol' found: line " . __LINE__);
+            $nd = new $this->node_class_name(ParserNode::ACTION, 'semantic action', "{{$symbol->value}}",
+                  "$symbol->value", $symbol->semantic_name);
+            $nd->verbose = $this->verbose;
+            $nd->action_prefix = &$this->language->action_prefix;
+            $nd->action_suffix = &$this->language->action_suffix;
+            $this->cur_node->add_node($nd);
+            break;
+          case ParserLangDefParser::ERROR:
+            if ($this->verbose) echo $this->display_parser_state("  error message '$symbol' found: line " . __LINE__);
+            $nd = new $this->node_class_name(ParserNode::MESSAGE, 'error message', $symbol->value,
+                "echo '{$symbol->value}' . \"\n\";", $symbol->semantic_name);
+            $nd->verbose = $this->verbose;
+            $this->cur_node->add_node($nd);
+            $this->scanner->advance();
+            break;
+          default:
+            if ($this->verbose) echo $this->display_parser_state("  Language Definition Error: '$symbol' not terminal or production " . __LINE__);
+            $this->cur_node->discard_nodes();
+            $this->scanner->push_back($this->scanner->token_pointer - $this->token_pointer_stack[$nonterminal_name][0]);
+            continue 4;
+        }
+      }
+      
+      // at this point, we have processed every symbol in the list of symbols for
+      //  this specific production without returning FALSE, so we have matched the string
+      if ($this->verbose) echo $this->display_parser_state("satisfied production " . $nt_node->production_as_string($production) . "  " . __LINE__);
+      if ($this->verbose) echo "{$this->indent}===========leaving production()===========\n";
+      array_shift($this->token_pointer_stack[$nonterminal_name]);
+      return TRUE;
+    }
+    
+    // failed to find a production which works
+    if ($this->verbose) echo $this->dump("no alternative works " . __LINE__);
+    if ($this->verbose) echo "{$this->indent}===========leaving production()===========\n";
+    $this->cur_node->discard_nodes();
+    $this->scanner->push_back($this->scanner->token_pointer - $this->token_pointer_stack[$nonterminal_name][0]);
+    array_shift($this->token_pointer_stack[$nonterminal_name]);
+    return FALSE;
+  } // end of production()
+  
+  public function display_parser_state($msg) {
+    $idx = count($this->node_stack);
+    $token = $this->scanner->token();
+    $next_token = $this->scanner->next_token();
+    $str = "\nParser State: $msg\n";
+    $str .= "token_pointer: {$this->scanner->token_pointer}; token: ({$token[0]}, '{$token[1]}', {$token[2]}); next_token: ({$next_token[0]}, '{$next_token[1]}')\n";
+    $str .= "node stack depth: $idx\n";
+    $indent = '';
+    $str .= "node stack:\n";
+    while ($idx-- > 0) {
+      $str .= "{$indent}{$this->node_stack[$idx]}: {$this->node_stack[$idx]->render()}\n";
+      // $str .= $this->node_stack[$idx]->dump("Node $idx");
+      $indent .= '  ';
+    }
+    $str .= "token_pointer_stack: (top on left):\n";
+    foreach ($this->token_pointer_stack as $prod => $stack) {
+      $str .= " $prod: [" . implode(' > ', $stack) . "]\n";
+    }
+    return $str;
+  } // end of display_parser_state()
+
+  // display section
+  public function render($tree = NULL) {
+    return $this->root->render();
+  } // end of render()
+
+  public function execute($tree = NULL) {
+    $this->root->execute();
+    return $this->root->execution_value;
+  } // end of execute()
+  
+  public function dump($msg = '') {
+    $token = $this->scanner->token();
+    $next_token = $this->scanner->next_token();
+    $str = "{$msg}: ptr: {$this->ptr}; token: ({$token[0]}, '{$token[1]}');"
+      . " nxt: ({$next_token[0]}, '{$next_token[1]}');"
+      // . " node_stack: {$this->render()}:"
+      // . " str: '$this->str'"
+      . "\n";
+    return $str;
+  } // end of dump()
+}

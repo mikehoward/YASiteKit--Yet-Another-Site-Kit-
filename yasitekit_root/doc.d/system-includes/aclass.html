@@ -1,0 +1,1199 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>aclass.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> aclass.php &#8211; Base Classes for persistent data</h1>
+
+<p>Created by  on 2010&#8211;02-13.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>Back in the Generic Object game &#8211; once again.</p>
+
+<p>This module defines five classes:</p>
+
+<ul>
+<li>AnEncryptor for encapsulating encryption and decryption operations</li>
+<li>AClassCmp is used to define comparision functions for arrays of AnInstance objects.
+<a href="#aclasscmp">see below</a> for details</li>
+<li>AClass for defining classes which persist in tables. <a href="#aclass">see below</a></li>
+<li>AnInstance for instances of these classes. <a href="#aninstance">see below</a></li>
+<li>AJoin for table/class joins among classes and join instances among
+AnInstance instances of these classes. This is facistly limited
+to joins on keys between AClass instances. <a href="#ajoin">see below</a></li>
+<li>AManager which encapsulates simple form processing. <a href="#amanager">see</a></li>
+</ul>
+
+<p>This implementation has modest support for:</p>
+
+<ul>
+<li>general character data &#8211; fixed length (char), variable but bounded length (varchar),
+and unlimited (text)</li>
+<li>specialized character &#8211; for email addresses (email), discrete single character values (enum),
+zero or more token values (set), and file &#8211; such as images, and other stuff (file).</li>
+<li>numbers &#8211; int and float</li>
+<li>dates &#8211; date data (date), time of day (time) [actually time in seconds from any arbitrary
+starting point], and time stamps &#8211; including both date and time of day (datetime)</li>
+</ul>
+
+<h2 id="anencryptor">AnEncryptor &#8211; Encryption encapsulation</h2>
+
+<p>AnEncryptor instances are named objects which know how to encrypt and decrypt
+strings. Each <em>AnEncryptor</em> is defined by its key value, is retained between sessions
+in a well known database table, and cached within session to reduce database access
+overhead.</p>
+
+<p>All encryptors use the TwoFish encryption algorithm.</p>
+
+<p>It&#8217;s very important that this module not be readable on the net betcause the master
+key to the database is given in plain text. The keys to all AnEncryptor instances are
+encrypted in the database to reduce the security problem to securing this source code.</p>
+
+<h3>Attributes</h3>
+
+<p>There are <em>no</em> public attributes.</p>
+
+<h3>Class Methods</h3>
+
+<ul>
+<li>AnEncryptor::get_encryptor($dbaccess, $name) &#8211; returns an AnEncryptor
+instances. The <em>key</em> is either  read from the database table &#8216;_encryptors&#8217;
+OR randomly generated.
+<ul>
+<li>$dbaccess &#8211; a valid DBAccess object</li>
+<li>$name &#8211; the AnEncryptor name &#8211; which must satisfy [a-z][_0&#8211;9a-z]&#042;</li>
+</ul>
+</li>
+<li>AnEncryptor::create_table($dbaccess) &#8211; creates the encryptors table,
+if it does not exist.</li>
+<li>AnEncryptor::php_create_string($dbaccess, $dump_dir) &#8211; writes <span class="caps">PHP</span> code to
+a file named _encrpytor.php
+which can be used to recreate the AnEncryptor table and objects in a clean
+datatbase</li>
+</ul>
+
+<p><span class="caps">NOTE</span>: the AnEncryptor supports simultaneous access to multiple databases.</p>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>encrypt($value) &#8211; returns a bas64 encoded string containing the encrypted form
+of the value</li>
+<li>decrypt($value) &#8211; returns the original value. Note that <em>value</em> must be a
+a base64 encoded string returned by the <em>encrypt</em> method of this same AnEncryptor &#8211; or at least one created with exactly the same key.</li>
+</ul>
+
+<h3>Other methods</h3>
+
+<p>All other methods are private.</p>
+
+<h2 id="aclasscmp">AClassCmp &#8211; comparision objects.</h2>
+
+<p>An AClassCmp object is a comparison function which can be used to sort
+arrays of AnInstance objects. You use it by creating an instance of AClassCmp
+which defines the fields involved in the comparision and whether they are
+sorted in ascending or descending sequence. You then simply pass this
+instance to <em>usort()</em> &#8211; the <span class="caps">PHP</span> user defined array sort function. The object
+will be invoked as a function, which will trap to the __invoke() magic method
+and all good things happen.</p>
+
+<p>The argument to the AClassCmp constructor may be:</p>
+
+<ul>
+<li>a function (in which case it is redundant)</li>
+<li>an array of field names</li>
+<li>a comma separated list of field names.</li>
+</ul>
+
+<p>Each field name may be optionally suffixed by a direction indicator.
+(<em>more detail immediately below</em>)</p>
+
+<p>For example: new AClassCmp(&#8216;foo,bar:desc,baz:asc&#8217;) will create an object which
+is callable and compares the fields &#8216;foo&#8217;, &#8216;bar&#8217;, and &#8216;baz&#8217; of an array of
+some sort of object. <em>foo</em> and <em>baz</em> ar compared in <em>ascending</em> order, whereas
+<em>bar</em> is compared in <em>descending</em> order &#8211; where ascending and descending have the
+usual precise which is determined by the underlying colating order of the character
+set.</p>
+
+<h3>Instantiation</h3>
+
+<p>$foo = new AClassCmp(arg) &#8211; where <em>arg</em> is:</p>
+
+<ul>
+<li>a callable &#8211; in which case $foo is simply a wrapper for the function. It is
+not checked in any way.</li>
+<li>array &#8211; an array of strings of field/attribute names. Each may be optionally
+followed by a colon (:) and a sort direction indicator.</li>
+<li>string &#8211; a comma separated list of field/attribute names, with optional sort indicator.</li>
+</ul>
+
+<p>Sort indicators are:</p>
+
+<ul>
+<li>a, asc, + or absent &#8211; indicating <em>ascending</em> sort</li>
+<li>d, desc, or &#8211; - indicating <em>descending</em> sort</li>
+</ul>
+
+<p><span class="caps">NOTE</span>: field names must satisfy the regular expression [a-z]\w*. If they fail, an exception
+is thrown. The regular expression is anchored at both ends of the field name (if you don&#8217;t
+know what this means, don&#8217;t worry about it)</p>
+
+<h3>Attributes</h3>
+
+<p>None</p>
+
+<h3>Class Methods</h3>
+
+<p>None &#8211; unless you want to count the magic methods __toString() and __invoke()</p>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>dump(msg = &#8217;&#8217;) &#8211; returns a description of the object.</li>
+</ul>
+
+<h2 id="aclass">AClass &#8211; a class class</h2>
+
+<p>AClass is used as a base class for higher level structures. It
+serves as the basic object-relational mapper.</p>
+
+<p>AClass supports the following <em>useful</em> data types.</p>
+
+<ul>
+<li>char &#8211; fixed length character data</li>
+<li>varchar &#8211; variable length, but bounded character data</li>
+<li>text &#8211; arbitrary length character data</li>
+<li>email &#8211; an email address &#8211; satisfies
+(?P&lt;user&gt;[a-z0&#8211;9_][-a-z0&#8211;9_]&#042;)@(?P&lt;domain&gt;[a-z_0&#8211;9][-a-z_0&#8211;9]&#042;(\.[a-z_0&#8211;9][-a-z_0&#8211;9]&#042;)\.[a-z]+)
+and fits within varchar(255)</li>
+</ul>
+
+<ul>
+<li>blob &#8211; arbitrary data &#8211; of things like object-maintained arrays. Blobs
+are always readonly and managed programatically. They are also invisible
+in forms. The default &#8216;default&#8217; value is an empty string; this which may be overridden
+by explicitly setting the <em>default</em> property. Blobs are stored in base64 formated strings</li>
+</ul>
+
+<ul>
+<li>pile &#8211; collection of key-value pairs &#8211; this allows an object to have arbitrary attributes. See
+<a href="#pile">pile</a> for details. <em>piles</em> are implemented as arrays and must be managed programatically.</li>
+</ul>
+
+<ul>
+<li>enum &#8211; one of a discrete set of words</li>
+<li>set &#8211; zero or more values from a specified set</li>
+</ul>
+
+<ul>
+<li>file &#8211; data is either empty of a path to a local file. The default forms
+present a <em>file</em> input element. The default display form presents the local file path &#8211; which almost <em><strong>never</strong></em> what you want.</li>
+</ul>
+
+<ul>
+<li>int &#8211; an integer</li>
+<li>float &#8211; a floating point number</li>
+<li>date, time, and datetime &#8211; <span class="caps">PHP</span> DateTime structure</li>
+</ul>
+
+<ul>
+<li>link &#8211; links to a single instance of a different AnInstance class</li>
+<li>join &#8211; join to another different AClass object instance. Suppports both 1 to 1 and
+1 to many joins.</li>
+<li>category &#8211; 0 or more category classification values</li>
+</ul>
+
+<p>Each class definition must have at least one unique key. Legal key types are:
+&#8216;char&#8217;, &#8216;varchar&#8217;, &#8216;enum&#8217;, &#8216;set&#8217;, &#8216;email&#8217;, &#8216;date&#8217;, &#8216;time&#8217;, &#8216;datetime&#8217;, and &#8216;int&#8217;.
+No other type may be used as a key.</p>
+
+<h3>Constructor</h3>
+
+<p><strong>new AClass(cls_name, keys_list, attribute_defs, property_defs)</strong> where</p>
+
+<ul>
+<li>cls_name satisfies [a-z_0&#8211;9][_a-z0&#8211;9]&#042; and is used for:
+<ul>
+<li>the name of the class</li>
+<li>the name of the table which provides persistence.</li>
+</ul>
+</li>
+<li>keys_list is either the name of the single unique key used to access the
+object or an array of unique attribute names which are used as a compound
+key.</li>
+<li>attribute_defs is an associative array key&#8217;ed by attribute name, with data type values:
+<ul>
+<li>attribute names <span class="caps"><span class="caps">MUST</span></span> satisfy [a-z][_a-z0&#8211;9]&#042; &#8211; i.e. lower case alphameric beginning
+with a lower case letter.</li>
+<li>data types are defined below</li>
+<li>attribute titles are string literals which are displayed in default forms
+and instance renerings.</li>
+</ul>
+</li>
+</ul>
+
+<h4 id="aclass_types">Data Types</h4>
+
+<p>Text data types &#8211; mostly varying in the size of the string.</p>
+
+<ul>
+<li>char(&lt;num&gt;) &#8211; where <em>num</em> is an integer in the range 0 through 255</li>
+<li>varchar(&lt;num&gt;) &#8211; as in char</li>
+<li>email &#8211; an email address</li>
+<li>text &#8211; arbitrary, more or less unlimited text</li>
+</ul>
+
+<p>Files</p>
+
+<ul>
+<li>file(PATH[,public|private])- uploadable file &#8211; <ul>
+<li><em>path</em> property holds local path template for
+path to file, which is relative to either the <em>document_root</em> or <em>private_data_root</em>.
+The default <em>path</em> is &#8216;files/{{$attr}}, where <em>$attr</em> is the name of the field, so that
+the path ends up being &#8216;files/{field-name}&#8217;. i.e. &#8216;file/value-of-field-name&#8217;,
+which probably <em>not</em> what you want. You should replace it with something
+like: &#8216;files/{some-unique-attribute-name}&#8217;.
+Because <em>path</em> is in a <a href="#aclass_properties">property</a>, it is easy to modify
+the value using <em>put_prop()</em>.</li>
+<li>the second parameter is optional and, if present, <em>must</em> be either &#8216;public&#8217; or  &#8216;private&#8217;.
+If absent, the path root defaults to &#8216;public&#8217; &#8211; which is <em>document_root</em>. If set to
+&#8216;private&#8217;, then the file path is rooted in <em>private_data_root</em>.</li>
+</ul>
+</li>
+</ul>
+
+<p>Enumearated (essentially discrete) data:</p>
+
+<ul>
+<li>enum(VALUES) &#8211; where <em>values</em> is a comma separated list of words. For example:
+<em>enum(Y,N,Maybe)</em></li>
+<li>set(VALUES) &#8211; where <em>values</em> is a comma separated list of words</li>
+</ul>
+
+<p>Scalar data &#8211; one value per entity and fairly simple.</p>
+
+<ul>
+<li>int</li>
+<li>float or float(DIGIT) &#8211; The second form sets the precision following the
+decimal point to <em>digit</em> digits</li>
+<li>date &#8211; satisfies dd-mm-yyyy</li>
+<li>time &#8211; satisfies hh:mm:ss</li>
+<li>datetime satisfies dd-mm-yyy hh:mm:ss</li>
+</ul>
+
+<p>Related Data: The following relate the record to other entities. The <em>join</em> data type
+is a &#8216;convenient&#8217; interface to AJoin objects &#8211; which create and manage
+relations between AClass objects. The <em>link</em> data type is a simplified
+<em>join</em>. It differs from the <em>join</em> type in that it does <em>not</em> use an
+AJoin table, can only link to a single instance of the <em>other</em> object,
+the other object cannot have a compound key, and the actual value of the
+<em>key</em> value of the other object is stored in the <em>link</em> variable.
+<em>category</em> data is an entirely different animal &#8211; see the discussion below
+and in <a href="/doc.d/system-objects/Category.html">Category.php</a>.</p>
+
+<ul>
+<li>link(Object.display-field-name) &#8211; where Object is the name of an
+AClass object with a simple key (only one key field). <em>display-field-name</em>
+is the name of the attribute to display in an <span class="caps">HTML</span> Select element. This
+creates a link to a single instance of <em>Object</em>.</li>
+<li>join(Object.display-field-name[,multiple]) &#8211; where Object is the name of an AClass object.
+<em>display-field-name</em> is the name of the field to display in the <em>select</em>
+element option list. If the optional <em>multiple</em> flag is set, then this is a
+1 to N join, otherwise only one element from <em>Object</em> will be joined to <em>this</em></li>
+<li id="category">category(category_root) &#8211; comma separated list of 0 or more Category paths.
+Categories are restricted to descendents of the specified category root
+The <em>category root</em> is a comma separated list of Category paths
+See <a href="/doc.d/system-objects/Category.html">Category.php</a>
+for a discussion of category objects and paths.
+Here are some examples:
+<ul>
+<li><em>foo</em> &#8211; the Category named <em>foo</em> which is a child of root</li>
+<li><em>foo_bar_baz</em> &#8211; the Category named <em>baz</em> which is a descendent of both &#8216;root&#8217;
+and <em>foo</em> and is a direct child of <em>bar</em>.</li>
+</ul>
+</li>
+</ul>
+
+<p>Blobs</p>
+
+<ul>
+<li><em>blob</em> data is arbitrary, binary data. Blobs are not displayed in the default
+display and form methods. The support is confined to magic set/get/etc methods
+and persistent storage. Blobs are stored as base64 strings and may be encrypted.</li>
+</ul>
+
+<p id="pile">Piles</p>
+
+<p>A <em>pile</em> is an unordered collection of key-value pairs. In other words: it&#8217;s an
+associative array without all the nice features. This allows dynamic definition
+of collections of loosely related clumps of data. Uses include extensible
+collections of <span class="caps">HTML</span> element attributes, dynamic and user manageable titling, etc.
+It&#8217;s kind of a mini-unstructured data cache.</p>
+
+<p><em>piles</em> are managed using <a href="#pile_methods">pile methods</a>. It is illegal to assign
+a value to a <em>pile</em> field. Getting a <em>pile</em> will return a string containing all
+of the key-value pairs, ordered in ascending <span class="caps">ASCII</span> order of <em>keys</em>.</p>
+
+<p><span class="caps">NOTES</span>:</p>
+
+<ul>
+<li>attributes in the <em>pile</em> are not displayed in either the default display or form methods.</li>
+<li>attributes in the <em>pile</em> are not stored separately in the database. They are not searchable
+or selectable individually.</li>
+<li>the contents of the <em>pile</em> is stored as a serialized array and may be encrypted.</li>
+</ul>
+
+<h3>Attributes</h3>
+
+<ul>
+<li>attribute_defs &#8211; array &#8211; the array used to define all the attributes
+for this AClass instance.</li>
+<li>attribute_dictionary &#8211; associative array &#8211; maps the field names of this
+AClass instance into their respective <em>attribute_defs</em> definition row.</li>
+<li>attribute_names &#8211; array &#8211; array of attribute names</li>
+<li>attribute_token_patterns &#8211; array &#8211; of attribute token patterns useable for
+replacement in templates. Each one looks like &#8217;/{name}/&#8217;, where <em>name</em> is
+the name of an attribute.</li>
+<li>cls_name &#8211; string &#8211; class name of the AClass instance. It is the job of
+the class file to both create the AClass instance and define the class as
+an extention of AnInstance.</li>
+<li>default_title &#8211; strings &#8211; read only &#8211; returns the default display string
+for this instance, if defined. If not defined, returns the key values.</li>
+<li>enctype &#8211; string &#8211; used in creating forms. It is either &#8216;application/x-www-form-urlencoded&#8217;
+or, if there are <em>file</em> type fields, &#8216;multipart/form-data&#8217;.</li>
+<li>hash &#8211; an MD5 hash of the (field name, data type) pairs created
+in an order independent manner. Used to determine if field types have changed.</li>
+<li>keys_list &#8211; array &#8211; array of the names of attributes used as keys</li>
+<li>tablename &#8211; string &#8211; the name of the table used to save instances of this
+class.</li>
+<li>value_names &#8211; array &#8211; array of all attributes which are <span class="caps">NOT</span> keys</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<ul>
+<li>match_datatype($str) &#8211; returns a <em>match array</em> (see <span class="caps">PHP</span> function preg_match()) if
+<em>$str</em> is a legal data type declaration, else <span class="caps">FALSE</span>.</li>
+<li>define_class($cls_name, $keys_list, $attribute_defs) &#8211; creates a class
+definition if it does <span class="caps">NOT</span> exist. Else, throws exception</li>
+<li>existsP($cls_name) &#8211; returns <span class="caps">TRUE</span> if class definition exists in class directory,
+else <span class="caps">FALSE</span></li>
+<li>attribute_existsP($cls_name, $attr) &#8211; returns <span class="caps">TRUE</span> if <em>$cls_name</em> is a defined class
+and has the attribute <em>$attr</em>. Else, returns <span class="caps">FALSE</span>.</li>
+<li>get_class_instance($cls_name) &#8211; returns class definition instance if it exists,
+else throws exception</li>
+<li>get_class_directory() &#8211; returns the array of defined classes.</li>
+<li>create_aclass_hashes_table($dbaccess, $drop_first = <span class="caps">FALSE</span>) &#8211; creates the _aclass_hashes
+table. Drops if it exists if $drop_first is <span class="caps">TRUE</span>, else attempts to create table and
+fails silently if it is already there.</li>
+<li>create_all_tables($drop_first = <span class="caps">FALSE</span>, $warn_on_drop_error = <span class="caps">TRUE</span>) &#8211; creates
+all currently defined tables by calling <em>create_table()</em> on each object in
+<em>class_directory</em>.</li>
+<li>php_defs_ar(aclass_object_names) &#8211; returns an array of AClass object attribute_defs,
+key_lists, and attribute_properties under the keys &#8216;defs&#8217;, &#8216;keys&#8217;, and &#8216;props&#8217;.</li>
+<li>php_create_string(dbaccess, aclass_object_names, $dump_dir) &#8211; write <span class="caps">PHP</span> code to a file
+named _aclasses.php
+which can be used to recreate all the classes which are derived from AClass.
+<em>aclass_object_names</em> is an array of object names.</li>
+</ul>
+
+<h3>Instance Methods</h3>
+
+<p>Public Instance methods:</p>
+
+<p>Support Instance methods are used to support instances of the object.
+This is just a way to keep the code which implements object instances
+in one place.</p>
+
+<ul>
+<li>aclass_hash_values() &#8211; returns a two element array: array($hash, $key_hash).
+Both are MD5 hashes which are used to detect changes to the definitions of
+attributes. <em>$hash</em> is based on <em>all</em> attribute definitions, whereas <em>$key_hash</em>
+uses only the key defintions. A change to an attribute is allowed, but not
+changes to the keys &#8211; thus a change to <em>$hash</em> w/o changing <em>$key_hash</em> generates
+a Model Mismatch event, whereas a change to <em>$key_hash</em> is an Illgal Edit.</li>
+<li>create_table($dbaccess, $drop_first = <span class="caps">FALSE</span>, $warn_on_drop_error = <span class="caps">FALSE</span>) &#8211; attempts to create the table for this instance.
+As a side effect, it also creates an instance of
+the Parameters class for this class and inserts the <em>hash</em> value in the <strong>_aclasses</strong>
+table [creating the _aclasses table if required].
+If table creation fails, the action depends on the value of <em>drop_first</em>.
+<ul>
+<li>if <em>drop_first</em> is <span class="caps"><span class="caps">FALSE</span></span>, then an exception is thrown.</li>
+<li>If <em>drop_first</em> is <span class="caps"><span class="caps">TRUE</span></span>, then attempts to drop the table prior to creating.</li>
+<li>If the table drop fails, then
+<ul>
+<li>if $warn_on_drop_error === <span class="caps"><span class="caps"><span class="caps">TRUE</span></span></span>, then a warning is echoed;</li>
+<li>if == &#8216;ignore&#8217;, then nothing happens</li>
+<li>otherwise an AClassException is thrown.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>obj_to_db($attr, $value, $encryptor) &#8211; returns a string suitable to store in the database
+consistent with the data type of <em>attr</em> and containing the data in <em>value</em>.
+<em>encryptor</em> must be an AnEncryptor object &#8211; if any fields are encrypted.</li>
+<li>db_to_obj($attr, $value, $encryptor) &#8211; returns the object representation of the value
+of <em>attr</em> in the database.</li>
+<li>dump($msg = <span class="caps">NULL</span>) &#8211; returns a string displaying pertenent information about the
+AClass instance. <em>msg</em> is printed if not <span class="caps">NULL</span>.</li>
+</ul>
+
+<h4 id="aclass_props">Properties</h4>
+
+<p>Metadata for fields are maintained in property lists. Property values
+can be anything, but at present only strings, booleans, numbers, and
+arrays are used. Some properties are always present, while some relate
+only to the type of field.</p>
+
+<p>These are managed by four functions.</p>
+
+<ul>
+<li>prop_name_exists($prop_name) &#8211; returns <span class="caps">TRUE</span> if <em>prop_name</em> is a legal
+property name, else <span class="caps">FALSE</span>. Used for testing</li>
+<li>put_prop($name, $prop_name, $value = <span class="caps">TRUE</span>) &#8211; defines the property <em>prop_name</em>
+for field <em>name</em>. If <em>value</em> is omitted, then <em>prop_name</em> becomes a boolean with value <span class="caps">TRUE</span>.</li>
+<li>append_to_prop($name, $prop_name, $value) &#8211; appends <span class="caps">STRING</span> values to a <span class="caps">STRING</span> valued
+property. If the property exists and is boolean, then throws exception. If exists then
+is treated as a string and a space followed by <em>$value</em> are appended. Otherwise <em>$value</em>
+is assigned to the property.</li>
+<li>has_prop($name, $prop_name) &#8211; returns <span class="caps">TRUE</span> if <em>name</em> has property <em>prop_name</em>, else
+<span class="caps">FALSE</span>.</li>
+<li>get_prop($name, $prop_name) &#8211; returns value of <em>prop_name</em> or <span class="caps">FALSE</span> if it is
+not defined.</li>
+</ul>
+
+<p>Legal properties are:</p>
+
+<ul>
+<li>category_root &#8211; string &#8211; used by <em>category</em> data types to store the
+root category.</li>
+<li>category_deep &#8211; boolean &#8211; Controls depth of category options list. If <span class="caps">TRUE</span>,
+the all descendents are included in list; if <span class="caps">FALSE</span> then only children.</li>
+<li>default &#8211; string &#8211; optional &#8211; default value for this field. Used only
+if not defined otherwise. If not defined, then field is set to <span class="caps">NULL</span>.</li>
+<li>display_attributes &#8211; string &#8211; optional &#8211; attributes to add to display
+html segment</li>
+<li>display_classes &#8211; string &#8211; optional &#8211; classes to add to display html
+segment</li>
+<li>display_html &#8211; string &#8211; always present &#8211; html used to display the field</li>
+<li>encrypt &#8211; boolean &#8211; present only if field is to be encrypted</li>
+<li>enums &#8211; array &#8211; defined <span class="caps">ONLY</span> for <em>enum</em> and <em>set</em> data types</li>
+<li>filter &#8211; string &#8211; content of a regular expression which text, char, varchar data must
+satisfy in order to properly set a value. This expression should <span class="caps">NOT</span> contain
+any anchors or starting and ending delimiters. They will be added automatically.</li>
+<li>format &#8211; string &#8211; defined only for int and floats</li>
+<li>form_attributes &#8211; string &#8211; optional &#8211; attributes to add to form
+html segment</li>
+<li>form_classes &#8211; string &#8211; optional &#8211; classes to add to form html segment</li>
+<li>form_html &#8211; string &#8211; always present &#8211; html used to edit field value</li>
+<li>form_html_func &#8211; string &#8211; optional &#8211; name of instance method to call
+to create <em>form_html</em> value. Supports dynamic creation of input
+elements. See <a href="#aninstance_form_html_func">below</a> for details of how to
+write a function and an example.</li>
+<li>immutable &#8211; boolean &#8211; present only for immutable fields. Immutable fields
+may only be initialized. <span class="caps">NOTE</span>: all key fields are <em>immutable</em></li>
+<li>invisible &#8211; boolean &#8211; present for fields which are <span class="caps">NOT</span> displayed</li>
+<li>joins and join_display_field &#8211; these properies are <em>only</em> used for
+<em>join</em> data types and are managed automatically by the AClass and AnInstance
+objects. It is a <em>bad idea</em> to manage them directly.
+<ul>
+<li>joins &#8211; string &#8211; present only for &#8216;link&#8217; and &#8216;join&#8217; field types.
+Content is the AClass name of the joined field. Note that this <span class="caps"><span class="caps">ONLY</span></span> supports
+1&#8211;1 and 1-N relationships and only in the object which on the &#8216;1&#8217; side.</li>
+<li>join_display_field &#8211; string &#8211; present only for &#8216;join&#8217; field types &#8211; field name from joined object to display in <em>select</em> element.</li>
+</ul>
+</li>
+<li>key &#8211; boolean &#8211; present if this is a key field</li>
+<li>multiple &#8211; boolean &#8211; only applies to <em>join</em> data types and indicates a
+1 to N relationship.</li>
+<li>path &#8211; string &#8211; defined only for <em>file</em> types. May contain zero or more
+substitution values of the form {field-name}. This is the same substitution
+mechanism used for <span class="caps">HTML</span> rendering.</li>
+<li>precision &#8211; int &#8211; only definable for floats. must be an integer between 0 and 9,
+inclusive. Is set automatically with the float(DIGIT) declaration form.</li>
+<li>private &#8211; boolean &#8211; if present, then is not displayed in default form, render,
+or dump &#8211; automatically sets <em>invisible</em></li>
+<li>public &#8211; boolean &#8211; if present, then is displayable via web service interface</li>
+<li>readonly &#8211; boolean &#8211; if present, value cannot be modified via a form</li>
+<li>required &#8211; boolean &#8211; optional &#8211; used to indict field must be filled in</li>
+<li>sql_name &#8211; string &#8211; always present &#8211; used in constructing joins. Consists
+of &lt;tablename&gt;.&lt;fieldname&gt;.</li>
+<li>sql_type &#8211; string &#8211; always present &#8211; used in create table statement. Generally
+differs from <em>type</em> because <em>type</em> is the field type and <em>sql_type</em> defines
+the database column used to contain the values of the field</li>
+<li>title &#8211; string &#8211; always present &#8211; title used in <span class="caps">HTML</span> when displaying or
+editing this field</li>
+<li>type &#8211; string &#8211; always present &#8211; the AClass field type. <a href="#aclass_types">see above</a></li>
+<li>unique &#8211; must have unique value in db &#8211; this is distinct simple and compound key uniqueness</li>
+<li>where &#8211; string &#8211; used in <em>join</em> and <em>link</em> data types. Allows a <em>where</em> constraint
+for joining values. Format is as an <span class="caps">SQL</span> <span class="caps">WHERE</span> clause. Allows {field-name} interpolations.</li>
+<li><span class="caps">IMPORTANT</span> <span class="caps">NOTE</span>:* this <em>only</em> works for _select_elt_join_list() which returns
+an <span class="caps">HTML</span> <em>select</em> element for the join. Assignment, <em>add_to_join()</em> and <em>delete_from_join()</em>
+ignore the <em>where</em> clause.</li>
+<li>width &#8211; int &#8211; not always present. See the code</li>
+</ul>
+
+<h2 id="aninstance">AnInstance &#8211; a class for instances</h2>
+
+<p>An AnInstance object is the base class for implementing AClass objects.
+It wraps a single instance of AClass &#8211; which it uses to provide support
+for object / database mapping, consistency checking, etc.</p>
+
+<p>While AnInstance is not an abstract class so it should never be used directly.
+It should always be subclassed.</p>
+
+<p>Derived classes of AnInstance should <em>not</em> be extended.</p>
+
+<ul>
+<li><a href="#aninstance_attributes">Attributes</a></li>
+<li><a href="#aninstance_class_methods">Class Methods</a></li>
+<li><a href="#aninstance_instance_methods">Instance Methods</a></li>
+<li>&#8220;Properties&#8221;#aninstance_props</li>
+</ul>
+
+<h3>Creating Subclasses</h3>
+
+<p>Subclass as follows:</p>
+
+<ol>
+<li>create the object definition using AClass::define_class()</li>
+<li>subclass AnInstance using the same <em>cls_name</em> used in <em>AClass::define_class()</em></li>
+<li>create object instances of the new class using the optional <em>key_values</em> or
+<em>attr_values</em>.</li>
+</ol>
+
+<p>Here&#8217;s an example from the test driver:</p>
+
+<pre>
+ define the attributes of _test_class_ using an array of tripples: attribute name,
+   attribute type, and attribute title
+$test_class_def = array(
+array("text_var", "text", "Text"),
+array("char_var","char(10)", "Char"),
+array("varchar_var", "varchar(200)", "Varchar"),
+array("enum_var", "enum(Y,N)", "Yes or No"),
+array("email_var", "email", "Email"),
+array("file_var", "file", "File Variable"),
+array("int_var", "int", "Int"),
+array("float_var", "float", "Float"),
+array("date_var", "date", "Date"),
+array("time_var", "time", "Time"),
+array("datetime_var", "datetime", "DateTime"),
+);
+</pre>
+<pre>
+ create the class definition as an instance of AClass
+AClass::define_class('TestClass', 'char', $test_class_def);
+</pre>
+<pre>
+ subclass AnInstance. This is boilerplate. The only thing which will
+  change is the argument 'TestClass' in parent::__construct() - that
+  will change to the name of your class
+</pre>
+<pre>
+NOTE: dbaccess is an instance of DBAccess - which will save the data
+</pre>
+<pre>
+class TestClass extends AnInstance {
+public function __construct($dbaccess, $attr_values = NULL) {
+parent::__construct('TestClass', $dbaccess, $attr_values);
+} // end of __construct()
+}
+</pre>
+<pre>
+ create instances as needed. This creates an empty instance.
+$test_instance = new TestClass($dbaccess);
+</pre>
+<pre>
+ create an instance which attempts to initialize from the database where
+  the value of _char_ [the key defined in _define_class()_] has the value _foo_
+$t2 = new TestClass($dbaccess, array('char' => 'foo'));
+</pre>
+<pre>
+ create an instance which initializes the values using the values in the
+  values array.
+$t3 = new TestClass($dbaccess, array('char' => 'foo', ...));
+</pre>
+
+<h3>Accessing Subclasses</h3>
+
+<p>Each AnInstance subclass is defined by an AClass instance. All AClass instances
+must define one or more key fields, so AnInstance subclasses are uniquely
+specified by their AClass class name and the values of their key fields.</p>
+
+<p>For various reasons of complexity and performance (and personal laziness),
+it is illegal to change the value of an key field, once it has been defined.</p>
+
+<h3>Integrity</h3>
+
+<p>AnInstance subclasses implicitly maintain two copies of the data they contain:
+* the object copy which is referenced by the software
+* the database copy which is referenced and refreshed by the <em>load()</em> and <em>save()</em>
+methods. [NOTE: <em>load()</em> is automatically and implicitly called when an instance
+is created with <em>key_values</em> specified].</p>
+
+<p>This poses a problem if the same object instance is instantiated using the same
+class type and key values. AnInstance does not address this &#8211; except to say
+<em>caveat emptor</em>.</p>
+
+<h3 id="anininstance_attributes">Attributes</h3>
+
+<p>All defined attributes for the class are available as well as the following
+read-only attributes from the AClass instance:</p>
+
+<ul>
+<li>cls_name &#8211; the name of the AClass instance &#8211; used to identify the class and
+also for the database table used for persistent storage</li>
+<li>attribute_names &#8211; array of attribute names which is in the same order as the
+<em>attribute_defs</em> array used to create the class.</li>
+<li>attribute_token_patterns &#8211; an associative array mapping attribute names to Perl
+regular expressions of the form /{attribute-name}/. These are used to instantiate
+template strings which contain strings of the same form.</li>
+<li>enctype &#8211; either &#8216;application/x-www-form-urlencoded&#8217; or, if there are <em>file</em> type
+fields, &#8216;multipart/form-data&#8217;.</li>
+<li>keys_list &#8211; list of the names of the key fields</li>
+<li>tablename &#8211; name of the table in the database which contains data for the instance</li>
+<li>value_names &#8211; names of all the non-key attributes.</li>
+<li>dbaccess &#8211; the DBAccess object which holds this AnInstance&#8217;s data</li>
+<li>record_in_db &#8211; boolean &#8211; <span class="caps">TRUE</span> if record is in database, else <span class="caps">FALSE</span></li>
+</ul>
+
+<p><span class="caps">IMPORTANT</span> <span class="caps">NOTE</span>: joins between object are supported for 1&#8211;1 and 1-N joins. Use
+the &#8216;join&#8217; data type for the left side. Direct assignments to the
+&#8216;join&#8217; attributes invoke <em>assign_join_value()</em> to update &#8216;join&#8217; fields.
+Consequently, the <em>value</em> assigned must conform to the rules of <em>assign_join_value()</em>:
+it must be an instance of the joined object, an array of key-value pairs, or
+an encoded version of this array (as generated by <em>encode_key_values()</em>).
+Retrieving the value of a &#8216;join&#8217; field takes one of two forms:</p>
+
+<ul>
+<li>$this->field_name &#8211; returns an array of all foreign objects which are joined
+to <em>this</em> via <em>field_name</em>. This is usually what you want for programmatic access.
+For display access, you will probably want <em>join_value_of()</em>.</li>
+<li>$this->join_value_of(field_name) &#8211; which returns the value of the &#8216;join_display_field&#8217;
+field of the foreign object which is joined to. This is usually what you want to
+display, but not for programmatic access.</li>
+</ul>
+
+<h3 id="aninstance_class_methods">Class Methods</h3>
+
+<p>new AnInstance(cls_name, dbaccess, attr = array()) creates a new AnInstance object.
+Generally <em>attr</em> must be an array of (attribute, value) pairs. As a miminum, it should
+contain values for the key attributes of the class. <em>As a convenience</em>, if the
+class has a single key, then <em>attr</em> may be a single value which will be implicitly
+matched against the single class key.</p>
+
+<ul>
+<li>existsP(cls_name, dbaccess, attr_values = array()) &#8211; returns <span class="caps">TRUE</span> if specified
+instance exists in <em>dbaccess</em>. Returns <span class="caps">FALSE</span> if not or if keys are not sufficiently
+specified. As, in the constructor, <em>attr_values</em> may be a string if, and only if,
+the class has a single, rather than mulitple, keys.</li>
+<li>static_decode_key_values($str) &#8211; returns a key value array from a url encoded,
+serialize string OR &#8217;&#8217; if $str is false in some sense.</li>
+<li>php_create_string($dbaccess, $aclass_object_names, $dump_dir) &#8211; write <span class="caps">PHP</span> code which can be used to recreate
+all the AnInstance objects <span class="caps">AND</span> all objects in the <em>aclass_object_names</em> list which
+define a static function <em>php_create_string(dbaccess, dump_dir)</em>
+in the database to a &#8216;dump&#8217; file.
+<em>$dbaccess</em> is a DBAccess instance. <em>$aclass_object_names</em> is an array
+of object names to dump.
+<em>$dump_dir</em> is the path to a diretory in which to write dump files. Each dump file
+is named <em>object-name</em>.dump, where <em>object-name</em> is the name of the object being
+dumped.</li>
+</ul>
+
+<h3 id="aninstance_instance_methods">Instance Methods</h3>
+
+<h4>Key field support:</h4>
+
+<ul>
+<li>instance_existsP(attr_ar) &#8211; array of attributes or value of single key or whatever.
+Returns <span class="caps">TRUE</span> if there are one or more instances in the database which satisfy <em>attr_ar</em>
+as a <em>where</em> clause. [This is a convenience function which calls Classname::existsP(...)].</li>
+<li>key_values_complete() &#8211; returns <span class="caps">TRUE</span> if all key values are completely defined,
+else <span class="caps">FALSE</span></li>
+<li>key_value() &#8211; returns either:
+<ul>
+<li>the value of the key, if the object has a simple key</li>
+<li>the value of encode_key_values() (below)</li>
+</ul>
+</li>
+<li>compute_key_values() &#8211; returns an associative array where the keys are key field
+names for this AnInstance and values are the current values of those fields.
+Does <span class="caps">NOT</span> check <em>key_values_complete()</em>.</li>
+<li>encode_key_values() &#8211; returns urlencoded, serialized version of <em>compute_key_values()</em>.
+Used in forms and text fields which need to reference another object.</li>
+<li>decode_key_values($str) &#8211; returns:
+<ul>
+<li>$str if <em>$str</em> is not a urlencoded array &#8211; that is: the result of <em>encode_key_values()</em></li>
+<li>associative array produced by privious call
+to <em>encode_key_values()</em>. This does not reference <em>this</em> object, so it can
+be used to instantiate foreign objects. This <em>actually</em> calls AnInstance::static_decode_key_values().</li>
+</ul>
+</li>
+</ul>
+
+<h4>Link Support</h4>
+
+<p>Link attributes hold the value of the key of the instance they are linked to. Thus,
+$foo->link_name returns the key, not the object. To get the object, use <em>link_value_of()</em>.</p>
+
+<ul>
+<li>link_value_of($attr) &#8211; returns instance of object linked to or <span class="caps">FALSE</span> if the link
+is not defined.</li>
+</ul>
+
+<h4>Join Support</h4>
+
+<p><span class="caps">NOTE</span>: assigned values for <em>join</em> files can be an instance of an object
+derived from AnInstance, an array of key:value pairs which uniquely specify
+the object, a single key value for objects which do not have compound keys, or
+an array containing a mixture of these values.
+The object type <span class="caps">MUST</span> match the &#8216;joins&#8217; property of <em>attr</em>. The assignment
+uses the AJoin::update_join() instance method: thus the <em>join</em> will be changed
+to contain <em>exactly</em> the object(s) listed in the assignment. In other words,
+this is a <em>destructive</em> assignment. Use <em>add_to_join()</em> and <em>delete_from_join()</em>
+(below) to add and delete without disturbing already
+existing join relationships.</p>
+
+<p>All joined objects can be retrieved by referencing the attribute &#8211; as in $obj->foo.
+[this returns an array of all currently joined foreign objects]</p>
+
+<ul>
+<li>join_value_of($attr) &#8211; returns a string created by selecting all of the foreign object joined to
+and extracting their <em>join_display_field</em> values. The values are concatenated
+together with comma (,) delimiters.
+The string may be empty.</li>
+<li>__get() &#8211; simply referencing the attribute returns an array of all joined objects.</li>
+<li>add_to_join(value(s)) &#8211; addes the indicated objects to the join. <em>values</em> may be:
+<ul>
+<li>a single instance of the foreign object</li>
+<li>attribute values which can be used to instantiate an instance of the object &#8211; key field array or key value (if single key for foreign object)</li>
+<li>a mixed array of both.</li>
+</ul>
+</li>
+<li>delete_from_join(value(s)) &#8211; similar to <em>add_to_join()</em>, except it deletes rather
+than add. Rules for <em>values</em> are the same.</li>
+</ul>
+
+<h4>Pile Support</h4>
+
+<p>Assigning a value to a <em>pile</em> field throws an exception.</p>
+
+<p>Accessing a <em>pile</em> variable returns an associative array containing all the key-value pairs.</p>
+
+<p>isset(<em>pile</em>) always returns <span class="caps">TRUE</span>.</p>
+
+<p>unset(a <em>pile</em>) throws an exception.</p>
+
+<ul>
+<li>pile_keys($attr) &#8211; returns an unsorted array of the <em>keys</em> in pile <em>$attr</em></li>
+<li>pile_put($attr, $key, $value) &#8211; creates or overwrites the key-value pair in pile
+<em>$attr</em>.</li>
+<li>pile_get($attr, $key) &#8211; returns the <em>value</em> of <em>key</em> or <span class="caps">FALSE</span> if it is not defined.</li>
+</ul>
+
+<h4>Category Support</h4>
+
+<ul>
+<li>delete_category($attr, $category_path) &#8211; The specified path is
+deleted from <em>$attr</em> if it is already included. If not included, it
+is silently ignored. If <em>$category_path</em> is not a child of <em>category_root</em>,
+an exception is thrown.</li>
+<li>add_category($attr, $category_path) &#8211; The specified path is added
+to <em>$attr</em> or &#8211; if it is not a legal path or not a child of <em>category_root</em>,
+an exception is thrown.</li>
+<li>category_paths_of($attr) &#8211; returns an array of all Category paths
+in <em>$attr</em>.</li>
+<li>default_category($attr) &#8211; returns the <em>default</em> category for <em>$attr</em> &#8211; which
+is the first category value in <em>$attr</em>. This makes sense because all category
+values are kept in a sorted order: from root outward and at the same
+heirarchic level in the category tree, in <span class="caps">ASCII</span> sort order.
+This is not the same as the sibling order maintained for sibling categories
+for two reasons: (1) efficiency and (2) this sort order does not reflect
+the tree heirarchy inasmuch as <em>category</em> data may contain data from disjoint
+Category subpaths.</li>
+<li>category_objects_of($attr) &#8211; returns all of the Category objects in
+<em>$attr</em>.</li>
+<li>select_objects_in_category($attr, $subpath, $other_class) &#8211; returns a (possiblye
+empty) array of objects of class <em>$other_class</em> which are in category <em>$subpath</em>.
+The array will be empty of <em>$subpath</em> is not a subpath of any category in <em>$attr</em>
+or if there are no <em>$other_class</em> instances in <em>$subpath</em>.</li>
+<li>delete_category_references($category_path) &#8211; finds all <em>category</em> type attributes and
+deletes all categories which either are <em>$category_path</em> or are its descendents
+from each one. <span class="caps">NOTE</span>: this is used by the Category::delete() method and should <span class="caps">NOT</span>
+be used in normal coding. This is also a little dangerous because it works with
+<span class="caps">NEW</span> instances of all AnInstance objects which are in the category to delete rather
+than existing, in-memory instances. As a result, previously existing in-memory
+instances will lose synchronization with the database. This will <span class="caps">NOT</span> be fixed
+because:
+<ul>
+<li>it&#8217;s a low frequency event</li>
+<li>you&#8217;ve been warned</li>
+<li>it requires implementing cached AnInstance objects with a private constructor
+and alternative &#8216;get_aninstance&#8217; method, so it screws up subclassing and it&#8217;s
+just not worth it.</li>
+</ul>
+</li>
+</ul>
+
+<h4>Object Primatives</h4>
+
+<ul>
+<li>equal(other) &#8211; returns <span class="caps">TRUE</span> if all attributes of <em>this</em> and <em>other</em> are the same.</li>
+<li>asString($attribute-name) &#8211; returns the value of the attribute as a string</li>
+<li>load($where) &#8211; attempts to load the record pointed to by the $where clause.</li>
+<li>save() &#8211; writes the object to the data store.</li>
+<li>dirtyP() &#8211; returns <span class="caps">TRUE</span> if this object has been modified since creation, else <span class="caps">FALSE</span>.</li>
+<li>mark_saved() &#8211; marks instance as not needing to be saved. Use with care or
+don&#8217;t use at all.</li>
+<li>mark_dirty() &#8211; marks instance as needing to be saved. Use with care (really for
+internal use)</li>
+<li>delete() &#8211; deletes this object and all associated AJoin instances.</li>
+<li>get_objects_where($where, $orderby = <span class="caps">NULL</span>) &#8211; returns an array of whatever-this-object-is which
+are in the database and satisfy <em>where</em>. <span class="caps">NOTE</span>: $where == <span class="caps">NULL</span> is OK. The optional
+<em>orderby</em> is a string (which is escaped) denoting the ordering.</li>
+</ul>
+
+<h4>Generic Display and Forms + Support</h4>
+
+<ul>
+<li>interpolate_string($str, $reset_flag = <span class="caps">FALSE</span>) &#8211; <strong>This is the primative you want when building your own <em>render()</em> method for taylored objects.</strong>
+It interepolates $str by substituting
+all &#8217;{attribute-name}&#8217; and &#8217;{class-name.attribute-name}&#8217; patterns with the current attribute values.
+If $reset_flag is <span class="caps">TRUE</span> OR this is the first time it has been called, the interpolation arrays are rebuilt.
+The default is generally OK unless an attribute has been changed.</li>
+<li>file_abs_path($attr, $reset_interpolation_flag = <span class="caps">TRUE</span>) &#8211; <strong>Use this <span class="caps">INSTEAD</span> of <em>interpolate_string()</em> for <em>file</em> attribute paths.</strong>
+It is similar to <em>interpolate_string()</em>
+except that it returns the absolute path to a <em>file</em> attribute. The flag <em>$reset_interpolation_flag</em>
+is passed directly toe <em>interpolate_string()</em></li>
+<li>render($top = <span class="caps">NULL</span>, $bottom = <span class="caps">NULL</span>) &#8211; returns an unordered list of the fields
+of <em>this</em> object, listed in the order defined. <em>$top</em> and <em>$bottom</em> are strings
+which are prepended and appended to the list, so you can wrap this ugly output
+in a &lt;div&gt; &#8211; or whatever else you want. This is basically a place to start.</li>
+<li>render_file($path) &#8211; returns the contents of the file at <em>$path</em> after passing
+through <em>interpolate_string()</em> for <em>$this</em>. If <em>$path</em> does not exist, is not a file,
+or is not readable, then returns <em>this->render()</em></li>
+<li>render_include($fname) &#8211; returns the contents of the file at <em>$file</em> after passing
+through <em>interpolate_string()</em> for <em>$this</em>. If <em>$file</em> cannot be included, then
+returns <em>this->render()</em>.</li>
+<li>select_elt_join_list($attr, $classes = <span class="caps">NULL</span>, $attributes = <span class="caps">NULL</span>) &#8211; returns an <span class="caps">HTML</span> Select element for a joined field. <em>$attr</em> must have the &#8216;joins&#8217;
+property set to a defined AClass object and must have the &#8216;join_display_field&#8217;
+set to the name of a valid field in the foreign object.
+<ul>
+<li>$attr &#8211; the foreign key field in this AClass instance</li>
+<li>$display_name &#8211; name of foreign object display name field</li>
+<li>$classes &#8211; names of <span class="caps"><span class="caps">HTML</span></span> classes to stuff into a class= attribute</li>
+<li>$attributes &#8211; additional attribute values to stuff in the <em>select</em> element start tag.</li>
+</ul>
+</li>
+<li>form($form_action = <span class="caps">NULL</span>, $top_half = <span class="caps">NULL</span>, $bottom_half = <span class="caps">NULL</span>, $actions = <span class="caps">NULL</span>) &#8211; similar as <em>render()</em>
+except it defaults to the default form template.
+The first parameter is the <span class="caps">HTML</span> form element <em>action</em> attribute. If <span class="caps">NULL</span> (the default)
+we use $_SERVER[&#8216;REQUEST_URI&#8217;] &#8211; which is the <span class="caps">URI</span> which got us to the form.
+The rest of the parameters make it possible to
+modify the form by adding list items to the top and bottom of the form and to
+re-define the <em>submit</em> buttons. <strong><span class="caps">NOTE</span></strong> both <em>top_half</em> and <em>bottom_half</em> can be
+callables which generate text.
+<ul>
+<li><em>top_half</em> and <em>bottom_half</em> can be either something which can be converted
+to a string OR a callable which returns something appropriate.</li>
+<li>top_half &#8211; this is literally inserted after the &lt;form&gt; start tag</li>
+<li>bottom_half &#8211; this is litterally inserted immediately before the list
+element which defines the <em>submit</em> buttons</li>
+<li>actions &#8211; this is an array of submit button values. If <span class="caps"><span class="caps">NULL</span></span>, it defaults
+to array(&#8216;Save&#8217;, &#8216;Cancel&#8217;, &#8216;Delete&#8217;).</li>
+</ul>
+</li>
+<li>process_form(rc) &#8211; <em>rc</em> is request cleaner object. Automatically saves.</li>
+</ul>
+
+<h4>Diagnostic Support</h4>
+
+<ul>
+<li>dump(msg = <span class="caps">NULL</span>) &#8211; returns a string containing a dump of the object instance.</li>
+</ul>
+
+<h3 id="aninstance_props">Properties</h3>
+
+<p>AnInstance instances hold properties and also provide read-only
+access to AClass properties.</p>
+
+<p>Legal property keys are:</p>
+
+<blockquote>
+<p>set &#8211; boolean &#8211; present if the corresponding field in this instance has
+been set. Otherwise, not. Test using <em>has_prop()</em></p>
+</blockquote>
+
+<blockquote>
+<p>display_html, form_html, and invisible &#8211; optional properties which may
+override the AClass properties they correspond to. <a href="#aclass_props">see</a></p>
+</blockquote>
+
+<blockquote>
+<p>default_title  &#8211; optional &#8211; declares this attribute as an element
+of the default display field which will be used when one is not
+specifically declared. See Category.php for an example of use.</p>
+</blockquote>
+
+<p>The following instance methods manage properties. <span class="caps">NOTE</span> that these
+methods coordinate property values properly between instance and the
+underling AClass, so the Class properties should <em>never</em> be accessed
+directly.</p>
+
+<ul>
+<li>put_prop($name, $prop_name, $value = <span class="caps">TRUE</span>) &#8211; defines the property <em>prop_name</em>
+for field <em>name</em> for <em>this</em> instance.
+If <em>value</em> is omitted, then <em>prop_name</em> becomes a boolean with value <span class="caps">TRUE</span>.</li>
+<li>append_to_prop($name, $prop_name, $value) &#8211; appends <span class="caps">STRING</span> values to a <span class="caps">STRING</span> valued
+property. If the property exists and is boolean, then throws exception. If exists then
+is treated as a string and a space followed by <em>$value</em> are appended. Otherwise <em>$value</em>
+is assigned to the property.</li>
+<li>has_prop($name, $prop_name) &#8211; returns <span class="caps">TRUE</span> if <em>name</em> has property <em>prop_name</em>
+in either the instance or underlieing class, else <span class="caps">FALSE</span>.</li>
+<li>get_prop($name, $prop_name) &#8211; if <em>prop_name</em> is defined for <em>name</em> in either
+the instance or underlieing AClass then returns value of <em>prop_name</em>, else <span class="caps">FALSE</span></li>
+<li>del_prop($name, $prop_name) &#8211; removes the property from the instance.
+<span class="caps">NOTE</span>: only instance properties can be removed.</li>
+</ul>
+
+<h3 id="aninstance_form_html_func">Writing a <em>form_html_func</em> function</h3>
+
+<p>The <em>form_html_func</em> is an instance method with no arguments. It must
+return a string containing a legal <span class="caps">HTML</span> element which can be used to
+input a legal field value. This is useful to constrain a <em>varchar</em> field
+to a selection set which is created dynamically.</p>
+
+<p>The string <span class="caps">MUST</span> also contain the following template symbols:</p>
+
+<ul>
+<li>&#8217;{&#8217; form_attributes &#8217;}&#8217; &#8211; which will be filled in by the <em>form_attributes</em> property.</li>
+<li><span class="caps">NOTE</span>*: the &#8217;{&#8217; construction is necessary to &#8216;fool&#8217; textile. Just enclose the word
+in curly braces w/o the extra space and quote marks</li>
+<li>&#8217;{&#8217; form_classes &#8217;}&#8217; &#8211; which defines the classes for this form element</li>
+</ul>
+
+<p>As an example, here is the code from Category.php which generates
+the <span class="caps">HTML</span> <em>select</em> element which replaces the default <em>input type=text</em> element:</p>
+
+<pre>
+protected function parent_form_func()
+{
+&nbsp;&nbsp;  $tmp_ar = $this->get_objects_where(NULL, 'order by parent,name');
+&nbsp;&nbsp;  $str = "&lt;select name=\"parent\" class=\"{form_classes}\" {form_attributes}&gt;\n";
+&nbsp;&nbsp;  $str .= "  &lt;option value=\"\"&gt;Top Level []&lt;/option&gt;\n";
+&nbsp;&nbsp;  foreach ($tmp_ar as $obj) {
+&nbsp;&nbsp;&nbsp;&nbsp;    $str .= "  &lt;option value=\"{$obj->path}\"&gt;$obj->title [$obj->path]&lt;/option&gt;\n";
+&nbsp;&nbsp;  }
+&nbsp;&nbsp;  return $str . "&lt;/select&gt;\n";
+} // end of parent_form_func()
+</pre>
+
+<p><strong><span class="caps">NOTE</span>:</strong> the &#8216;protected&#8217; visibility. Private will not work, but, of course, public will
+also.</p>
+
+<h2 id="ajoin">AJoin</h2>
+
+<p><strong>AJoin</strong> objects model a simple join between two AClass instances.</p>
+
+<p>All joins are implemented using the <em>keys_list</em> fields in both classes.
+Join objects are named for the objects they join, using a &#8216;left&#8217;_&#8217;right&#8217;.
+Which object is which is arbitrary, but determined when the join is created.</p>
+
+<h3>Attributes</h3>
+
+<ul>
+<li>left_class_name &#8211; name of left class AClass element of AJoin</li>
+<li>right_class_name &#8211; name of right class AClass element of AJoin</li>
+<li>tablename &#8211; name of table for the AJoin instance</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<h4>AJoin element</h4>
+
+<p>These class methods allow instances to create join instances without
+directly messing with the AJoin object. They all take an instance
+of an object first parameter. Subsequent parameters depend on the method.</p>
+
+<ul>
+<li>AJoin::ajc_select_objects($controlling_instance, $joined_class) &#8211; returns all
+<em>$joined_class</em> instances which are joined to <em>controlling_instance</em>.</li>
+<li>AJoin::ajc_add_to_join($controlling_instance, $joining_instance) &#8211; adds <em>$joining_instance</em> to the join for <em>$controlling_instance</em> and the
+class of <em>$joining_instance</em>.</li>
+<li>AJoin::ajc_delete_from_join($controlling_instance, $joined_instance) &#8211; deletes <em>$joined_instance</em> from the join for <em>$controlling_instance</em>
+and <em>$joined_instance</em></li>
+<li>AJoin::ajc_update_join($controlling_instance, $new_join_list) &#8211; forces the joins for <em>$controlling_instance</em> to only include the
+values of joining objects in <em>$new_join_list</em>. <span class="caps">NOTE</span>: <em>$new_join_list</em>
+may be a mixture of objects &#8211; multiple joins may processed in a single
+call.</li>
+</ul>
+
+<h4>AJoin management methods</h4>
+
+<p>These methods work with retrieve or destroy AJoin objects themselves</p>
+
+<ul>
+<li>get_ajoin($dbaccess, left_name, right_name) &#8211; where <em>left_name</em> and <em>right_name</em>
+are the names of AClass classes</li>
+<li>destroy_all_joins(dbaccess) &#8211; does just what it says. <span class="caps">DON</span>&#8216;T DO <span class="caps">THIS</span> <span class="caps">UNLESS</span>
+<span class="caps">YOU</span> <span class="caps">NEED</span> TO <span class="caps">REBUILD</span> <span class="caps">EVERYTHING</span></li>
+<li>get_ajoins_for($aninstance) &#8211; returns an array of all AJoin objects defined for the
+supplied <em>aninstance</em> or <span class="caps">FALSE</span></li>
+</ul>
+
+<h4>Archive Support</h4>
+
+<ul>
+<li>php_create_string(dbaccess, $dump_dir) &#8211; writes <span class="caps">PHP</span> code to a file named _join_tables.php
+which will recreate the join tables in the database. <em>dbaccess</em> is a DBAccess instance.</li>
+</ul>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>select_joined_objects(controlling_instance) &#8211; uses the key values from <em>controlling_instance</em> to select all of the
+<em>other</em> objects in the join.returns a single array of the object instances joined to
+<em>controlling_instance</em>. <span class="caps">NOTE</span>: the array may be empty.
+<ul>
+<li>name of <em>other</em> AClass</li>
+<li>array of associative arrays. Each associative array contains the
+values of one object of the <em>other</em> class. Keys are attribute names.
+It contains the values for all the <em>key</em> attributes plus any other
+attributes in <em>additional_attribute_list</em>. <em>additional_attribute_list</em>
+may be either a string containing a comma separated list of attribute
+names, a simple array of attribute names or the name of a single,
+or <span class="caps"><span class="caps">NULL</span></span>.</li>
+</ul>
+</li>
+</ul>
+
+<ul>
+<li>add_to_join($left, $right) &#8211; adds the objects to the join. <span class="caps">NOTE</span>:
+the order of <em>left</em> and <em>right</em> doesn&#8217;t matter &#8211; even though it looks
+like it should.</li>
+<li>delete_from_join(left, right) &#8211; deletes the objects from the join.
+<span class="caps">NOTE</span>: see <em>add_to_join()</em> <span class="caps">NOTE</span></li>
+<li>delete_joins_for($aninstance) &#8211; deletes all join entries for the supplied
+<em>aninstance</em> for this AJoin instance.</li>
+<li>update_join($controlling_instance, $new_join_list) &#8211; adds and deletes the join
+table so that all controlling instance is joined to all items in new_join_list,
+and nothing else. <em>$new_join_list</em> is a list of join objects, key value arrays,
+or urlencoded key arrays or a mix of any and all three.</li>
+<li>in_joinP(left, right) &#8211; returns <span class="caps">TRUE</span> if <em>left</em> and <em>right</em> are in the join,
+else <span class="caps">FALSE</span>;</li>
+<li>dump(msg) &#8211; dumps out the contents of the join instance.</li>
+</ul>
+
+<h2 id="amanager">AManager</h2>
+
+<p>The <strong>AManager</strong> class implements a simple html form for maintaining
+any AnInstance object which is created. It supplies a <em>select</em> element list
+which allows any existing AnInstance which currently exists or to create
+a new one.</p>
+
+<p><strong>AManager</strong> is designed to be subclassed by each AnInstance extension.</p>
+
+<p>Typically, for the Foo, where you want to view the <em>title</em> field
+in the drop-down list &#8211; ordered by increasing value of <em>title</em>,
+you would do something like:</p>
+
+<pre>
+class Foo extends AnInstance {
+. . .
+}
+
+<p>class FooManager extends AManager {
+public function __construct($dbacces)
+{
+parent::__construct($dbaccess, &#8216;Foo&#8217;, &#8216;title&#8217;, array(&#8216;orderby&#8217; => &#8216;title&#8217;));
+} // end of __construct()
+}</p>
+
+<p>then in use, you would do:
+$form = new FooManager(Globals::$dbaccess);
+$form->render_form(Globals::$rc);
+</pre></p>
+
+<p>Of course, it is possible to instantiate AManager directly to provide
+alternate means of accessing the objects</p>
+
+<h3>Attributes</h3>
+
+<p>None of interest</p>
+
+<h3>Class Methods</h3>
+
+<p>Just the constructor</p>
+
+<ul>
+<li>__construct($dbaccess, $cls_name, $display_field_names, $options = array()) &#8211; generally only called in the constructor of an AManager extension
+<ul>
+<li>dbaccess &#8211; a DBAccess instance</li>
+<li>cls_name &#8211; string &#8211; name of class being managed</li>
+<li>display_field_names &#8211; string &#8211; comma separated list of field names used to
+construct the display and also used in the order by clause of the <em>select</em>
+statement.</li>
+<li>options &#8211; array &#8211; array of options which can be used to control the operation
+of the manager
+<ul>
+<li>form_action &#8211; string OR {form_action} &#8211; <span class="caps"><span class="caps"><span class="caps">URL</span></span></span> to <em>this</em> form.</li>
+<li>orderby &#8211; string OR <span class="caps"><span class="caps"><span class="caps">NULL</span></span></span> &#8211; literal <span class="caps"><span class="caps"><span class="caps">SQL</span></span></span> &#8216;order by&#8217; phrase used to order the <em>select</em>
+element options. Typically something like &#8220;order by $display_field_names&#8221;. If
+false in any sense, then the default ordering is applied.</li>
+<li>expose_select &#8211; boolean &#8211; default is <span class="caps"><span class="caps"><span class="caps">TRUE</span></span></span>. Determines if the <em>select</em> list is
+exposed when the manager&#8217;s <em>render_form()</em> method is called.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>select_element($select = <span class="caps">NULL</span>) &#8211; Not normally called directly
+returns an <span class="caps">HTML</span> <em>select</em> element
+as a string. If <em>$select</em> is not <span class="caps">NULL</span>, it is assumed to be an AnInstance
+derived object. It&#8217;s keys are then compared to each key for each object
+and the matching object is selected.</li>
+<li>render_form($rc, $form_top = <span class="caps">NULL</span>, $form_bottom = <span class="caps">NULL</span>, $actions = <span class="caps">NULL</span>) &#8211; pass it a request cleaner,
+and it displays the &#8216;select an object&#8217; form. The parameters <em>form_top</em>, <em>form_bottom</em> and
+<em>actions</em> are passed directly through to the <em>form()</em> method of the AnInstance instance.
+If an object or create-new-object is selected, then the content of the
+object is displayed in an edit form.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

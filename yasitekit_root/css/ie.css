@@ -1,0 +1,14 @@
+#content {
+  background-color: #444;
+}
+#header {
+  margin-top: 1em;
+  height:8em;
+  min-width: 40em;
+}
+#main-nav {
+  top: 6em;
+}
+#main-nav > ul > li {
+  line-height:2em;
+}

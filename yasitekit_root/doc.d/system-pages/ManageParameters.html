@@ -1,0 +1,58 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>ManageParameters.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>ManageParameters.php &#8211; Management for Persistent parameter store for Classes</h1>
+
+<p>bq.(c) Copyright 2010 Mike Howard. All Rights Reserved.</p>
+
+<p>ManageParameters.php is the management interface to the Parameters object and persistent
+store.</p>
+
+<p>The <a href="/doc.d/system-objects/Parameters.html">Parameters</a> object provides a persistent, centralized store
+for Object parameters.</p>
+
+<p>Parameter names use the same rules as object attribute names: [a-z][_a-z0&#8211;9]*</p>
+
+<p>At present, the following parameters are defined, but the facility is general and flexible.</p>
+
+<ul>
+<li>required_authority &#8211; all persistent objects &#8211; defines the authority required for
+data access via web services. See <a href="/doc.d/system-includes/render_web_service.html">render_web_service.php</a>
+for details.</li>
+<li>max_days &#8211; DownloadAuthorization &#8211; sets the maximum number of days a download authorization
+is valid for.</li>
+<li>max_uses &#8211; DownloadAuthorization &#8211; sets the maximum number of times a download authorization
+may be used.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

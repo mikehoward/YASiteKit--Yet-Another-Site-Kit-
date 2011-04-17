@@ -1,0 +1,66 @@
+#! /bin/sh
+# This script is run on the remote system. It works on pair.com, which
+# runs Free BSD. It should also work on Linux, UNIX, and AIX systems.
+# You will need to re-write it if you're on windows
+
+PROGNAME="`basename $0`"
+
+for dir in {document_root} \
+		{private_data_root} \
+		{private_data_root}/dev-dump.d \
+		{private_data_root}/ajax_scripts \
+		{private_data_root}/atom \
+		{private_data_root}/dump.d \
+		{private_data_root}/includes \
+		{private_data_root}/json \
+		{private_data_root}/objects \
+		{private_data_root}/page_structure \
+		{private_data_root}/pages \
+		{private_data_root}/rss \
+		{private_data_root}/xml \
+		{private_data_root}/installation \
+		{private_data_root}/sqlite_db.d \
+		{system_root} ; do
+	test -d $dir || mkdir $dir
+done
+
+. tarfile-list.sh
+
+(
+  echo "Unpacking DOCUMENT ROOT"
+  cd {document_root} ;
+  tar xzf ~/${DOCUMENT_ROOT_TAR}
+  mv ~/index.php-{site_installation} index.php
+  mv ~/htaccess-{site_installation} .htaccess
+)
+(
+  echo "Unpacking Private Files and Data"
+  cd {private_data_root}
+  tar xzf ~/${PRIVATE_ROOT_TAR}
+  if [ -s config.php ] ; then
+    rm -f config.php-BAK
+    mv -f config.php config.php-BAK
+  fi
+  mv ~/config.php-{site_installation} ./config.php
+  echo "Unpacking System files"
+  tar xzf ~/${SYSTEM_TAR}
+)
+(
+  if [ -s ~/{site_id}-dump.tar.gz ] ; then
+    echo "Unbacking Database File"
+    cd {private_data_root}/dev-dump.d
+    tar xzf ~/${DUMP_TAR}
+  else
+      echo "no data base dump file"
+  fi
+)
+(
+	echo "Bootstrapping Database"
+	cd {private_data_root}/installation
+	php ./bootstrap_db.php
+)
+echo '________________________________________________________________________________'
+echo ''
+echo 'Please Log in As Administrator and Go to the "Dump and Reload Database" Function'
+echo ''
+echo '________________________________________________________________________________'

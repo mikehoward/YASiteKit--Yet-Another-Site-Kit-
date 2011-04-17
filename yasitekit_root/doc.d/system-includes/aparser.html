@@ -1,0 +1,576 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>aparser.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>aparser.php &#8211; A Parser for little languages</h1>
+
+<p>This is top-down, recursive parser in <span class="caps">PHP</span></p>
+
+<p>Parser is a <span class="caps">PHP</span> 5 object which takes a <strong>right, recursive language specification</strong>
+in more-or-less yacc/bison format and magically becomes a top-down, recursive
+descent, predictive parser. If the grammer is written properly, it even works.</p>
+
+<p><strong>Note:</strong> yacc/bison and most other parser generators are use a <em>shift-reduce</em>
+algorithmn and so they require <strong>left recursive</strong> grammars to keep the parser
+from going into an infinite loop. Recursive descent &#8211; on the other hand &#8211; needs the grammar to be <strong>right recursive</strong>. [Go read the Dragon book if you
+want more detail &#8211; or even to correct any garbage I may be slinging]</p>
+
+<p>This module defines several helper classes:</p>
+
+<ul>
+<li><a href="#parser">Parser</a> &#8211; the actual Parser Class &#8211; follow this link for
+the details of the object.</li>
+<li><a href="#parsernode">ParserNode</a> &#8211; nodes which are created by the parser when
+parsing a sentense in the target language</li>
+<li><a href="#parserlangnode">ParserLangNode</a> &#8211; nodes used by the Parser and ParsesrLangDefParser
+in parsing the target language definition. These are used by the Parser in
+running the parse (phew)</li>
+<li><a href="#parserlangdefparser">ParserLangDefParser</a> &#8211; the object which parses the
+target language definition and prepares the table which drives the parser. It
+produces an array of ParserLangNodes.</li>
+</ul>
+
+<h2>Grammar Specification Rules</h2>
+
+<p><strong>Comments</strong> may be inserted anywhere in a grammer by enclosing them in
+C-style comment markers: &#8217;/&#42; ..... &#42;/&#8217;. Everything following, and including,
+the first &#8217;/&#42;&#8217; is discarded up <em>through</em> the first &#8217;&#42;/&#8217;. <strong>Comments</strong> do <em>not</em>
+next.</p>
+
+<p><strong>Terminals</strong> start with a capital letter OR are single quote enclosed punctuation marks.</p>
+
+<blockquote>
+<p>T, <span class="caps">TERMINAL</span>, Terminal, &#8217;:&#8217;, &#8217;,&#8217;</p>
+</blockquote>
+
+<p><strong>non-terminals</strong> start with a lower case letters and contain lower case letters, digits
+and underscore characters (_).</p>
+
+<blockquote>
+<p>foo, bar, foo_bar10</p>
+</blockquote>
+
+<p><strong>Directives</strong> start with a percent prefixed keyword. There are only a limited number.</p>
+
+<ul>
+<li>%start &lt;non-terminal&gt; &#8211; optional &#8211; defines the start non-terminal</li>
+<li>%action_prefix{ <em>php code</em> %} &#8211; optional &#8211; defines code which prefixes
+<em>every</em> action. This is where you put global variables and other stuff.
+<span class="caps">NOTE</span>: &#8217;%action_prefix{&#8217; is all one word &#8211; no interior blanks.</li>
+<li>%action_suffix{ <em>php code</em> %} &#8211; optional &#8211; code which is appended
+to <em>every</em> action.</li>
+</ul>
+
+<p><strong>non-terminal definitions:</strong>
+all non-terminals are uniquely defined by a set of production definitions.
+non-terminal definitions start with the non-terminal, followed by a colon (:),
+followed by one or more productions (separated by pipe symbols (|)), and terminated
+by a semicolon (;)</p>
+
+<blockquote>
+<p>The syntax is: non-terminal &#8217;:&#8217; production | production | production | ... ;</p>
+</blockquote>
+
+<p><strong>productions</strong> are sequences of symbols, semantic_name declarations, and semantic actions.
+For example &#8216;A B ( C ) {some action}&#8217;.</p>
+
+<p>A production may be empty. An empty production
+should always be the last production in a non-terminal definition. It is symbolized
+by only putting white space between the production separator (|) and the definition
+terminator.</p>
+
+<blockquote>
+<p>foo: A foo | ;</p>
+</blockquote>
+
+<p><strong>semantic_names</strong> are identifiers enclosed in parenthesis. <em>identifiers</em> satisfy
+the regular expression [a-zA-Z]\w*.</p>
+
+<blockquote>
+<p>Examples: (A), (foo), (foo_bar_1)</p>
+</blockquote>
+
+<p>There are two types of <strong>semantic actions</strong>:</p>
+
+<ul>
+<li>%string{ ... } &#8211; which contains a list of language symbol references which
+are concatenated together and then assigned to the non-terminal being defined</li>
+<li>%php{ ... } &#8211; which contains <span class="caps">PHP</span> code which is executed. The code may contain
+language symbol references which will be substituted <em>verbatum</em> with the values
+of the indicated symbols. This may lead to <span class="caps">PHP</span> syntax errors if strings are
+not properly quoted and/or interior characters are not properly escaped.</li>
+</ul>
+
+<p>The contents of a <em>%string</em> form may only consist of symbol references and
+white space. Each symbol reference must be surrounded by white space &#8211; unless
+it is the first or last symbol reference where the white space between the
+reference and the bracket is optional: as in &#8217;%string{ A }&#8217; or &#8217;%string{A}&#8217;.
+[for the lazy, <em>%string{</em> can be abbreviated <em>%str{</em> ]</p>
+
+<p>In the <span class="caps">PHP</span> form, verything inside the braces is opaque to the parser, so
+you can actually put about anything in there you want. The only caviate
+is that any embedded braces must match. That is &#8217;%php{ ... {...}...} is OK,
+but %php{ { } and %php{ } } are not. However &#8211; if you need to embed an
+unmatched (read unmatchable) brace, you can by escaping it with a backslash (/).
+That is: &#8217;%php{ ... \} ... }&#8217; is ok and will be translated to &#8217;%php{ ... } ... }&#8217;.
+Similarly, &#8217;%php{ ... \{ ... }&#8217; translates to &#8217;%php{ ... { ... }&#8217;.</p>
+
+<p><span class="caps">PHP</span> semantic actions are executed when the parser&#8217;s <em>execute()</em> method is run.
+This contrasts with other parsers which ususally perform semantic actions
+while parsing is in progress.</p>
+
+<p><strong>special variable names</strong> in semantic actions refer to symbols which occur in the same production,
+augmented by the non-terminal being defined. In other words, in &#8216;foo: A B {action1} | C D { action2 }&#8217;,
+the code <em>action2</em> will may refer to the values of C and D, but not A or B. It may assign a
+value to <em>foo</em>. Similarly, action1 may refer to values of A and B, but not C and D. Again,
+it can assign a value to <em>foo</em></p>
+
+<p><strong>special variables names</strong> can be <span class="caps">EITHER</span> <em>semantic_names</em>
+or a speical form which mimics the convention used in yacc, bison, lemon, and many
+other parser generators:</p>
+
+<ul>
+<li>@@ refers to the non-terminal being defined. This is a read-write variable.</li>
+<li>@1, @2, ... refer to the preceeding symbols and semantic actions in the rule,
+as defined above. These are <em>read-only</em> variables.</li>
+</ul>
+
+<p>If a <strong>semantic action</strong> returns a value, it is assigned to the action and may be used
+by other actions to the right and in the same production. Othewise it is assigned
+the value <span class="caps">NULL</span>.</p>
+
+<h3><span class="caps">PHP</span> Semantic Actions Expanded</h3>
+
+<p>Semantics are grafted on to the parse tree using <em>semantic actions</em>.</p>
+
+<h4>String Semantic Actions</h4>
+
+<p>String actions are enclosed in &#8217;%string{&#8217; &#8217;}&#8217; symbols. [alternately, &#8217;%str{ ... } ]
+The contents consists
+solely of white space separated language symbol references (see the next subsection).
+The values of all references are concatenated together and assigned to the
+non-terminal being defined. That is: &#8216;foo : A B %string{ @1 @2 }&#8217; concatenates
+the values of the terminals &#8216;A&#8217; and &#8216;B&#8217; and assigns the result to &#8216;foo&#8217;.
+Note that this <em>overwrites</em> any value &#8216;foo&#8217; had in this node. This is generally
+not a problem, because when you want to append values, you usually recurse, as in</p>
+
+<pre>foo : A B foo %string{ @1 @2 @3 }.
+</pre>
+
+<pre>foo : A B %string{ @1 @2 } %string{ @1 @2 @3 }
+</pre>
+
+<p>which doubles the concatenation of A and B and assigns it to foo [the
+first assignment is overwritten]. [of course, this is contrived
+because it would be easier to write the action as %str{ @1 @2 @1 @2 },
+but you get the idea]</p>
+
+<h4><span class="caps">PHP</span> Actions</h4>
+
+<p><span class="caps">PHP</span> actions are <span class="caps">PHP</span> enclosed in curly braces: &#8217;%php{&#8217; &#8217;}&#8217; and are executed
+as <span class="caps">PHP</span> Functions in the context described below.</p>
+
+<p>All production symbols &#8211; including the non-terminal being defined &#8211; are
+available for use in the function. The non-terminal being defined can
+be assigned a value by writing &#8217;@@ = some experssion&#8217;. <a href="#php_action_symbols">See</a>
+for details</p>
+
+<p>This allows more complex formatting than <em>string actions</em> do as well
+as communication and modification with the enclosing environment &#8211; see Execution Context, below, for more detail.</p>
+
+<p>Each <span class="caps">PHP</span> action may have a prefix and suffix which can set up a more
+elaborate execution context. See <a href="#php_action_prefix_suffix">Execution Prefix and Suffix</a></p>
+
+<p>All values of production symbols are initialized to local function
+variables &#8211; as described <a href="#php_action_symbols">below</a>. The value of each symbol depends
+its nature:</p>
+
+<ul>
+<li>terminals &#8211; defined by the semantic_value returned by the scanner.
+This value is immutable.</li>
+<li>non-terminals &#8211; initially defined as the empty string. May be modified by
+semantic actions &#8211; as described below.</li>
+<li>string actions &#8211; the concatenation of the symbols named in the string action,
+in the order of their occurance.</li>
+<li>php actions &#8211; the return value of the code upon execution by calling
+the <em>render()</em> method on the semantic action&#8217;s ParseNode instance.</li>
+<li>error messages &#8211; the value returned by the error handler. This is immutable.</li>
+</ul>
+
+<h5 id="php_action_symbols">Accessing Symbol Values</h5>
+
+<p>Each symbol (and semantic action) in a non-terminal definition production
+is assigned a symbolic name.</p>
+
+<p>For example:</p>
+
+<pre>a : foo { if (@1) { @@ = @1; } }
+</pre>
+
+<p>which tests to see if the value of <em>foo</em> is not false in some sense and, if it isn&#8217;t,
+assigns the value of <em>foo</em> (@1) to the <em>a</em> (@@).</p>
+
+<p>Each symbol in a production is automatically assigned a name. The non-terminal
+being defined is named &#8217;@@&#8217;. The symbols in the production are named &#8217;@1&#8217;, &#8217;@2&#8217;, ...
+in order of appearence in the production. <em>This includes semantic actions</em>.</p>
+
+<p>For example, in:</p>
+
+<pre>a : foo { if (@1) { @@ .= @1; return TRUE; } else { return FALSE; } } bar { @@ .= @3; }
+</pre>
+
+<p>the assignments are:</p>
+
+<ul>
+<li>@@ &#8211; a</li>
+<li>@1 &#8211; foo</li>
+<li>@2 &#8211; the value returned by &#8217;{ @@ .= @1; return <span class="caps">TRUE</span>; } else { return <span class="caps">FALSE</span>; ; }&#8217;.
+[FALSE will automatically be returned if no explicit return is included]</li>
+<li>@3 &#8211; bar</li>
+<li>@4 &#8211; the value returned by &#8217;{ @@ .= @3; }&#8217; &#8211; which is <span class="caps">FALSE</span> in this case.</li>
+</ul>
+
+<p>This can get difficult to maintain, so each <em>symbol</em> may be given an explicit
+name by following it with a word in parenthesis, as in <em>foo (F)</em>. Traditionally,
+this word will be a single, upper case letter &#8211; but it can be any word
+which satisfies <em>\w+</em>. [I don&#8217;t know where the tradition came from or even if
+it&#8217;s really a tradition. I stole this from the Lemon parser documentation
+because I like the idea.]</p>
+
+<p>Thus,</p>
+
+<pre>a : foo { @@ = @1; }
+</pre>
+
+<p>and</p>
+
+<pre>a (A) : foo (FOO) { A = FOO; }
+</pre>
+
+<p>are equivalent, execute identical code, and achieve the same result.</p>
+
+<p>You can mix and match.</p>
+
+<h5 id="php_action_context">Execution Context</h5>
+
+<p>In contrast with other parser generators, the parser does not execute
+semantic actions during the parse. First the parse tree is constructed
+by the <em>parse()</em> method. The semantic actions are <em>only</em> executed
+when the <em>render()</em> method is invoked. <em>render()</em> returns the
+value assigned to the <em>start</em> non-terminal.</p>
+
+<p>Each <em>semantic action</em> executes in the context of a temporary function.
+Each symbol reference is transformed into a local variable and the
+current value of each symbol is passed in the argument list to the
+body of the function. The local variable names are generated
+automatically:</p>
+
+<ul>
+<li>$__context &#8211; the context object passed in from outside. This is passed
+by value and is usually an object reference, so that object methods and
+attributes are available within the local function context.</li>
+<li>$__non_terminal &#8211; for the non-terminal being defined &#8211; symbol reference @@</li>
+<li>$__var1 &#8211; for the first symbol in the production &#8211; @1</li>
+<li>$__var2 &#8211; for the second symbol in the production &#8211; i.e. @2</li>
+<li>etc</li>
+</ul>
+
+<p>The calling sequence passess <em>$__non_terminal</em> as a reference and the others
+as values.</p>
+
+<p>Note: this means that you can write &#8216;normal <span class="caps">PHP</span>&#8217; expressions using the symbol
+references &#8211; such as</p>
+
+<pre>'@@ = @1 . @2;' or '"it rains in {@1}\n".
+</pre>
+
+<h5 id="php_action_prefix_suffix">Execution Prefix and Suffix</h5>
+
+<p>Each (and every) semantic action may be prefixed and suffixed by chunks of code
+which are defined in the <em>language definition</em> using the <em>%action_prefix</em> and
+<em>%action_suffix</em> directives.</p>
+
+<p>This is a limited feature because:</p>
+
+<ul>
+<li>only one prefix and one suffix may be defined</li>
+<li>the prefix and suffix code are prepended and appended to the action body
+for each and every action prior to execution</li>
+<li>the prefix and suffix are defined in the <em>language specification</em> and so
+are a fixed part of the language. In other words, you can&#8217;t use a different
+prefix or suffix when parsing different string.</li>
+<li>if the body of the action executes a <em>return</em>, then the suffix code
+is not executed. This can be a feature if, for example, you want to assign
+a default value to every <em>semantic action</em> and only return significant
+ones.</li>
+</ul>
+
+<p>What do you use this stuff for?</p>
+
+<p>Well you can put global variables in the prefix and they will then be accessible
+from every action.</p>
+
+<p>You can create a default return value [see above].</p>
+
+<p>You can probably think of lots of other things.</p>
+
+<h2 id="parser">Parser &#8211; the parser object</h2>
+
+<p>Each parser is an instance of a Parser object. It needs a language definition
+(see above) and a scanner (see <a href="/doc.d/system-includes/ascanner.html">ascanner.php</a>).</p>
+
+<p>Once the scanner and language grammar are constructed, the parser object is
+very easy to use.</p>
+
+<h3>Instantiation</h3>
+
+<pre>$foo = new Parser(language_def_string, YAScannerBase scanner, $context = NULL, verbose = FALSE, node_class_name = NULL);
+</pre>
+
+<ul>
+<li><em>language_def_string</em> is string containing the language definition &#8211; as specified above.</li>
+<li>scanner &#8211; a scanner object which extends YAScannerBase.
+(found in <a href="/doc.d/system-includes/ascanner.html">ascanner.php</a>).</li>
+<li>context &#8211; typically an object. This is used to pass an object reference to
+<span class="caps">PHP</span> actions so that they can access methods and attributes defined in the object.
+This provides a per-parser execution environment. Parser treats this an an opaque
+parameter.</li>
+<li>verbose &#8211; boolean &#8211; the usual.</li>
+<li>node_class_name &#8211; the name of a class of nodes which implements the ParserNode
+to populate the parse tree.</li>
+</ul>
+
+<h3>Attributes</h3>
+
+<!-- case 'indent': -->
+Attributes you might be interested in. All attributes except _verbose_ are read-only.
+
+<ul>
+<li>language &#8211; ParserLangDefParser instance which defines the language being parsed.</li>
+<li>root &#8211; this is the root node of the parse tree. That is where <em>render()</em> starts</li>
+<li>str &#8211; the string the Parser instance can parse. Is set by calling the <em>parse()</em> method</li>
+<li>str_valid &#8211; boolean &#8211; <span class="caps">TRUE</span> if the string parsed correctly, else <span class="caps">FALSE</span></li>
+<li>verbose &#8211; boolean &#8211; turn it on or off.</li>
+</ul>
+
+<p>Internal attributes. You should never need to even know about these.</p>
+
+<ul>
+<li>cur_node &#8211; node_class_name (defaults to ParserNode) &#8211; the current node which is being
+examined during the parse. Used internally and not something to mess with.</li>
+<li>node_stack &#8211; stack of node_class_name instances being manipulated during the parse</li>
+<li>productions &#8211; this is a copy of language->language_ar: an associative array of
+production arrays used by the parser and created by a ParserLangDefParser object.
+Don&#8217;t mess with them.</li>
+<li>scanner &#8211; The scanner object which was passed in.</li>
+</ul>
+
+<h3>Class methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<p>Magic methods plus <em>dump(msg)</em> and . . .</p>
+
+<ul>
+<li>parse(str, $file_name) &#8211; parses the string according to the language specification.
+<em>$file_name</em> is used for diagnostics &#8211; it is passed to the scanner.
+Returns <span class="caps">TRUE</span> on a successful parse and <span class="caps">FALSE</span> on an error.</li>
+<li>render() &#8211; returns the rendering of the current parse tree.</li>
+<li>display_parser_state() &#8211; returns a string describing the parser state</li>
+<li>$parser->root->dump(msg) &#8211; returns a string containing a recursive dump of all the
+ParserNodes in the current parse tree. [not strictly a method, but handy for debugging
+language grammars]</li>
+</ul>
+
+<h2 id="parsernode">ParserNode</h2>
+
+<p>These are nodes created by the Parser when parsing a sentense in the target
+language. The final result of the parse is a tree of these nodes.</p>
+
+<h3>Instantiation</h3>
+
+<pre>$foo = new ParserNode($type, $value, $semantic_value, $semantic_name);
+</pre>
+
+<p>see attributes, next, for the meaning of these parameters</p>
+
+<h3>Attributes</h3>
+
+<p>Attributes defined at instantiation:</p>
+
+<ul>
+<li>type &#8211; type of node: production / literal / action / message</li>
+<li>syntactic_value &#8211; this is the term used in the grammar</li>
+<li>semantic_value &#8211; string which will be returned if <em>render()</em> is called on this node</li>
+<li>semantic_name &#8211; symbolic name this execution value will be assigned to, so it can</li>
+</ul>
+
+<p>Attributes defined later and internally</p>
+
+<ul>
+<li>execution_value &#8211; the value returned from the latest execution of the node</li>
+<li>my_index &#8211; int &#8211; the nodes index into the table of subnodes of it&#8217;s parent</li>
+<li>next &#8211; ParserNode &#8211; left sybling in subnodes of parent or <span class="caps">NULL</span></li>
+<li>parent &#8211; ParserNode &#8211; parent node or <span class="caps">NULL</span></li>
+<li>previous &#8211; ParserNode &#8211; right sybling in subnodes of parent orN <span class="caps">NULL</span>
+be used in semantic actions</li>
+<li>subnodes &#8211; array of subnodes living under this node. Only valid for productions</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>add_node(node) &#8211; appends <em>node</em> to the <em>subnodes</em> attribute;</li>
+<li>discard_modes() &#8211; discards all subnodes. Leaves it up to <span class="caps">PHP</span> to actually
+destroy them.</li>
+<li>render() &#8211; renders this node and recursively renders all subnodes.</li>
+<li>execute() &#8211; does something brilliant and I don&#8217;t know what it is yet.</li>
+</ul>
+
+<h2 id="parserlangnode">ParserLangNode &#8211; holds information about a legal language definition
+symbol</h2>
+
+<h3>Instantiation</h3>
+
+<pre>$foo = new ParserLangNode($type, $value);
+</pre>
+
+<p>where the arugments are defined below in Attributes.</p>
+
+<h3>Attributes</h3>
+
+<ul>
+<li>type &#8211; type of node. Types are:
+<ul>
+<li>production &#8211; then the value is the name of the non-terminal</li>
+<li>terminal &#8211; a terminal symbol</li>
+<li>non_terminal &#8211; a non terminal occuring in a production rule</li>
+<li>semantic_action &#8211; some <span class="caps"><span class="caps">PHP</span></span> to be executed or symbols to be concatenated.
+May contain references to the
+symbols previously occurring <em>in this rule</em>. References can be $$, $1, ... as
+in yacc and bison OR assigned <em>semantic_names</em>.</li>
+<li>error &#8211; error messages</li>
+</ul>
+</li>
+<li>value &#8211; value of node. For productions, terminal, and non_terminal, the value is
+the name of the symbol. For semantic actions, the value is the supplied <span class="caps">PHP</span> code.
+For errors, the value is the error message.</li>
+<li>semantic_name &#8211; either a string or <span class="caps">NULL</span></li>
+<li>productions &#8211; array() &#8211; only defined for type == &#8216;production&#8217; nodes. Is an array
+of productions for this non-terminal.</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>sort_productions(callback) &#8211; sorts the <em>productions</em> array or throws an exception
+if <em>this</em> is not a <em>production</em></li>
+<li>static production_as_string(production array) &#8211; returns the production as a comma separated
+string. Throws an exception if <em>this</em> is not a <span class="caps">PRODUCTION</span> node.</li>
+<li>production_as_string_by_index(index) &#8211; returns the &#8216;index&#8217;th production as a comma
+separated string.</li>
+</ul>
+
+<h2 id="parserlangdefparser">ParserLangDefParser &#8211; parses language definitions</h2>
+
+<h3>Instantiation</h3>
+
+<h3>Attributes</h3>
+
+<ul>
+<li>language_def &#8211; original string passed to object</li>
+<li>language_ar &#8211; array of arrays of ParserLangNode instances which implement
+the language definition. Keys are by production names.</li>
+<li>start_symbol &#8211; string &#8211; the starting production for the language. This will
+Either be the first production encountered OR the value taken from the
+phrase &#8217;%start non-terminal&#8217;, where <em>non-terminal</em> is a non_terminal of the
+language.</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<p>Usual magic methods, dump(), and . . .</p>
+
+<p>Recursive descent parsers &#8211; like all parsers &#8211; are very sensitive to the order in which
+productions are tested. For example, for the language &#8216;foo: A | A foo;&#8217;, when
+presented with the string &#8216;AAAA&#8217;, the parser will announce completion after seeing
+the first &#8216;A&#8217; and will ignore the trailing &#8216;AAA&#8217;. If the grammar is rewritten
+as &#8216;foo: A foo | A;&#8217;, then the parser will recognize &#8216;AAAA&#8217; and finish processing
+the string. This is a good thing.</p>
+
+<p>So we provide (crude) sorting support for fixing sloppily written (or edited) grammars.
+Calling <em>sort()</em> is optional, so one strategy for testing to see if your grammar
+is really what you want is:</p>
+
+<ol>
+<li>feed your grammar to ParserLangDefParser &#8211; by creating an instance.</li>
+<li>print the instance as a string &#8211; this will print out your grammar in a nicely
+indented display.</li>
+<li>invoke the <em>sort()</em> method on your instance.</li>
+<li>print out the instance as a string (again) and compare it with the first printout.</li>
+<li>then do something which you think is a good idea.</li>
+</ol>
+
+<ul>
+<li>sort(cmp_func = ParserLangDefParser::cmp_productions) &#8211; sorts the language productions
+using the comparision function. The default comparison function sorts the products
+so that:
+<ul>
+<li>the productions with the most non-terminals are tested first. The order is in reverse
+of the number of non-terminals in a production. For example foo: a b c | T b c | T S c | T</li>
+<li>within productions with the same number of non-terminals, they are sorted so that
+the longest are tested first.</li>
+<li>if any empty productions exist, they are deleted and a single empty production is
+tested last.</li>
+</ul>
+</li>
+<li>cmp_productions(p1, p2) &#8211; used to sort the production array. returns -1, 0, or 1
+if p1 < p2, p1 == p2, or p1 > p2 as determined by the number of non-terminals
+in each production and &#8211; for equal numbers of non-terminals &#8211; which is longer.
+In all cases, -1 means p1 is more complex than p2.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

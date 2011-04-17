@@ -1,0 +1,61 @@
+#! /bin/sh
+
+# This script creates installation tar archive files.
+# Important: it uses the 'maketar' command from 'useful utilities'
+
+PROGNAME="`basename \$0`"
+CSS="css/screen.css css/mobile.css css/print.css css/styles1.css"
+IMG=img
+JAVASCRIPT="javascript/jquery-1.4.2.min.js javascript/tinymce"
+DOCROOT_CONTENT="index.php robots.txt favicon.ico css img ${JAVASCRIPT}"
+PRIVATE_DATA="config.php version ajax_scripts atom includes installation json objects page_structure rss xml"
+VERSION="`cat {private_data_root}/system/version`"
+DUMP_DIR="{private_data_root}/dump.d"
+TARDIR="`dirname {private_data_root}`/tarfiles"
+MAKETAR=maketar
+# MAKETAR=tar
+TARFILE_NAMES="DOCUMENT_ROOT_TAR={site_id}-docroot.tar.gz
+PRIVATE_ROOT_TAR={site_id}-private.tar.gz
+SYSTEM_TAR=yasitekit-system-${VERSION}.tar.gz
+DUMP_TAR={site_id}-dump.tar.gz"
+
+# make archive files
+test -d ${TARDIR} || mkdir ${TARDIR}
+case `basename ${MAKETAR}` in
+	maketar)
+		( cd {document_root}
+		  ${MAKETAR} --exclude 'test-ajax-check.html' --exclude '**/.*.orig' --output=${TARDIR}/{site_id}-docroot.tar.gz \
+		    ${DOCROOT_CONTENT}
+		  test -d doc.d && ${MAKETAR} --output=${TARDIR}/{site_id}-doc.d.tar.gz doc.d
+		)
+		( cd {private_data_root}
+		   ${MAKETAR} --exclude='dump.d' --exclude='tests' --exclude='**/.*.orig' --exclude='system' \
+		      --exclude='installation/config-dir/**'  \
+		     --output=${TARDIR}/{site_id}-private.tar.gz ${PRIVATE_DATA}
+		   ${MAKETAR} --output=${TARDIR}/yasitekit-system-${VERSION}.tar.gz system 
+		)
+		( cd ${DUMP_DIR} 
+		   ${MAKETAR} --output=${TARDIR}/{site_id}-dump.tar.gz ${DUMP_FILES}
+		)
+		;;
+	tar)
+		( cd {document_root}
+		  ${MAKETAR} czf ${TARDIR}/{site_id}-docroot.tar.gz --exclude='test-ajax-check.html' --exclude '.*.orig' \
+		    ${DOCROOT_CONTENT}
+		  test -d doc.d && ${MAKETAR} czf ${TARDIR}/{site_id}-doc.d.tar.gz doc.d
+		)
+		( cd {private_data_root}
+		   ${MAKETAR} czf ${TARDIR}/{site_id}-private.tar.gz \
+				--exclude='dump.d' --exclude='tests' --exclude='.*.orig' --exclude='system' \
+		      	--exclude='installation/config-dir/**'  \
+		      ${PRIVATE_DATA}
+		   ${MAKETAR} czf ${TARDIR}/yasitekit-system-${VERSION}.tar.gz system 
+		)
+		( cd ${DUMP_DIR} 
+		   ${MAKETAR} czf ${TARDIR}/{site_id}-dump.tar.gz ${DUMP_FILES}
+		)
+	;;
+esac
+cat /dev/null >tarfile-list.sh
+for x in ${TARFILE_NAMES} ; do echo $x >>tarfile-list.sh ; done
+awk -F= '{print $2}' tarfile-list.sh >tarfile-list.txt

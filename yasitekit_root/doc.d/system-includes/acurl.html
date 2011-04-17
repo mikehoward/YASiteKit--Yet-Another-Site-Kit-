@@ -1,0 +1,305 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>acurl.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> acurl.php &#8211; abstracts cURL operations into an object.</h1>
+
+<p>Created by  on 2010&#8211;03-29.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>This module defines a &#8211; if not simplified, at least &#8211; congealed interface
+to the <span class="caps">PHP</span> <a href="http://us2.php.net/manual/en/book.curl.php">cURL</a> module.</p>
+
+<ul>
+<li>the <strong>ACurlData</strong> class manage query string and post data. ACurlData objects
+differ from <span class="caps">PHP</span> associative arrays because data is retrieved in the order
+it is created. <a href="#acurldata">see</a></li>
+<li>the <strong>ACurl</strong> class are a convenience package to make <span class="caps">HTTP</span> <span class="caps">GET</span>, <span class="caps">POST</span>, <span class="caps">PUT</span>, <span class="caps">HEAD</span>
+and <span class="caps">DELETE</span> requests more or less painless. <a href="#acurl">see</a></li>
+</ul>
+
+<h2 id="acurldata">ACurlData class</h2>
+
+<p>Instantiate an ACurlData object by:</p>
+
+<p>$acurldata = new ACurlData([key_case_mode,] [key1, value1, key2, value2, ...])</p>
+
+<p>The <em>first</em> parameter may be &#8216;mixed&#8217;, &#8216;upper&#8217;, or &#8216;lower&#8217; to set the key case
+mode. If it is not, then the key case mode is not defined until <span class="caps">EITHER</span>
+them method <em>set_key_case()</em> is called OR the first key is assigned a
+value [which causes the key case to default to &#8216;mixed&#8217;].</p>
+
+<p>The <em>key case mode</em> determines how keys &#8211; implemented as object instance attributes &#8211; are interpreted w.r.t. case sensitivity and how they are stored.</p>
+
+<p>If the mode is:</p>
+
+<ul>
+<li>mixed &#8211; then keys are case sensitive and &#8216;frog&#8217;, &#8216;Frog&#8217;, and &#8216;FROG&#8217; are all
+different keys with distinct values.</li>
+<li>upper &#8211; then keys are case insensitive and all keys are translated to and
+stored as upper case keys. Thus &#8216;frog&#8217;, &#8216;Frog&#8217;, and &#8216;FROG&#8217; all refer to
+the key &#8216;FROG&#8217; and have a single, shared value.</li>
+<li>lower &#8211; similar to <em>upper</em>, but with the obvious difference.</li>
+</ul>
+
+<p>The data which follows the (optional) key-case-mode <span class="caps">MUST</span> occur in pairs.
+Each (key, value) pair is put away in the order it occurs.</p>
+
+<p id="value_rules">Rules for values:</p>
+
+<ul>
+<li>if the value is a boolean &#8211; either <span class="caps">TRUE</span> or <span class="caps">FALSE</span>, then the query string
+will just contain the key name, not the value</li>
+<li>if the value is anything else, then the query string will be the string
+representation of the value</li>
+</ul>
+
+<p>Additional key, value pairs may be added to the object by simply assignment.
+For example,</p>
+
+<blockquote>
+<p>$acurldata->foo = &#8216;this is a bar&#8217;;</p>
+</blockquote>
+
+<p>creates or assigns the attribute <em>foo</em> the value &#8216;this is a bar&#8217;. If <em>foo</em>
+already exists, it&#8217;s value is updated. Otherwise both <em>foo</em> and it&#8217;s value
+are appended to the (key, value) list.</p>
+
+<h3>Attributes</h3>
+
+<p>All <em>key</em> values are accessible as attributes.</p>
+
+<h4>Attribute Names</h4>
+
+<p>Attribute names must satisfy the regular expression [a-zA-Z]\w*, where \w is a &#8216;word character&#8217;.</p>
+
+<p>Attribute names may or may not be case sensitive. See section on instantiation for
+details and how to contro <em>key case mode</em>.</p>
+
+<p>Attribute names may be specified in any case, but will be retrieved according to
+the current key case mode: <em>mixed</em>, <em>lower</em>, or <em>upper</em>.</p>
+
+<p>The retrieved value when retrieved using the <em>keys()</em> method or a constructed
+query string is according to key case mode.</p>
+
+<h4>Assignment</h4>
+
+<p>Attributes may be assigned in three different ways:</p>
+
+<ol>
+<li>construction &#8211; attribute, value pairs are assigned when the object is constructed.</li>
+<li>assignment &#8211; writing $acurldata->att_name = &#8216;foo&#8217;; assigns the attribute, creating
+the key if required.</li>
+<li>merging &#8211; all the key, value pairs defined in another ACurlData instance may be merged
+with an instance by invoking the <em>merge</em> method. This results in the new values
+overwriting any existing values, so merging is <em>not</em> a symetric or non-destructive
+operation. Write: $acurldata->merge($other_acurldata);</li>
+</ol>
+
+<h4>Access</h4>
+
+<p>Attributes may be accessed in  different ways:</p>
+
+<ol>
+<li>as attributes &#8211; $acurldata->attr_name returns the value of <em>attr_name</em> or &#8217;&#8217;.
+<em>attr_name</em> is interepreted according to the existing current key case mode.</li>
+<li>iteration &#8211; use <em>first_key_value()</em> and <em>next_key_value()</em> &#8211; both of which
+return two element arrays of the form array(attribute-name, attribute-value)</li>
+<li>as query string &#8211; convert the ACurlData instance to a string:
+<ol>
+<li>(string)$acurldata</li>
+<li>&#8221;$acurldata&#8221;</li>
+<li>$acurldata->asString()</li>
+</ol>
+</li>
+</ol>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<p>The magic methods __toString(), __get(), __set(), __isset(), and __unset() are
+defined so that ACurlData instances may be used in a natural way.</p>
+
+<ul>
+<li>__get(name) &#8211; $acurldata->foo &#8211;  returns the value of the foo, if defined, else <span class="caps">NULL</span>.</li>
+<li>__set(name, val) &#8211; $acurldata->foo = &#8216;something&#8217;; &#8211; re-assigns or creates
+the variable <em>foo</em> and assigns it the value &#8216;something&#8217;. Order of assignment is
+preserved.</li>
+<li>__isset($name) &#8211; isset($name) . . . &#8211; returns <span class="caps">TRUE</span> if $name is a defined attribute, else <span class="caps">FALSE</span></li>
+<li>__unset($name) &#8211; unset($name); &#8211; unsets the specified attribute.</li>
+<li>__toString() method returns the query string made up of the (key, value) pairs
+<em>in order of definition</em>. See <a href="#value_rules">above</a> for value rules.</li>
+</ul>
+
+<p>Non-magic methods</p>
+
+<ul>
+<li>legal_key_case($mode) &#8211; returns <span class="caps">TRUE</span> if <em>mode</em> is one of &#8216;mixed&#8217;, &#8216;upper&#8217;, or &#8216;lower&#8217;.</li>
+<li>set_key_case($mode) &#8211; where <em>mode</em> is one of &#8216;mixed&#8217;, &#8216;upper&#8217;, or &#8216;lower&#8217;. This
+method may only be called once and <span class="caps">NOT</span> after any keys are assigned. If the key
+case is not set in the constructor and no keys have been assigned, then it may
+be assigned using <em>set_key_case()</em>. If this method is called after the key case
+has been assigned, an exception is thrown.</li>
+<li>key_case() &#8211; returns current key case as one of the strings &#8216;mixed&#8217;, &#8216;upper&#8217;, or &#8216;lower&#8217;.</li>
+<li>keys() &#8211; returns an array of all defined keys in the order they were defined.</li>
+<li>asString() &#8211; convenience function which returns the value of the ACurlData object
+as a string. Identical to (string)$acurldata;</li>
+<li>emptyP() &#8211; returns <span class="caps">TRUE</span> if the ACurlData instance has no keys set</li>
+<li>first_key_value() &#8211; returns the array(key, value) for the first (key, value) pair
+and sets the iteration index.</li>
+<li>next_key_value() &#8211; returns the the next (key, value) pair as an array OR <span class="caps">FALSE</span>
+if there are no more. Advances iteration index</li>
+<li>merge($other) &#8211; assigns all the (key, value) pairs in <em>other</em> to <em>this</em> ACurlData
+instance as though they were assigned using as usual assignments. If <em>other</em> is
+not an ACurlData, throws an exception.</li>
+<li>parse_array(array) &#8211; works through an array of (key, value) pairs and puts
+them away. See <a href="#value_rules">value rules</a> above.</li>
+<li>parse_query_string($str, $urldecode_flag = <span class="caps">FALSE</span>) &#8211; parses the query string <em>str</em> and assigns it&#8217;s
+values to <em>this</em> object. This is useful for parsing, reformatting and merging query string
+data. If <em>urldecode_flag</em> is <span class="caps">TRUE</span>, then the data values are url-decoded.
+Default is to snarf them down raw.</li>
+<li>dump(msg = <span class="caps">NULL</span>) &#8211; returns a string defining the state of this ACurlData instance.</li>
+</ul>
+
+<h2 id="acurl">ACurl class</h2>
+
+<p>Use by instantiating an object and then invoking the objects methods. Each
+of the public methods takes a <span class="caps">URL</span>. This <span class="caps">URL</span> may be either a fully qualified
+<span class="caps">URL</span> &#8211; in which case it is used as is &#8211; or it can be a relative or server absolute
+<span class="caps">URL</span>, in which case the instantiation values for server and scheme/protocol are
+used.</p>
+
+<h3>Instantiation</h3>
+
+<p>$a_curl = new aCurl($url, $agent_str = &#8220;Mozilla/4.0&#8221;, $https = <span class="caps">FALSE</span>);</p>
+
+<p>where:</p>
+
+<ul>
+<li>$url &#8211; string &#8211; url ACurl will be talking with. This string is parsed
+and the <em>scheme</em>, <em>host</em>, <em>user</em>, <em>password</em>, values <em>port</em> are saved, if they
+exist and define the defaults for subsequent requests.</li>
+<li>$agent_str &#8211; string &#8211; is the string passed in the &#8216;User-Agent&#8217; header</li>
+<li>$https &#8211; boolean &#8211; is used to deterimine if no-fully specified urls use the <span class="caps">HTTP</span>
+or <span class="caps">HTTPS</span> scheme.</li>
+</ul>
+
+<h3>Attributes</h3>
+
+<ul>
+<li>agent_str &#8211; string &#8211; the text sent in the user agent header</li>
+<li>body &#8211; string or <span class="caps">NULL</span> &#8211; response to last request executed or <span class="caps">NULL</span></li>
+<li>fragment &#8211; string &#8211; always disregarded &#8211; <span class="caps">NULL</span> or derived from the instantiation <span class="caps">URL</span></li>
+<li>host &#8211; string &#8211; the host this aCurl object talks to &#8211; derived from instantiation <span class="caps">URL</span></li>
+<li>https &#8211; boolean &#8211; if <span class="caps">TRUE</span>, curl uses the <span class="caps">HTTPS</span> [aka <span class="caps">SSL</span> aka <span class="caps">TLS</span>]. Default is <span class="caps">FALSE</span>.</li>
+<li>http_headers &#8211; associative array or <span class="caps">NULL</span> &#8211; headers from last executed request. Keys are header
+field names.</li>
+<li>http_start_line &#8211; string or <span class="caps">NULL</span> &#8211; the <span class="caps">HTTP</span> start line response from last executed
+request</li>
+<li>include_headers &#8211; boolean &#8211; <span class="caps">TRUE</span> to populate http_headers and http_start_line attributes.
+Setting <em>include_headers</em> <span class="caps">TRUE</span>, automatically sets <em>verbose</em> to <span class="caps">FALSE</span>.</li>
+<li>pass &#8211; string &#8211; <span class="caps">NULL</span> or derived from the instantiation <span class="caps">URL</span></li>
+<li>path &#8211; string &#8211; always diregarded &#8211; derived from instantiation <span class="caps">URL</span></li>
+<li>port &#8211; string &#8211; <span class="caps">NULL</span> or derived from the instantiation <span class="caps">URL</span></li>
+<li>query &#8211; string &#8211; <span class="caps">NULL</span> or derived from the instantiation <span class="caps">URL</span></li>
+<li>scheme &#8211; string &#8211; default string. This will either be set by the instantiating <span class="caps">URL</span> or set to <em>http</em> or <em>https</em> depending on the <em>$https</em> boolean</li>
+<li>url &#8211; string &#8211; url used when instantiating instance &#8211; see constructor</li>
+<li>user &#8211; string &#8211; <span class="caps">NULL</span> or derived from the instantiation <span class="caps">URL</span></li>
+<li>verbose &#8211; boolean &#8211; passed to undelying curl library. Default is <span class="caps">FALSE</span>. Must be set programatically after instiating object.</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<p>All Data parameters are associative arrays. These are used to construct
+proper <span class="caps">URL</span> encoded strings to send to the host specified when creating the
+aCurl object. Keys to the arrays are <span class="caps">NOT</span> url encoded and are <span class="caps">NOT</span> sanity
+checked.</p>
+
+<p>The actual <span class="caps">URL</span> used is constructed using the <em>$url</em> argument augmented
+by parts of the <em>$url</em> used in constructing the ACurl object. This is
+done by parsing the <em>$url</em> argument using <em>parse_url()</em> to produce an array with
+keys: <em>scheme</em>, <em>host</em>, <em>port</em>, <em>user</em>, <em>pass</em>, <em>path</em>, <em>query</em>, and <em>fragment</em>.</p>
+
+<p>The actual <span class="caps">URL</span> is built as follows:</p>
+
+<ol>
+<li>if <em>scheme</em> is missing, $this->scheme is used</li>
+<li>if <em>host</em> is missing, then <em>this->host</em> is used</li>
+<li>if any of <em>port</em>, <em>user</em>, or <em>pass</em> is present, it is used. If not, then <em>this->whatever</em>
+is used.</li>
+<li>if <em>query</em> is supplied allong with query data [as in get()] then it is merged
+with the supplied get data. The query string from the <span class="caps">URL</span> <em>preceeds</em> the query
+data constructed from parameters, so that the arguments to the method take precidence
+in the case of duplicated, non-array style query parameters.</li>
+<li><em>path</em> and <em>fragment</em> are alwyas ignored</li>
+</ol>
+
+<p>This is really simpler than it reads. Basically, it does what you want it to
+do.</p>
+
+<p>Query and Post data are specified using pairs of parameters to the <em>get</em> and
+<em>post</em> methods respectively. Each pair consists of the variable name, followed
+immediately by the variable value. This is done so that the order of occurance
+of query and post data may be guarenteed.</p>
+
+<p>For example: $foo->get(url, &#8216;parm1&#8217;, &#8216;value1&#8217;, &#8216;parm2&#8217;, &#8216;value2&#8217;) will
+result in a <span class="caps">URL</span> which looks (roughly) like: http://url?parm1=urlencode(value1)&amp;parm2=urlencode(value2)</p>
+
+<ul>
+<li>get($url, qp1, qv1, ...) &#8211; returns of the result of a <span class="caps">GET</span> request with the query string
+defined by the variable pairs following $url.</li>
+<li>post_data($url, $post_data) &#8211; sends <em>post_data</em> to <em>url</em> using <span class="caps">POST</span> request. Returns
+result.</li>
+<li>post_query($url, pp1, pv1, ...) &#8211; returns of the result of a <span class="caps">POST</span> request with the post data
+defined by the variable pairs following $url</li>
+<li>put_data($url, $data) &#8211; same as <em>post_data()</em> except uses <span class="caps">PUT</span> request</li>
+<li>put_query($url, pp1, pv1, ...) &#8211; same as <em>post_query()</em> but uses <span class="caps">PUT</span> <span class="caps">HTTP</span> request.</li>
+<li>put_json($url, $put_data) &#8211; encodes <em>put_data</em> using json_encode() and passes it to put_data</li>
+<li>put_file($url, $file_path) &#8211; returns of the result of a <span class="caps">PUT</span> request. The specified
+file is read and the contents are <span class="caps">PUT</span> to the supplied <span class="caps">URL</span></li>
+<li>delete($url) &#8211; returns of the result of a <span class="caps">DELETE</span> request to the specified
+url.</li>
+<li>dump(msg = <span class="caps">NULL</span>) &#8211; returns a string which dumps the state of the ACurl object.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

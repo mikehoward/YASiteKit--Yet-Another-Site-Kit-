@@ -1,0 +1,193 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Map.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> Map &#8211; The Map object manages mapping between versions of a site</h1>
+
+<p>Created by  on 2010&#8211;06-18.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved. Licensed under the terms of the <span class="caps">GNU</span> Lesser
+<span class="caps">GNUL</span> License, version 3.  See <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a> for details.</p>
+</blockquote>
+
+<blockquote>
+<p><span class="caps">THIS</span> <span class="caps">SOFTWARE</span> <span class="caps">HAS</span> NO <span class="caps">WARRANTEE</span> OR <span class="caps">REPRESENTATION</span> <span class="caps">FOR</span> <span class="caps">FITNESS</span> OF <span class="caps">PURPOSE</span>.
+<span class="caps">USE</span> AT <span class="caps">YOUR</span> <span class="caps">OWN</span> <span class="caps">RISK</span>.</p>
+</blockquote>
+
+<p>Maps are describe in some detail in <a href="/doc.d/ControllingSiteDevelopment.html">Development-Control</a>.
+Additonal relavant material is in <a href="/doc.d/DatabaseState.html">Database States</a> and
+<a href="/doc.d/Overview.html">Overview of YASiteKit</a></p>
+
+<p>Maps are really implmented using two classes:</p>
+
+<ul>
+<li><a href="#map_for_object">MapForObject</a> is used to analyze differences between two versions of the same AnInstance calss</li>
+<li><a href="#map">Map</a> is used to analyze and create a mapping function for an entire site.</li>
+</ul>
+
+<ul>
+<li><a href="#instantiation">Instantiation</a></li>
+<li><a href="#attributes">Attributes</a></li>
+<li><a href="#class_methods">Class Methods</a></li>
+<li><a href="#instance_methods">Instance Methods</a></li>
+</ul>
+
+<h2 id="map">Map Class</h2>
+
+<p>The Map class is used to compare two versions of all the AnInstance classes in a YASiteKit
+site. It will analyze them and determine if a map is needed, if one is possible and
+can create an intereactive form to create one.</p>
+
+<h3 id="map_instantiation">Instantiation</h3>
+
+<pre>$map_obj = new Map($source, $target = NULL)
+</pre>
+
+<p>where <em>$source</em> and <em>$target</em> are
+associative arrays of arrays as describe in <a href="#map_for_object_instantiation">MapForObject Instantiation</a>.
+The array keys are the AnInstance classes of the site. If <em>$target</em> is null (the default),
+then AClass::php_defs_ar() is called to get the arrays for the current version of the site.
+In other words, Map will be initialized from a backup archive and the current definition of
+all the objects. This is generally what you want.</p>
+
+<p>Generally you can forget about the <em>$target</em> argument, unless you come up with a case where
+you need to compute a map between two archives. I haven&#8217;t thought of a real use case for this,
+but there may be one &#8211; and having capability is essentially free.</p>
+
+<h3 id="map_attributes">Attributes</h3>
+
+<p>First, all attributes are read-only. Only __get() is implemented, so <strong>isset()</strong>, <strong>unset()</strong>
+and attribute assignments don&#8217;t work.</p>
+
+<p>The only attribute which is interesting &#8211; outside of the object itself &#8211; is <em>site_state</em>.</p>
+
+<p><em>site_state</em> can take on three values: no-map, need-map, and &#8216;illegal&#8217;.</p>
+
+<p>The other attributes are:</p>
+
+<ul>
+<li><em>source</em> and <em>target</em> (passed to constructor at instantiation),</li>
+<li><em>map_for_object_ar</em> &#8211; which is an associative array keyed by AnInstance class names
+into all the MapForObject instances for the site.</li>
+<li>errors &#8211; the accumlation of error messages</li>
+</ul>
+
+<h3 id="map_class_methods">Class Methods</h3>
+
+<p>none</p>
+
+<h3 id="map_instance_methods">Instance Methods</h3>
+
+<ul>
+<li>create_map_form($action) &#8211; analyzes the differences between the source and target and
+returns one of three strings:
+<ul>
+<li>if no map is needed, then it&#8217;s simply a message to that effect</li>
+<li>if the site is in an illegal state, then you also get a message</li>
+<li>if a map is needed, then the string is a &lt;form&gt; element which invokes the
+<em>$action</em> supplied.</li>
+</ul>
+</li>
+<li>process_form($rc, $dump_dir) &#8211; eats the result of a <em>create_map_form()</em> form submission
+and writes out the map function and map function description to the files _map_data_function.php
+and _map_data_description.html, respectively.
+<em>$rc</em> must be a <a href="/doc.d/system-includes/request_cleaner.html">RequestCleaner</a> object.
+<em>$dump_dir</em> is the dump directory into which the map files are written.</li>
+<li>dump(msg = &#8217;&#8217;) &#8211; returns a string containing information about the Map instance. This
+consists of the contents of the <em>errors</em> and <em>site_state</em> attributes along with the
+map instructions for each AnInstance object which requires a mapping.</li>
+</ul>
+
+<h2 id="map_for_object">MapForObject Class</h2>
+
+<p>As the name suggests, a MapForObject instance is used to examine and prepare a map
+for all the attributes of a single object. It encapsulates all the relationships
+between AClass data types and their compitability.</p>
+
+<h3 id="map_for_object_instantiation">Instantiation</h3>
+
+<pre>$foo = new MapForObject(class-name, source-defs, target-defs)
+</pre>
+
+<p>This creates a MapForObject instance for the given class-name. It expects that
+both <em>source-defs</em> and <em>target-defs</em> to be associative arrays with three keys:</p>
+
+<ul>
+<li>defs &#8211; a copy of the attribute definitions used to create the class &#8211; parameter
+3 of the <a href="/doc.d/system-includes/aclass.html">AClass::define_class()</a> call.</li>
+<li>keys &#8211; a copy of the keys_list attribute of the class</li>
+<li>props &#8211; a copy of attribute_properites attribute of the class.</li>
+</ul>
+
+<p>These arrays can either be obtained from an archive &#8211; in the file <strong>_acalss_attribute_defs.php</strong> &#8211; or from a the AClass static method <em>php_defs_ar()</em>.</p>
+
+<h3 id="map_for_object_attributes">Attributes</h3>
+
+<p>All attributes are read-only. They aren&#8217;t very interesting unless you have to fix a bug
+in the Map class. Read the code for details.</p>
+
+<p>The only interesting attributes are:</p>
+
+<ul>
+<li>all_attributes &#8211; a list of all attributes used in both source and target</li>
+<li>new_attributes, missing_attributes, retained_attributes &#8211; arrays of attribute names
+which are new, missing from or retained in the the target.</li>
+<li>map_instructions &#8211; an associate array with attributes as keys.
+values are array. The first element of a value array determines the format
+<ul>
+<li>- new &#8211; &#8211; second element is an array of 3 element arrays: array(missing-attribute, safety, comment)</li>
+<li>- delete &#8211; second element is &#8216;Safe&#8217;, third element is comment</li>
+<li>- change &#8211; second element is <em>safety</em>, third element is comment</li>
+<li>- unchanged &#8211;  &#8211; no more elements
+<ul>
+<li>safety and comment are returned values from _data_type_change_analysis()</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<h3 id="map_for_object_class_methods">Class Methods</h3>
+
+<p>none</p>
+
+<h3 id="map_for_object_instance_methods">Instance Methods</h3>
+
+<ul>
+<li>need_mapP() &#8211; returns true if a map is needed to convert from <em>source</em> to <em>target</em></li>
+<li>create_map_instructions() &#8211; populates the attribute <em>map_instructions</em>. Returns nothing.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

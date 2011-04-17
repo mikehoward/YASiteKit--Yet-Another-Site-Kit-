@@ -1,0 +1,290 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>PackageSpec.textile</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>Package The YASiteKit Package Specification</h1>
+
+<p>A <strong>YASiteKit</strong> package is means to add functionality to a YASiteKit site. In Drupal parlance,
+it is similar to a Module. In other systems they would be called &#8220;plugins&#8221;.</p>
+
+<p>Packages are actually a collection of files in a subdirectory of <em>private_root/packages</em>
+or <em>system_root/packages</em>. It doesn&#8217;t matter where they are placed unless the there
+are more than one web site sharing the same system. In that case, site specific packages
+should be in _private_root/packages__ and packages which are used in more than one
+site &#8211; without any special modifications &#8211; should be placed in <em>system_root/packages</em>.</p>
+
+<p>A <em>package</em> consists of the following files:</p>
+
+<ul>
+<li>an install file</li>
+<li>one or more object files &#8211; these define <span class="caps">PHP</span> 5 objects which implement the data
+structures and capabilities of the package.</li>
+<li>one or more YATheme Template files</li>
+<li>one <span class="caps">README</span>.txt file with the usual content. The content is plain text. All <span class="caps">HTML</span>
+will be stripped and it will be displayed as preformatted.</li>
+</ul>
+
+<p>Packages are managed by the <a href="/doc.d/system-objects/Package.html">Package.php</a> object.</p>
+
+<p>Package names must conform to a subset of camel case: The name must consist of words
+which each begin with a capital letter and are then followed by one or more lower
+case letters or digits. All words are concatenated together. In regular expression-esse,
+they must satisfy &#8217;^([A-Z][a-z0&#8211;9]<ins>)</ins>$&#8217;.</p>
+
+<p>Package directory names consist of lower case words joined by underscore characters (_).
+For example, the &#8216;Foo&#8217; package will be in the directory named &#8216;foo&#8217;. The &#8216;FooBar&#8217; package
+will bin the directory named &#8216;foo_bar&#8217;.</p>
+
+<h2>The Install File</h2>
+
+<p>It contains one or more RequestRouter initialization arrays which define the
+routing to the Package&#8217;s capabilities. These connect specific paths to Package Template files.</p>
+
+<p>The install file is always named <em>install.php</em>.
+It must be valid <span class="caps">PHP</span>.
+It must contain entries for the following variables:</p>
+
+<ul>
+<li>$install_data &#8211; array &#8211; an array of installation arrays</li>
+<li>$required_packages &#8211; string &#8211; a comma separated list of required package names</li>
+<li>$required_objects &#8211; string &#8211; comma separated list of required objects which are
+not in a package. These are either system or site specific objects which just don&#8217;t
+live in a package.</li>
+<li>$management &#8211; array &#8211; is empty or either a Package initialization array. Only one
+management script is allowed, so there can be only one initialization array</li>
+</ul>
+
+<h3>The $install_data Array</h3>
+
+<p>For example, let&#8217;s say that the &#8216;foo&#8217; package has a template named &#8216;Foo.tpl&#8217;
+which requires two parameters called &#8216;bar&#8217; and &#8216;baz&#8217;. Let&#8217;s also assume
+it has a listing feature. Then the install file might contain:</p>
+
+<pre>
+$install_data = array(
+array(
+'routing_key' => 'foo',
+'resource_name' => 'Foo Things',
+'script_name' => 'Foo.tpl',
+'path_map' => 'bar/baz',
+'required_authority' => 'ANY',
+'authority_field_name' => '',
+),
+array(
+'routing_key' => 'foo_list',
+'resource_name' => 'Foo Thing List',
+'script_name' => 'FooList.tpl',
+'path_map' => 'start_date/end_date',
+'required_authority' => 'ANY',
+'authority_field_name' => '',
+),
+);
+</pre>
+
+<pre>
+// install_data for a package which provides function, but no visibility.
+$install_data = array(
+);
+</pre>
+
+<p>Notes:</p>
+
+<ul>
+<li><em>install.php</em> <em>must</em> define the variable &#8217;$install_data&#8217; as an array of arrays.</li>
+<li>the <em>script_name</em> key value must be the file name of the script.
+Scripts are expected to be in the <em>package</em> directory or somewhere else along the
+include path. All scripts are processed by YATheme &#8211; which uses the YAThemeParser
+object (defined in <a href="/doc.d/system-includes/athemer.html">athemer.php</a>). The YAThemeParser
+knows how to find the script on the include path or in a subdirectory of one of the
+packages directories. <span class="caps">NOTE</span>: Script names <em>must</em> be <em>unique</em> site-wide.</li>
+<li>the <em>routing_key</em> must be unique in the system. It should be constructed with
+the lower case version of the package name leading. Differing functions can
+be indicated by appending words after the package name &#8211; conventionally separated
+by underscores (_). (See examples above)</li>
+<li>The following fields do not need to be defined because they have reasonable defaults:
+<ul>
+<li>required_authority &#8211;  defaults to &#8217;&#8217; &#8211; meaning anyone may access</li>
+<li>authority_field_name &#8211; the name of the authority field within a record which
+overrides the <em>required_authority</em> value in the RequestRouter record. Defaults to &#8217;&#8217;
+which means that there isn&#8217;t one.</li>
+</ul>
+</li>
+</ul>
+
+<h3>The $required_packages Variable</h3>
+
+<p>The required packages variable is simply a string containing a comma separated
+list of package names. It must be present and empty if nothing is required.</p>
+
+<pre>$required_packages = 'Foo, Bar';
+</pre>
+
+<pre>$required_packages = '';   // nothing required
+</pre>
+
+<h3>The $required_objects Variable</h3>
+
+<p>A comma separated list of object names which are not in packages.</p>
+
+<pre>$required_objects = '';  // nothing required
+</pre>
+
+<pre>$required_objects = 'Address';
+</pre>
+
+<h3>The $management Variable</h3>
+
+<p>For a package which requires no management:</p>
+
+<pre>$management = ''; or array(); or NULL; or FALSE
+</pre>
+
+<p>For a package which uses a single point of management, create a single
+Package initialization array. The <em>resource_name</em> field may be omitted;
+if omitted, it will named &#8220;package-name Management&#8221;, where package-name
+is the name of the package.</p>
+
+<p>The additional key <em>object_names</em> is a comma separated list of Object Names.</p>
+
+<p><span class="caps">NOTE</span>: if an object is not named in a management initialization array, it is
+presumed to be <span class="caps">UNMANAGED</span>.</p>
+
+<pre>
+$management = array(
+'object_names' => 'Foo',
+'routing_key' => 'manage_foo',
+'resource_name' => 'Foo Management',
+'script_name' => 'ManageObject.tpl',
+'path_map' => 'object',
+'required_authority' => 'X',
+);
+</pre>
+
+<p>For a package which contains multiple objects which require separate management,
+, create an array of Package initialization arrays.
+The <em>resource_name</em> field may be omitted;
+if omitted, it will named &#8220;package-name Management&#8221;, where package-name
+is the name of the package.</p>
+
+<pre>
+$management = array(
+array(
+'object_names' => 'Foo,Bar',
+'routing_key' => 'manage_foo_or_bar',
+'resource_name' => 'Foo and Bar Management',
+'script_name' => 'ManageFooBar.tpl',
+'path_map' => 'obj_key',
+'required_authority' => 'X',
+),
+array(
+'object_names' => 'Baz',
+'routing_key' => 'manage_baz',
+'resource_name' => 'Baz Management',
+'script_name' => 'ManageBaz.tpl',
+'path_map' => 'baz_key',
+'required_authority' => 'X',
+),
+);
+</pre>
+
+<h2>Package Object Files</h2>
+
+<p>Objects in the package must be in files named for the name of the (primary) object
+and with a &#8217;.php&#8217; suffix.</p>
+
+<p>Thus, if a package encapsulates its data and functionality in an object called &#8216;Foo&#8217;,
+the object must be defined in a file named &#8216;Foo.php&#8217;.</p>
+
+<p>The only code in this file should be the code necessary to define the object.</p>
+
+<p>There is no requirement that Foo be defined using AClass and AnInstance, but it&#8217;s
+a good idea in order to interoperate with other objects and to gain the many of the
+basic advantages of using YASiteKit.</p>
+
+<p>By convention, YASiteKit objects and object files are named using &#8216;camel case&#8217;.</p>
+
+<h2>Package Template Files</h2>
+
+<p>Template files are used to create web pages. All template files end in &#8217;.tpl&#8217;.</p>
+
+<p>See <a href="/doc.d/YAThemeSpec.html">YATheme</a> for details on the YATheme templating language
+and how to construct template files.</p>
+
+<p>There must be at least one template in order to create web pages for the package.</p>
+
+<p>Template files have the following resources available to figure out what they are
+supposed to do:</p>
+
+<ul>
+<li>Globals::$router_obj &#8211; which is the RequestRouter object which was used to
+locate them. See <a href="/doc.d/system-includes/requrest_router.html">requrest_router.php</a>
+for details of the router object. Important attributes are:
+<ul>
+<li>routing_key &#8211; which should give a hint as to what <em>unique</em> <span class="caps"><span class="caps">URL</span></span> got here.</li>
+<li>required_authority &#8211; which lists 0 or more authority tokens. This is not normally
+needed because authorization is handled by <a href="/doc.d/system-includes/render_tpl.html">render_tpl.php</a>
+prior to the script getting control.</li>
+<li>uri &#8211; will contain the <span class="caps"><span class="caps">URL</span></span> which got us to the site.</li>
+<li>additionally &#8211; all tokens in the &#8216;path_map&#8217; attribute are used to create attribute which
+hold their respective values or <span class="caps"><span class="caps">FALSE</span></span> if not defined in the <span class="caps"><span class="caps">URL</span></span>. (NOTE: you should use
+the identity test for false, as in &#8217;$foo->bar === <span class="caps"><span class="caps">FALSE</span></span>)
+For example, if <em>path_map</em> is &#8216;foo/bar/baz&#8217; and the <em>routing_key</em> is &#8216;marble&#8217;, then the
+<span class="caps"><span class="caps">URL</span></span>&#8216;s beginning with &#8217;/marble/...&#8217; will be processed by this object. Examples of mapping:
+<ul>
+<li><span class="caps"><span class="caps"><span class="caps">URL</span></span></span>: $instance->map_pathinfo(/marble/1/frog/hopping) will generate attributes:
+<ul>
+<li>foo => 1</li>
+<li>bar => frog</li>
+<li>baz => hopping.</li>
+</ul>
+</li>
+<li><span class="caps"><span class="caps"><span class="caps">URL</span></span></span>: $instance->map_pathinfo(/marble/poodle) will also generate 3 attributes:
+<ul>
+<li>foo => poodle</li>
+<li>bar => <span class="caps"><span class="caps"><span class="caps"><span class="caps">FALSE</span></span></span></span></li>
+<li>bax => <span class="caps"><span class="caps"><span class="caps"><span class="caps">FALSE</span></span></span></span></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<h2>Packaging</h2>
+
+<p>Packages should be packed as gzipped or bzip2&#8217;ed tar files or zip files.</p>
+
+<p>The root directory must be the package name directory so that when the archive
+file is unpacked in <em>private_root/package</em> it will be ready to use in the system.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

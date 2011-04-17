@@ -1,0 +1,109 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>test_functions.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> test_functions.php &#8211; Functions to make unit testing easier</h1>
+
+<p>Created by  on 2010&#8211;06-19.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved. Licensed under the terms of the <span class="caps">GNU</span> Lesser
+<span class="caps">GNUL</span> License, version 3.  See <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a> for details.</p>
+</blockquote>
+
+<blockquote>
+<p><span class="caps">THIS</span> <span class="caps">SOFTWARE</span> <span class="caps">HAS</span> NO <span class="caps">WARRANTEE</span> OR <span class="caps">REPRESENTATION</span> <span class="caps">FOR</span> <span class="caps">FITNESS</span> OF <span class="caps">PURPOSE</span>.
+<span class="caps">USE</span> AT <span class="caps">YOUR</span> <span class="caps">OWN</span> <span class="caps">RISK</span>.</p>
+</blockquote>
+
+<p>This module defines some functions to use with testing. This is really a
+simpler version of a  unit testing framework &#8211; without all the extra
+stuff.</p>
+
+<h2>How to Use It</h2>
+
+<ol>
+<li>require_once(&#8216;test_functions.php&#8217;);</li>
+<li>if you&#8217;re testing variants in a loop, you probably want to call testReset()
+at the top of the loop to reset the test and error counters</li>
+<li>do your tests &#8211; picking test functions to report and count tests and errors.</li>
+<li>at the end (or bottom of the loop or wherevery you want), call testReport()
+to get a quick summary.</li>
+</ol>
+
+<h2>Reference</h2>
+
+<h3>Test Functions</h3>
+
+<ul>
+<li>testReset() &#8211; resets test count and error count to zero</li>
+<li>testReport() &#8211; prints a two line summary &#8211; number of tests and number
+of failures.</li>
+</ul>
+
+<p>The following functions print a test result message and increment the counters.</p>
+
+<ul>
+<li>testTrue(message, value) &#8211; print Pass if <em>value</em> is <span class="caps">TRUE</span> else Fail followed by
+message.</li>
+<li>testFalse(message, value) &#8211; prints Pass if <em>value</em> is <span class="caps">FALSE</span>, else Fail</li>
+<li>testNoDBError(message, $dbaccess) &#8211; prints Pass message if $dbaccess->errorP()
+returns <span class="caps">TRUE</span> &#8211; indicating that the last database operating completed successfully.
+Else Fail</li>
+<li>testDBError(message, $dbaccess) &#8211; reverses testNoDBError()</li>
+<li>testException(message, $code) &#8211; executes <em>$code</em> using eval() inside a try&#8230; catch
+construct. Prints Pass if <em>$code</em> generates an exception, otherwise Fail. Couple
+of Gotchas:
+<ul>
+<li>$code must be syntactically correct <span class="caps"><span class="caps">PHP</span></span> &#8211; including semicolons</li>
+<li>$code must <span class="caps"><span class="caps">NOT</span></span> include and php escapes (&lt;?php)</li>
+<li>$code must include &#8216;global&#8217; directives if you need to access a global variable,
+like: &#8220;global $dbaccess;$dbaccess->method();&#8221;</li>
+</ul>
+</li>
+<li>testNoException(message, $code) &#8211; the reverse of testException(). Same considerations
+apply.</li>
+</ul>
+
+<p>Utilities</p>
+
+<ul>
+<li>test_helper(message, value) &#8211; does the actual work for most of the test result functions.
+Use if you want to add a test so we keep all the message headers and counters in one place.</li>
+<li>ignore_exception() &#8211; an exception handler which does nothing. Useful if you have some
+exception handling buried deep enough that a try&#8230; catch&#8230; be able to clean up
+any undesired output. If you use it, follow with a <em>restore_exception_handler()</em> as
+soon as possible to avoid losing interesting error reports.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

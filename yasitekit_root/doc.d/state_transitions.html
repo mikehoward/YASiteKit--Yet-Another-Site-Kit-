@@ -1,0 +1,158 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>state_transitions.textile</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>YASiteKit-State &#8211; YASiteKit State Transitions</h1>
+
+<p style="clear:both;"><a href="/doc.d/img/StateTransitions3.jpg"><img src="/doc.d/img/StateTransitions3.jpg" style="float:right;" height="30%" width="30%" alt="" /></a>
+This is the third &#8211; and final &#8211; revision of the YASiteKit site state design.</p>
+
+<h2>Events which Cause Transitions</h2>
+
+<h3>Manual Events</h3>
+
+<ol>
+<li>Normal Operation
+<ol>
+<li>SAVE_RECORD &#8211; occurs each time a persistent object&#8217;s <em>save()</em> method is executed
+and the object data has been modified.</li>
+</ol>
+</li>
+<li>Admin takes site Offline or Online
+<ol>
+<li>GO_OFFLINE</li>
+<li>GO_ONLINE</li>
+</ol>
+</li>
+<li>Maintenance
+<ol>
+<li>REFRESH_ACLASS_HASHES &#8211; the system maintains two MD5 hashes for each persistent object
+in order to detect changes to the field definitions (legal edits which create model mismatches)
+and changes to key field definitions (illegal edits. Once created, key field names and data types
+may not be changed). During system initialization and database rebuilds, the hashes need
+to be refreshed.</li>
+</ol>
+</li>
+<li>Developer Edits a Persistent object and the system detects that the edit invalidates
+the coordination between the site model (the object) and the database (from saved archive).
+<span class="caps">NOTE</span>: transitions only occur if there are entries in the database for the object under
+test. This may not be correct for production environments, but I can&#8217;t think of a case
+where it doesn&#8217;t work.
+<ol>
+<li>MODEL_MISMATCH_EDIT &#8211; an edit which changes a persistent object field definition:
+field name, field data type, adds a field or deletes a field, but does not modify a key field</li>
+<li>ILLEGAL_EDIT &#8211; an edit which modifies the name or data type of a key field of a persistent
+object.</li>
+<li>RESTORATIVE_EDIT &#8211; an edit which reverses either a MODEL_MISMATCH_EDIT or ILLEGAL_EDIT.
+Typically will be a restore from a version control system. This action can be recognized
+by the system if it fully restores the object definitions to the point where the hash
+values match.</li>
+</ol>
+</li>
+<li>Database Rebuild &#8211; momentarily invalidates the database
+<ol>
+<li>START_REBUILD</li>
+<li>FINISH_REBUILD</li>
+</ol>
+</li>
+<li>Create Database Archive
+<ol>
+<li>CREATE_ARCHIVE</li>
+</ol>
+</li>
+</ol>
+
+<h2>State</h2>
+
+<p>State consists of the values of four database attributes (see
+<a href="/doc.d/system-includes/dbaccess.html">dbaccess.php</a>), which are
+expressed in various forms.</p>
+
+<p id="state_names">The summary form is a string consisting of the values of all four variables,
+in order, and separated by underscore (_) characters. For example, &#8216;T_F_T_F&#8217; &#8211; which is shorthand for <strong>(on line, archive not stale, database valid, no model mismatch)</strong>.</p>
+
+<h3>State Variables</h3>
+
+<ul>
+<li>on_line &#8211; defines the accessibility of the site
+<ul>
+<li>F &#8211; site is Off Line. Used for creating archives, rebuilding database, and as
+a safety state during development and site installation, re-installation, and upgrade</li>
+<li>T &#8211; site is On Line &#8211; may be accessed and modified. Normal mode of operation.</li>
+<li>R &#8211; Read Only &#8211; may be accessed, but not modified &#8211; except for certain specified tables</li>
+</ul>
+</li>
+<li>archive_stale &#8211; tracks database archive creation
+<ul>
+<li>F &#8211; archive is current &#8211; it&#8217;s safe to rebuild the database from the archive</li>
+<li>T &#8211; archive is old and does not match database</li>
+</ul>
+</li>
+<li>database_valid &#8211; is used while database is being rebuilt or does not exist
+<ul>
+<li>F &#8211; database is <span class="caps"><span class="caps">NOT</span></span> valid &#8211; cannot be used</li>
+<li>T &#8211; database is valid and can be used</li>
+</ul>
+</li>
+<li>model_mismatch &#8211; tracks the comparison of the models in the <em>object</em> directories
+[both site and system] with the object definitions in the current archive.
+<ul>
+<li>F &#8211; site code matches latest archive</li>
+<li>T &#8211; mismatch between model and archive which can be corrected by database rebuild</li>
+<li>X &#8211; mismatch between model and archive which <span class="caps"><span class="caps">CANNOT</span></span> be corrected by database rebuild</li>
+</ul>
+</li>
+</ul>
+
+<h3>State Transitions</h3>
+
+<p>The initial design attempted to simplify transitions by allowing only one state
+variables to change at a time. This doesn&#8217;t work well because it becomes too
+easy to interpose illegal states in a transition sequence which should actually
+be an atomic transition consisting of several, simultaneous variable changes.</p>
+
+<p>The current model simply defines a collection of legal transitions with associated
+transition generating events.</p>
+
+<h2>State Transitions:</h2>
+
+<p>State transitions are defined using the tables below. Single transitions
+may also be written using the &#8216;arrow&#8217; notation, as in &#8216;F_T_T_X -> F_T_T_F&#8217;,
+which means what you think it means.</p>
+
+<p>The left column is the invoking event. All possible events are listed.</p>
+
+<p>The right column is the resulting state. It will hold the value &#8216;no&#8217;, meaning
+the transition is not allowed; a state, as defined <a href="#state_names">above</a> ; or an augmented
+state, as described in the next paragraph.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

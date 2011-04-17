@@ -1,0 +1,133 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>ProductGallery.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> ProductGallery.php &#8211; Displays a list of products in one of several format</h1>
+
+<p>Created by Mike Howard on 2010&#8211;10-25</p>
+
+<blockquote>
+<p>(c) Copyright 2010 Mike. All Rights Reserved.
+Licensed under the terms of <span class="caps">GNU</span> <span class="caps">LGPL</span> Version 3</p>
+</blockquote>
+
+<p>Provides:</p>
+
+<ul>
+<li>Product category selection</li>
+<li>Product summary display &#8211; in both table and list format</li>
+<li>Product-per-page setting and display</li>
+</ul>
+
+<p>Each product summary provides a link to the product detail page.</p>
+
+<p>The page is driven by a smiggen of code at the bottom of the file.
+It is not documented.</p>
+
+<h2>Gallery Object</h2>
+
+<p>The Gallery object encapsulates the gallery and provides the basic
+functions necessary to implement a product gallery.</p>
+
+<p>The Gallery object is an ephemeral <span class="caps">PHP</span> object. More specifically,
+it does not have a persistent existence and is not aware of any
+persistent data. Session data is handled <em>exterior</em> to the Gallery
+object</p>
+
+<h3>Instantiation.</h3>
+
+<pre>$foo = new Gallery(dbaccess, $category, $page_number, $max_per_page, $sort_by = NULL, $style = 'list')
+</pre>
+
+<ul>
+<li>dbaccess &#8211; a DBAcess object</li>
+<li>$category &#8211; a Category name, instance, or key array which specifies the category of Product
+objects to display.</li>
+<li>$page_number &#8211; int &#8211; the number of the page to display &#8211; origin 1</li>
+<li>$max_per_page &#8211; integer or the string &#8216;all&#8217; &#8211; maximum number of products to display per page</li>
+<li>$sort_by &#8211; string or <span class="caps">NULL</span> &#8211; name of one field in the Product object to sort the array of objects by</li>
+<li>$style &#8211; string &#8211; style of <span class="caps">HTML</span> element for <em>display_gallery()</em> to return: either &#8216;list&#8217; or &#8216;table&#8217;</li>
+</ul>
+
+<h2>Instance Methods</h2>
+
+<ul>
+<li>button_func(idx, $) &#8211; this is a function passed to Product->render_table_elt()
+or Product->render_list_elt() to create a link to the ProductDisplay.php page.
+<em>$idx</em> is an integer to be displayed in the list element.
+<em>$image_elt</em> is an <span class="caps">HTML</span> im
+Products know how to display themselves and summary information about themselves, but
+know nothing of the page structure these displays are embedded in. They rely on having
+a function passed in to create the link needed. This is that function for ProductGallery.php</li>
+</ul>
+
+<ul>
+<li>display_gallery(classes, attributes) &#8211; returns either a <em>table</em> or <em>list</em> <span class="caps">HTML</span> element
+formatting the current page of the product gallery. <em>$classes</em> and <em>$attributes</em> are
+class names and attributes which are added to the <em>ul</em> or <em>table</em> element.</li>
+</ul>
+
+<ul>
+<li>page_nav($classes, $attributes, $range = 3, $endpoints = <span class="caps">TRUE</span>) &#8211; returns an <span class="caps">HTML</span> ul element of page numbers
+so that the user may select the page number to view. Page numbers are limited
+to the current page plus or minus $range. if <em>$endpoints</em> is <span class="caps">TRUE</span> and the first and/or last
+page numbers are outside the range of &#8216;current page +/- $range&#8217;, then links to the
+first and last pages are added &#8211; as necessary.</li>
+</ul>
+
+<ul>
+<li>items_per_page($classes = &#8217;&#8217;, $attributes = &#8217;&#8217;, $delta = 20, $max = 60) &#8211; returns an <span class="caps">HTML</span> form which which allows selecting the number of items per page.
+<em>$classes</em> and <em>$attributes</em> are added to the <em>form</em> element.
+<em>$delta</em> is the difference between item ranges. <em>$max</em> is the maximum number
+of items-per-page choices. The choice <em>all</em> is always displayed</li>
+</ul>
+
+<ul>
+<li>options_elt_style() &#8211; returns an <span class="caps">HTML</span> options element which can be included in a select
+element to chose <em>style</em>. This may disappear</li>
+</ul>
+
+<h2>Functions</h2>
+
+<p>These top level functions are defined</p>
+
+<ul>
+<li>get_param($name, $default) &#8211; returns the named parameter, if it is defined
+in the Query String, a Post Parameter, or in the user&#8217;s session, or <em>$default</em>.</li>
+</ul>
+
+<ul>
+<li>dynamic_display() &#8211; returns saves required parameters
+in the user&#8217;s session store and then string containing the current gallery.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

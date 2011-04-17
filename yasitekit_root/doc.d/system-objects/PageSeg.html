@@ -1,0 +1,379 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>PageSeg.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> PageSeg.php &#8211; Page Segment objects</h1>
+
+<p>Created by  on 2010&#8211;02-28.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>This module defines a bunch of classes used in page construction:</p>
+
+<ol>
+<li>PageSeg &#8211; basic building block. Used as a base class for everything else. <a href="#page_seg">Basic Segment</a></li>
+<li>PageSegText &#8211; container for text segments. <a href="#page_seg_text">programatic text</a></li>
+<li>PageSegFile &#8211; container for content which comes from a file. <a href="#page_seg_file">including files</a></li>
+<li>PageSegList &#8211; container for a list of PageSeg objects which are rendered
+as a concatenated string. <a href="#page_seg_list">Segment list</a></li>
+<li>PageSegElt &#8211; wraps a PageSegList in an <span class="caps">HTML</span>, <span class="caps">XHTML</span>, <span class="caps">XML</span>, etc element, optionally with
+attributes. <a href="#page_seg_elt">Element</a></li>
+<li>Vars &#8211; supplies a container for variables and template substitution. <a href="#vars">Vars</a></li>
+</ol>
+
+<p>All objects have an instance method called <em>dump(indent = 0)</em> which may be called to
+return a diagnostic string. <em>dump()</em> is called recursively by all container objects.</p>
+
+<h2 id="page_seg">PageSeg Class</h2>
+
+<p>All PageSeg instances are uniquely named.</p>
+
+<p>The PageSeg class provides basic services and ensures that a <em>render()</em> method
+exists. All errors which are discovered cause throw exceptions.</p>
+
+<h3>Instantiation</h3>
+
+<p>Don&#8217;t do it because it won&#8217;t render</p>
+
+<pre>$foo = new PageSeg('name');
+</pre>
+
+<h3>Class Attributes</h3>
+
+<ul>
+<li>file_not_found_function = Array(&#8216;PageSeg&#8217;, &#8216;file_not_found&#8217;) &#8211; the <em>callback</em> which
+will be executed when a page cannot be loaded. This must be a function callback of two variables:
+<ul>
+<li>$page_seg &#8211; the PageSeg object which invoked the call</li>
+<li>$fname &#8211; the name of the file which could not be loaded</li>
+</ul>
+</li>
+</ul>
+
+<h3>Instance Attributes</h3>
+
+<ul>
+<li>name &#8211; string &#8211; the name of this segment</li>
+<li>content &#8211; string &#8211; content of the object. Implicitly calls <em>render()</em> method.</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<ul>
+<li>flush_cache() &#8211; empties the record of all defined names. Used to re-initialize
+the PageSeg list in cases where the default page won&#8217;t do.</li>
+<li>get_by_name(name) &#8211; looks for a PageSeg named <em>name</em> in the cache and returns
+it or <span class="caps">FALSE</span> if not found.</li>
+<li>forget_all() &#8211; flushes PageSeg cache of PageSeg objects</li>
+<li>file_not_found_function($fname) &#8211; default &#8216;page not found&#8217; function</li>
+</ul>
+
+<h3>Instance Methods</h3>
+
+<p>Various magic methods: __toString(), __get(name), __set(name, value), __isset(name),
+and __unset(name) ensure that these things make sense and throw reasonable errors
+if detected.</p>
+
+<ul>
+<li>del_self() &#8211; removes <em>this</em> PageSeg object from the cache of PageSeg objects</li>
+<li>render() &#8211; throws an exception to announce that the extension failed to define
+this method.</li>
+</ul>
+
+<h2 id="page_seg_text">PageSegText Class extends PageSeg</h2>
+
+<p>The PageSegText class is a container for programmatically generated text</p>
+
+<h3>Instantiation</h3>
+
+<pre>$foo = new PageSegText(name, optional_initial_content);
+</pre>
+
+<p>Where:</p>
+
+<ul>
+<li>name &#8211; is the unique name of the segment</li>
+<li>optional_initial_content can be used to define the content of the segment</li>
+</ul>
+
+<h3>Attributes</h3>
+
+<p>All attributes are inherited from PageSeg. So they are <em>name</em> and <em>content</em>.</p>
+
+<h3>Class Methods</h3>
+
+<ul>
+<li>close_all_open() &#8211; closes all open PageSetText segments.</li>
+</ul>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>append(string) &#8211; appends the supplied string to the segment&#8217;s content. This is
+faster than <em>open()</em> / <em>close()</em> sequences.</li>
+<li>open() &#8211; opens the segment so that all output is captured by the segment. Does
+this by calling <em>ob_start()</em></li>
+<li>close() &#8211; closes the segment and captures output generated from previous
+corresponding open. Uses <em>ob_get_clean()</em>. <span class="caps">NOTE</span>: output buffer methods can be
+nested and so can PageSetText object open&#8217;s and closes. <span class="caps">NOTE</span>: Improper nesting
+of opens and closes causes all open segments to close and throws an exception.</li>
+</ul>
+
+<h2 id="page_seg_file">PageSegFile Class extends PageSeg</h2>
+
+<p>PageSegFile objects encapsulate the content of a single file.</p>
+
+<p>PageSegFile objects are special in that they are rendered using the <span class="caps">PHP</span> &#8216;include&#8217;
+mechanism, so they can execute <span class="caps">PHP</span> code and modify the content and structure of
+the page. This makes it a very bad idea to include them more than once. It turns
+out the there are pitfalls in using the &#8216;include_once&#8217; directive, so the PageSegFile
+class simply includes them once and caches the result. Any attempt to modify
+a PageSegFile object after rendering throws an exception.</p>
+
+<h3>Instantiation</h3>
+
+<pre>$foo = new PageSegFile(name, file_name, $missing_file_ok = FALSE);
+</pre>
+
+<p>where:</p>
+
+<ul>
+<li>name &#8211; string &#8211; required &#8211; is the unique name of the segment</li>
+<li>file_name &#8211; string &#8211; required &#8211; is the name of the include file</li>
+<li>missing_file_ok &#8211; boolean &#8211; optional &#8211; set to <span class="caps">TRUE</span> if it&#8217;s OK for the file to
+be missing. The default action causes <em>render()</em> to return an error message
+if the file is not found in the include path; if OK, then returns an empty string.</li>
+</ul>
+
+<h3>Attributes</h3>
+
+<ul>
+<li>name &#8211; inherited from PageSeg &#8211; the unique name of the segment</li>
+<li>content &#8211; inherited from PageSeg &#8211; the content of the segment. Implicitly calls <em>render()</em></li>
+<li>file_name &#8211; the name of the included file</li>
+<li>missing_file_ok &#8211; flag which controls rendering result if <em>file_name</em> is not found.</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>render() &#8211; includes the file and returns it&#8217;s unaltered content. Throws exception
+if file inclusion failed</li>
+</ul>
+
+<h2 id="page_seg_list">PageSegList Class extends PageSeg</h2>
+
+<p>A PageSegList contains a list of PageSeg objects. It provides means to
+manipulate the list and renders all components as a single string</p>
+
+<h3>Instantiation</h3>
+
+<pre>$foo = new PageSegList(name[, PageSeg object, PageSeg object, ...]);
+</pre>
+
+<p>Creates a new list and optionally initializes it to the PageSeg objects listed as arguments.</p>
+
+<h3>Attributes</h3>
+
+<p>Inherits the <em>name</em> and <em>content</em> attributes from PageSeg</p>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>list mainuplation: each of the following five methods takes a variable number of arguments
+which may be either the name of a
+PageSeg or a PageSeg object and adds them to or removes them from the list. The objects
+are not affected in any way &#8211; in particular, they do not disappear because they
+are referred to by an internal cache in the class PageSeg.
+<ul>
+<li>append(name or PageSeg) &#8211; appends to the end of the list of segments</li>
+<li>prepend(name or PageSeg) &#8211; puts at the head of the list of segments</li>
+<li>insert_before(index, name or PageSeg) &#8211; inserts it ahead of the supplied
+index. index == 0 is the same as <em>prepend()</em>; index larger than the number of segments
+is the same as <em>append()</em> <em>index</em> may be:
+<ul>
+<li>an integer &#8211; the numerical index of the list, starting from 0</li>
+<li>a string &#8211; taken as the name of a PageSeg object. Insersion is before the <em>first</em>
+occurance of the named object.</li>
+<li>a Page Seg instance &#8211; same action as if it is a string.</li>
+</ul>
+</li>
+<li>insert_after(index, ...) &#8211; same as insert_before(), but inserts before index instead
+of after. The index can be a integer, string or PageSeg instances &#8211; as in <em>insert_before()</em></li>
+<li>del(name or PageSeg) &#8211; removes from list</li>
+</ul>
+</li>
+<li>find_by_name_or_false($seg_name) &#8211; returns the segment corresponding to <em>$seg_name</em>
+or <span class="caps">FALSE</span>;</li>
+<li>get_index_of(string or PageSeg or integer) &#8211; returns the integer index of the argument
+in the list. Throws exception of not found or argument isn&#8217;t one of the correct types.</li>
+<li>render() &#8211; returns the string made by concatenating the renderings of all segments in
+the list.</li>
+</ul>
+
+<h2 id="page_seg_elt">PageSegElt Class extends PageSegList</h2>
+
+<p>Notice that this extends PageSegList rather than Page Seg, so it inherits all
+of the list manipulation methods of pageSegList.</p>
+
+<h3>Instantiation</h3>
+
+<pre>$foo = new PageSegElt(name, elt_tag[, args ...]);
+</pre>
+
+<p>Where:</p>
+
+<ul>
+<li>name &#8211; string &#8211; required &#8211; unique name of the segment</li>
+<li>elt_tag &#8211; string &#8211; required &#8211; is the element start tag. As in <span class="caps">SGML</span>, <span class="caps">HTML</span>, <span class="caps">XML</span>, <span class="caps">XHTML</span>,
+etc start tag.</li>
+<li>args &#8211; string or PageSeg instance &#8211; optional &#8211; an arbitrary of attribute definitions
+and PageSeg objects. These arguments are parsed as follows:
+<ul>
+<li>if an <em>arg</em> is a PageSeg object, it is appended to the list of objects</li>
+<li>if it is a string, it is assumed to be an attribute:
+<ul>
+<li>if <em>arg</em> contains an equals sign (=) it is broken apart and an &#8216;attr=&#8220;value&#8221;&#8217;
+clause is included in the element start tag</li>
+<li>if <em>arg</em> does <span class="caps"><span class="caps"><span class="caps">NOT</span></span></span> contain an equals sign (=), then it is taken as a boolean
+attribute &#8211; as common in <span class="caps"><span class="caps"><span class="caps">HTML</span></span></span> &#8211; and an &#8216;attr&#8217; clause is included in the element
+start tag.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<p><span class="caps">NOTE</span>: attribute definitions may be repeated. If they are, then their values will be
+combined into a white-space separated string. If they are boolean attributes &#8211; that is, having no value &#8211; they will simply be defined.</p>
+
+<p><span class="caps">NOTE</span>: conflicting definitions between <em>boolean</em> attributes and <em>value assigned</em>
+attributes throws an exception.</p>
+
+<h3>Attributes</h3>
+
+<p>In addition to <em>name</em> and <em>content</em>, which are inherited from PageSeg via PageSegList,
+PageSegElt has:</p>
+
+<ul>
+<li>elt &#8211; string &#8211; element tag for this element</li>
+<li>attributes &#8211; string &#8211; the attributes string suitable for enclosing inside the
+element start tag</li>
+<li><em>attribute-name</em> &#8211; string &#8211; the value of any assigned attribute.</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>add_attribute(attr_name, value = <span class="caps">NULL</span>) &#8211; adds the value or boolean attribute</li>
+<li>del_attribute(attr_name) &#8211; deletes the specified attribute if it exists. Fails
+silently if not.</li>
+<li>render() &#8211; returns a string consisting of the rendering of the contained
+PageSeg segments wrapped in an element start and end tag.</li>
+</ul>
+
+<h2 id="vars">Vars Class</h2>
+
+<p>The Vars class implements a Singleton pattern which holds variables and knows
+how to implement token substitution on a supplied.</p>
+
+<h3>How to Use Vars</h3>
+
+<p>Step 1: create an interesting collection of segments using the various extensions
+of PageSeg. Within the PageSegText and PageSegFile segments, include tokens
+of the form <em>{variablename}</em>. Also, include code segments of the form:</p>
+
+<pre>$var_instance = Vars::getVars();
+$var_instance-&gt;foo = 'value for foo';
+$var_instance-&gt;page_title = 'title for page';
+</pre>
+
+<p>Step 2: Render the page</p>
+
+<pre>$vars = Vars::getVars();
+echo $vars-&gt;render($top_level_page_seg);
+</pre>
+
+<p>This will call <em>$top_level_page_seg->render()</em> and apply the template
+substitution logic to the output.</p>
+
+<h3>Instantiation</h3>
+
+<pre>$foo = Vars::getVars();
+</pre>
+
+<p>Vars is a Singleton, so we don&#8217;t use the normal &#8216;new&#8217; operator. As in The
+Imortal &#8211; there can be <em>only one</em>.</p>
+
+<h3>Attributes</h3>
+
+<p>Attributes are created on the fly by assigning them values. If <em>$foo</em> is a
+Vars instance, then</p>
+
+<pre>$foo-&gt;bar = some-stuff;
+</pre>
+
+<p>Will assign &#8216;some-stuff&#8217; to the attribute <em>bar</em>, creating or re-assigning the value
+as required.</p>
+
+<h3>Class Methods</h3>
+
+<ul>
+<li>getVars() &#8211; use instead of &#8216;new Vars()&#8217; to get the single instance of Vars.</li>
+</ul>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>render($seg) &#8211; returns a string created by calling $seg->render() and then
+substituting every token of the form &#8217;{foo}&#8217; with the corresponding value
+of the attributes of Vars. In other words, if &#8216;foo&#8217; is defined to have the
+value &#8216;bar&#8217;, then &#8217;{foo}&#8217; will be replaced by &#8216;bar&#8217;. If &#8216;foo&#8217; is not defined,
+then &#8217;{foo}&#8217; will not be modified.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

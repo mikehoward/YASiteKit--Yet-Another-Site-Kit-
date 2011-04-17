@@ -1,0 +1,92 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>product_menu.tpl</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> product_menu.tpl &#8211; Product Menu Navigation</h1>
+
+<p>Created by  on 2010&#8211;03-25.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<h2>ProductMenu Object</h2>
+
+<p>$product_menu = new ProductMenu(dbaccess,  array(option => value, ...));</p>
+
+<p>Where:</p>
+
+<ul>
+<li>dbaccess &#8211; is a DBAccess object &#8211; typically Globals::$dbaccess</li>
+<li>array(...) &#8211; an array of options from the following list
+<ul>
+<li>recent_popular_interval &#8211; default is 30 &#8211; date interval in days to offset backward from today</li>
+<li>popular_products_max &#8211; default is  10 &#8211; number of products to show in list</li>
+<li>products_per_menu &#8211; default is 20 &#8211; number of products to show per panel in &#8216;products&#8217; mode</li>
+</ul>
+</li>
+</ul>
+
+<h3>Session Keys</h3>
+
+<ul>
+<li>product_menu_mode &#8211; one of:
+<ul>
+<li>grouping</li>
+<li>products</li>
+<li>favorites</li>
+<li>recently-viewed</li>
+<li>popular</li>
+<li>recent-popular</li>
+</ul>
+</li>
+<li>product_menu_grouping &#8211; only valid if product_menu_mode is grouping or products &#8211; name
+of current grouping</li>
+<li>product_menu_product &#8211; name of currently selected product</li>
+<li>product_menu_start_offset &#8211; index into list of products by title to start menu in products mode</li>
+<li>product_menu_end_offset &#8211; index into list of products by title to end menu in products mode</li>
+</ul>
+
+<h3>Attributes</h3>
+
+<p>None</p>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<p><strong>render()</strong> returns a string containing the current menu.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

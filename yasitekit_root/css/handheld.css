@@ -1,0 +1,39 @@
+/* mobile.css */
+body {background: #444; color:#eee;}
+
+/* main navigation styling */
+#main-nav { list-style:none;}
+#main-nav li { display:inline; float:left; width:10em;}
+a { color: inherit; text-decoration: none;}
+.hover { color:inherit; text-decoration:none; background:inherit;}
+a:hover, .hover:hover { color: #111; background: #ddd;}
+
+/* image area styling */
+#image { padding:5px; border: solid white 1px;}
+
+/* footer styling */
+#footer { list-style: none; text-align:center;}
+#footer li { list-style: none; display:inline; padding-left:1em;}
+
+/* image div styling */
+.image-info { width: 10em; padding:5px; border: solid #aaa 1px; color:#ddd;}
+.image-display { margin-left: 15em;}
+
+/* list styling */
+ul li { list-style: none;}
+
+/* display classes */
+.inline {display:inline;}
+.block {display:block;}
+.inline-block {display:inline-block;}
+
+/* float control */
+.float-left {float:left;}
+.float-right {float:right;}
+.clear {clear:both;}
+.clear-left {clear:left;}
+.clear-right {clear:right;}
+
+/* text styling */
+.center { text-align: center;}
+.box { border:1px solid white; padding:.2em;}

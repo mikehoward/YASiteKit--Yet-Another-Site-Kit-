@@ -1,0 +1,45 @@
+h1. New Site Checklist
+
+h2. Preparation for Developing Sites
+
+# Setup Apache and PHP
+# Create a directory for site development. I usually have several sites
+in development, so I create a directory to put all the sites under. Each site
+will have it's own subdirectory. I'm going to call this directory 'websites'.
+## Create a virtual host entry for 'websites' and map it into the Apache document
+## add an entry in /etc/hosts so that Apache can associate a site name with your
+'websites' directory. "see video":http://youtube.com?something
+directory.
+
+For those who don't know, here's how all this works:
+
+# apache needs a host name - so you have to put one in your /etc/hosts directory.
+[there are other ways to do this, but they are much more complex]
+# when you point your browser to http://websites, your browser looks up the address
+of the host 'websites' using very complex schemes. But the first place it looks is
+/etc/hosts, so by putting it there, the browser knows to talk to your local apache
+server.
+# your local apache server gets the request and looks at the host name in the URL
+[it's the part after the http:// part and before the first slash (/)]. It then
+looks to see if it has a virtual host configured for that name. If it does, it
+then looks for the Document Root directory for that virtual host.
+# You've set up a symbolic 
+
+h2. Setting up a Single Site
+
+# Create directory for your site development in 'websites'. We'll call it 'site',
+so the path to that directory is 'webites/site'. [It's probably in your home
+directory on your Mac or Linux machine, so the real path name will be '~/websites/site,
+where '~' expands to the absolute path to your home]
+# download and unpack http://www.yasitekit.org/downloads/site-framework-with-system.tar.gz
+into your development directory. 
+## download http://www.yasitekit.org/downloads/site-framework-with-system.tar.gz. This will
+probably put it someplace conventional: like your desktop or Downloads or something like that.
+## cd ~/websites/site
+## mv ~/Downloads/site-framework-with-system.tar.gz .
+## tar xzf site-framework-with-system.tar.gz
+# Fix permissions
+## cd ~/websites/site/private_root/installation
+## /bin/sh fix_perms.sh - follow on screen instructions
+# Run configurator
+## point your browser to http://websites/site/private_root/installation/configurator.php

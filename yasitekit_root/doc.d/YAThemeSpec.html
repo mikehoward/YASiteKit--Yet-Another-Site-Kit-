@@ -1,0 +1,377 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>YAThemeSpec.textile</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>YATheme &#8211; Yet Another Theme Hack (revision 4)</h1>
+
+<p>YATheme is a minimally intrusive, caching theme system designed to complement and augment
+<span class="caps">PHP</span>. It does not replace any <span class="caps">PHP</span> functionality.</p>
+
+<p>YATheme provides three features:</p>
+
+<ul>
+<li>Flexible, content driven templating</li>
+<li>Convenient and automatic <span class="caps">PHP</span> variable testing</li>
+<li>Caching</li>
+</ul>
+
+<p>The system consists of:</p>
+
+<ul>
+<li>a <strong>language</strong> which is embedded in mixed <span class="caps">PHP</span> &amp; <span class="caps">HTML</span> &#8211; <a href="#language">described here</a></li>
+<li>a language <strong>compiler</strong> which identifies the YATheme constructs
+and translates them into <span class="caps">PHP</span> and <span class="caps">HTML</span> &#8211; <a href="#compiler">sketched here</a></li>
+<li>a content-file driven <strong>template system</strong> &#8211; described <a href="#templates">below</a></li>
+<li>a configurable <strong>caching system</strong> &#8211; <a href="#cache">go here</a></li>
+</ul>
+
+<h2 style="clear:both;" id="structure">Page Structure</h2>
+
+<p>The <strong>YATheme</strong> system makes page construction a little unusual.</p>
+
+<p><a href="/doc.d/img/YATemplateOverview-0.jpg"><img src="img/YATemplateOverview-0.jpg" style="width:20%;border:solid black 1px;float:right;" title="conventional template" alt="conventional template" class="right" /></a></p>
+
+<p><span class="caps">HTML</span> pages are normally thought of as being constructed &#8216;top down&#8217; because that is
+how they are processed by the Web Browser. This is also the way that we normally
+them and how we visualize writing them.</p>
+
+<p>In a templated site, we still tend to think &#8216;top down&#8217; &#8211; at least from the point
+of view of the template. We think of the content as &#8216;being inserted&#8217; into the
+template &#8211; which provides an appropriate environment for the content to be rendered.</p>
+
+<p>When creating pages using a mixture of <span class="caps">PHP</span> and <span class="caps">HTML</span>, we still tend to think in the
+same way.</p>
+
+<p><a href="/doc.d/img/YATemplateOverview-2.jpg"><img src="/doc.d/img/YATemplateOverview-2.jpg" style="width:20%;clear:both;border:solid black 1px;float:right;" title="YATheme templates" alt="YATheme templates" class="right" /></a></p>
+
+<p><strong>YATheme</strong> requires a slightly different point of view.</p>
+
+<p>As in any templated system, we create template files and fragments which will
+create a context for the content, but we expect certain data to be defined
+by the content file. Data such as page titles, headers, selection of appropriate
+menus and navigation structures. Possibly altered <span class="caps">CSS</span> to convey content contextual
+information, etc.</p>
+
+<p>While this data must be defined in the content file, it <em>must</em> occur in proper
+sequence in the final page file which is rendered by the browser.</p>
+
+<p><strong>YATheme</strong> provides mechanisms to specify the values of various data which will
+be placed in proper sequence in the content file.</p>
+
+<ul>
+<li><span class="caps">PHP</span> initialization code which will be placed at the beginning of the file
+to ensure that all variables which must be defined <em>prior</em> to the rendering
+of the actual content are defined and available &#8211; such as page headings, titles,
+etc. See <a href="#phpprefix"><span class="caps">PHP</span> Prefix</a> for details of how this is done.</li>
+<li>Meta tags and <span class="caps">CSS</span> and Javascript links can be defined in content and arbitrary
+include files and then independently formatted under the control of the template.
+See <a href="#meta">Meta, <span class="caps">CSS</span> &amp; Javascript</a> for details.</li>
+</ul>
+
+<h2 id="language">YATheme Language</h2>
+
+<p>YATheme Language constructs are all enclosed in <strong>y-braces</strong>: <strong>&#8217;{:&#8217;</strong> and <strong>&#8217;:}&#8217;</strong>.</p>
+
+<p>YATheme escapes consist of four types:</p>
+
+<ol>
+<li><span class="caps">PHP</span> Variable references. These consist of a single <span class="caps">PHP</span> variable enclosed in <strong>y-braces</strong> and
+optionally followed by default value. If the default value is present, then it is separated
+from the variable by a pipe symbol (|). The default value is evaluated as literal text;
+any enclosed <span class="caps">PHP</span> code will not do what you want it to do.
+<ol>
+<li>{: $foo :}</li>
+<li>{: ClassName::$foo | the static variable ClassName::$foo is not defined :}</li>
+<li>{: $foo | this does not initialize $foo: <?php echo ($foo = 'some value'); ?>}</li>
+<li>{: ClassName::$foo->$bar[&#8216;foo&#8217;][$x]->foo | this messy variable isn&#8217;t defined. Use &#8216;test&#8217; to see what the problem is:}</li>
+</ol>
+</li>
+<li><span class="caps">PHP</span> Prefix Code. This is initialization code which must be executed first in the
+rendering of the resulting web page. See <a href="#phpprefix"><span class="caps">PHP</span> Prefix</a> for details.</li>
+<li>Commands. These control the construction of the page and various other things.
+See <a href="#commands">Commands</a> for detailed descriptions of each of the following commands:
+<ol>
+<li>errors &#8211; specifies how detected errors are to be handled. Can also be set programmatically</li>
+<li>guards &#8211; turns in-line testing of <span class="caps"><span class="caps">PHP</span></span> variables on and off</li>
+<li>include &#8211; includes a specified file into the resulting file. This is implicitly recursive
+because the file is processed.</li>
+<li>test &#8211; inserts code to test a <span class="caps"><span class="caps">PHP</span></span> variable. This is useful if a complex variable is not
+defined. <em>test</em> parses the variable into component parts and writes a test for each one.
+The result is wrapped in an <span class="caps"><span class="caps">HTML</span></span> div element with class <em>yatheme-test</em></li>
+<li>yatheme &#8211; turns the YATheme parsing on and off &#8211; useful in developing web pages when
+there is a bug in the YATheme code</li>
+</ol>
+</li>
+<li>Metadata, <span class="caps">CSS</span>, and Javascript &#8211; these commands allow metadata tags and css and javascript
+links to be defined in several different places and then finally rendered in the template
+at a single location. See <a href="#meta">Meta, <span class="caps">CSS</span> &amp; Javascript</a> for details.</li>
+</ol>
+
+<h3 id="commands">YATheme Commands</h3>
+
+<h4>errors &lt;normal&gt;</h4>
+
+<p>specifies how detected errors are to be handled. Can also be set programmatically</p>
+
+<p><strong>{:errors normal:}</strong> &#8211; results in <span class="caps">PHP</span> errors being displayed on the screen. This is good
+for development and alpha testing</p>
+
+<p><strong>{:errors ignore:}</strong> &#8211; results in errors being discarded. I&#8217;m not sure if this is good
+for anything</p>
+
+<p><strong>{:errors email <em>email address</em>:}</strong> &#8211; results in errors being emailed to the supplied
+email address. This is good for production sites.</p>
+
+<h4>guards &lt;on&gt;</h4>
+
+<p>turns in-line testing of <span class="caps">PHP</span> variables on and off.</p>
+
+<p><strong>{:guards on:}</strong> &#8211; results in each <strong>{:$variable:}</strong> being replaced by</p>
+
+<pre>&lt;?php echo (isset($variable) ? $variable : "\$variable is not set"); ?&gt;
+</pre>
+
+<p>and <strong>{:$variable | default value:}</strong> by</p>
+
+<pre>&lt;?php echo (isset($variable) ? $variable : 'default value'); ?&gt;
+</pre>
+
+<p><strong>{:guards off:}</strong> &#8211; simply results in replacing <strong>{:$variable:}</strong> by</p>
+
+<pre>&lt;?php echo $variable; ?&gt;
+</pre>
+
+<h4>include path</h4>
+
+<p>includes a specified file into the resulting file. This is implicitly recursive
+because the file is processed.</p>
+
+<p><strong>{:include <em>path</em>:}</strong> &#8211; as in {:include foo/bar.tpl:}</p>
+
+<h4>test <em>variable</em></h4>
+
+<p>inserts code to test a <span class="caps">PHP</span> variable. This is useful if a complex variable is not
+defined. <em>test</em> parses the variable into component parts and writes a test for each one.
+The result is wrapped in an <span class="caps">HTML</span> div element with class <em>yatheme-test</em>.</p>
+
+<p><strong>{:test <em>variable</em>:}</strong></p>
+
+<h4>yatheme &lt;on&gt;</h4>
+
+<p>Turns the YATheme parsing on and off &#8211; useful in developing web pages when
+there is a bug in the YATheme code</p>
+
+<p><strong>{:yathem on:}</strong> &#8211; turns on YATheme processing. This is &#8216;normal mode&#8217;</p>
+
+<p><strong>{:yatheme off:}</strong> &#8211; turns YATheme processing. This passes all YATheme escapes
+through as literal <span class="caps">HTML</span> text.</p>
+
+<h3 id="phpprefix"><span class="caps">PHP</span> Prefix &amp; Setup</h3>
+
+<p><span class="caps">PHP</span> Setup and Prefix code is <span class="caps">PHP</span> code which is run prior to the DocType tag
+at the top of the web page. Each file which is rendered &#8211; main content, include
+files, and templates &#8211; may independently define these blocks of code.</p>
+
+<p><a href="/doc.d/img/YATemplateOverview-4.jpg"><img src="img/YATemplateOverview-4.jpg" style="width:20%;border:solid black 1px;float:right;" title="php prefix construction" alt="php prefix construction" class="right" /></a></p>
+
+<p>The choice between <em>setup</em> and <em>prefix</em> forms depends on precisely where you
+need to run the code. The <em>setup</em> and <em>prefix</em> are like the top and bottom pieces
+of bread in a sandwich. Between them is the prefix content of all include files
+which are included in <em>this</em> specific file. The <em>setup</em> is on top, and the <em>prefix</em>
+is on the bottom.</p>
+
+<p>The syntax of both blocks is similar:</p>
+
+<pre>*{:php-prefix:}* PHP code without any enclosing PHP escapes *{:end-php-prefix:}*
+</pre>
+
+<pre>*{:php-setup:}* PHP code without any enclosing PHP escapes *{:end-php-setup:}*
+</pre>
+
+<p>That takes care of a single file and it&#8217;s include files.</p>
+
+<p>The situation is a little more complex, but well defined, for content embedded
+in templates.</p>
+
+<p><a href="/doc.d/img/YATemplateOverview-3.jpg"><img src="img/YATemplateOverview-3.jpg" style="width:20%;border:solid black 1px;float:right;" title="php prefix construction" alt="php prefix construction" class="right" /></a></p>
+
+<p>See the picture on the right for a visualization of how <span class="caps">PHP</span> prefix blocks are used to
+construct the final <span class="caps">PHP</span> prefix. The ordering allows content files to have the final
+control over the environment by allowing them to define the last initialization code
+which is executed.</p>
+
+<p>In detail: for each file which goes into building the page, all the php prefix blocks
+from all included files (which recursively includes their includes, etc) are concatenated
+in the order included along with the files <em>setup</em> and <em>prefix</em> blocks, as described
+above.
+Finally, if this file acts as a template by including content, the entire php prefix
+defined in the content file is added on the end.</p>
+
+<p>The entire block is wrapped in a <span class="caps">PHP</span> escape and prefixed to the rendering of the file.</p>
+
+<h3 id="meta">Meta, <span class="caps">CSS</span> &amp; Javascript</h3>
+
+<p>Meta, <span class="caps">CSS</span> and Javascript are supported by <strong>seven</strong> commands:</p>
+
+<ol>
+<li><strong>{:meta name content:}</strong> &#8211; declares a meta tag. The tag will either be of the
+form &lt;meta name=&#8220;name&#8221; content=&#8220;content&#8221; &gt; or &lt;meta http-equiv=&#8220;name&#8221; content=&#8220;content&#8221;&gt;,
+depending on the value of <em>name</em>.</li>
+<li><strong>{:css path:}</strong> or <strong>{:css path media:}</strong> &#8211; specifies that <em>path</em> is the source
+of an external <span class="caps">CSS</span> file. If <em>media</em> is not specified, then <em>all</em> is used. <em>media</em>
+can be anything &#8211; but it is a good idea that it be a legal <span class="caps">CSS</span> 2 media type or
+<span class="caps">CSS</span> 3 media query. It is copied as written into the <em>link</em> element.</li>
+<li><strong>{:javascript path:}</strong> &#8211; specifies that <em>path</em> is the source of an external
+Javascript file.</li>
+</ol>
+
+<p>Embedding <span class="caps">HTML</span> <em>&lt;style&gt;</em> or <em>&lt;script&gt;</em> elements is effected by
+wrapping the content in <em>style</em> and <em>script</em> YATheme commands:</p>
+
+<ol>
+<li><strong>{:style:} css statements w/o script tags{:end-style:}</strong></li>
+<li><strong>{:script:} javascript without script tags{:end-script:}</strong></li>
+</ol>
+
+<p>The actual <span class="caps">HTML</span> elements are created by the <strong>render</strong> command:</p>
+
+<ol>
+<li><strong>{:render css:}</strong> &#8211; is replaced by links to all the defined <span class="caps">CSS</span> files</li>
+<li><strong>{:render meta:}</strong> &#8211; is replaced by rendering of all Meta tags which have been
+defined.</li>
+<li><strong>{:render javascript:}</strong> &#8211; does what you expect for Javascript Script elements.</li>
+</ol>
+
+<p>The rendering of meta, css, and javascript entries is the <em>last</em> thing process performed
+in page rendering. It is effected by replacing all occurances of {:render meta:} by
+the illegal YATheme token: &#8217;{:-meta-:}&#8217;. Similarly for css and javascript.</p>
+
+<p><span class="caps">WARNING</span>: don&#8217;t put in more than one {:render&#8230;:} for each. We do not check this, yet.</p>
+
+<h4>Order of Rendering Meta, <span class="caps">CSS</span> &amp; Javascript</h4>
+
+<p>First of all, it works pretty much the way you want it to. So, if you don&#8217;t want
+to go through the mess, don&#8217;t worry about it &#8211; unless something bad is happening.</p>
+
+<p>Second, rendering order depends on the order in which the command occur and the arrangement
+of file inclusion / template referencing. [a file include is when <span class="caps">THIS</span> file includes
+<span class="caps">THAT</span> file; a template <span class="caps">REFERENCE</span> is when <span class="caps">THIS</span> file inserts itself into <span class="caps">THAT</span> file]</p>
+
+<p>As in <em>php-setup</em> and <em>php-prefix</em> blocks, each file gathers up its meta, css, and
+javascript into separate arrays while parsing the file.
+[css and javascript arrays are guaranteed to have a unique
+set of entries. If a duplicated entry is found, the <em>earlier</em> one is discarded: this
+preserves the precedence inherit in the cascade of definitions of both <span class="caps">CSS</span> and Javascript].</p>
+
+<p>When a file is included, it&#8217;s definitions are automatically appended to the arrays.</p>
+
+<p>When a template file is referenced, all of these definitions are appended to the Template
+file definitions. Then, when the template is rendered, the modified definitions are
+rendered in the proper order &#8211; with the inner-most content definitions <em>last</em>.</p>
+
+<p>All this works because the definitions are gathered during the parsing phase and rendered
+during the <em>render</em> phase. This gives us a place to tinker with template definitions.</p>
+
+<h2 id="templates">Template Overview</h2>
+
+<p><a href="/doc.d/img/YATemplateOverview-1.jpg"><img src="img/YATemplateOverview-1.jpg" style="width:20%;border:solid black 1px;margin-bottom:10px;float:right;vertical-align:middle;" title="conventional template" alt="conventional template" class="right middle" /></a></p>
+
+<p>Conventional templates are hierarchic: they normally are defined by a <em>template</em> file
+which includes various other sub-files &#8211; including the content.</p>
+
+<p><a href="/doc.d/img/YATemplateOverview-2.jpg"><img src="/doc.d/img/YATemplateOverview-2.jpg" style="width:20%;clear:both;border:solid black 1px;margin-top:10px;float:right;vertical-align:middle;" title="YATheme templates" alt="YATheme templates" class="right middle" /></a></p>
+
+<p><strong>YATheme</strong> templates are not hierarchic: the content file typically choses a <em>template</em>
+file in which to embed itself.</p>
+
+<p>A <strong>YATheme</strong> template file is any file which contains the <strong>{:yatemplate-content:}</strong> YATheme escape.
+Generally only one such escape will be present, but if you want to include a bunch,
+it&#8217;s legal and will do what you expect it will do: multiple renderings of the content.</p>
+
+<p>Any file may reference any template file by including the <strong>{:yatemplate file-name:}</strong>
+escape, where <em>file-name</em> is the name of a template file living somewhere on the include
+path. If more than one of these escapes occurs, then only the last one is used.</p>
+
+<p>Templates can embed themselves in another template (see picture on right),
+so the entire thing can get out of hand easily. Ont the other hand, this
+feature also makes it relatively easy to build something
+analogous to Object Inheritance using YATheme templates.</p>
+
+<h2 style="clear:both;" id="cache">Caching System</h2>
+
+<p>The Caching system is implemented as a <span class="caps">PHP</span> object which extends the
+<a href="/doc.d/system-includes/aninstance.html">AnInstance</a> class. It also
+automatically provides access to the language compiler and rendering
+functions, as needed. There is never any need to access the compiler
+directly (unless you want to).</p>
+
+<p>The object is described in the <a href="/doc.d/system-objects/YATheme.html">YATheme.php</a>
+documentation.</p>
+
+<p>Caching is provided at three levels:</p>
+
+<ul>
+<li>on &#8211; normal caching. Fully rendered pages are saved in the database table
+<em>yatheme</em>. They are only parsed and re-rendered if they are missing.
+This is good for Alpha level sites.</li>
+<li>compress &#8211; same as <em>on</em> except that pages are passed through the <span class="caps">PHP</span> function
+<em>php_strip_whitespace()</em> prior to saving them. This removes all extra white
+space (and comments) from the <span class="caps">PHP</span> parts of the file &#8211; making the request responses
+somewhat smaller. This is good for Production sites.</li>
+<li>off &#8211; every page is reassembled, parsed, and rendered for each request.
+This is good for development.</li>
+</ul>
+
+<h2 id="compiler">Language Compiler and Infrastructure</h2>
+
+<p>The language compiler is implemented using several objects defined in three
+files:</p>
+
+<ul>
+<li><a href="/doc.d/system-includes/athemer.html">athemer.php</a> &#8211; which defines the language grammar
+and implements the support structure for the parser and lexical scanner. It defines
+the YAThemeParser object, which is the primary object used to translate mixed
+<span class="caps">HTML</span>, <span class="caps">PHP</span>, and YATheme into mixed <span class="caps">HTML</span> and <span class="caps">PHP</span></li>
+<li><a href="/doc.d/system-includes/aparser.html">aparser.php</a> &#8211; a top-down, recursive programmable
+parser modeled very loosely after yacc and bison. This defines the AParser object
+which &#8211; given a language definition and lexical scanner &#8211; implements a recursive
+descent parser. Parsers implemented using this object must be right recursive and
+written so that the most complex productions are examined before simpler productions.
+See the documentation. (this parser is written in <span class="caps">PHP</span>, so it runs in <span class="caps">PHP</span> time &#8211; which
+is not necessarily all that efficient, but is much more portable than a C implementation).</li>
+<li><a href="/doc.d/system-includes/ascanner.html">ascanner.php</a> &#8211; a programmable lexical
+scanner. Also written in <span class="caps">PHP</span>, this is used to reduce files to a sequence of tokens
+which AParser objects can digest. It&#8217;s a little strange, but works quite well.
+Suitably defined rules execute quite rapidly.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

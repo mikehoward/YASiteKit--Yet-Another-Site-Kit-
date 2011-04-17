@@ -1,0 +1,127 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>ReCaptcha.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> ReCaptcha.php &#8211; encapsulates ReCaptcha Captcha service</h1>
+
+<p>Created by  on 2010&#8211;03-21.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>This is a simple object which encapsulates the reCaptcha protocol. You will
+use it by instantiating an object with the required parameters [see below].</p>
+
+<p>Then invoke the verify method using the local RequestCleaner instance.</p>
+
+<p>If the verify method returns <span class="caps">FALSE</span>, then expose the captcha form by echoing
+the output of <em>render()</em>. If <span class="caps">FALSE</span>, then the <em>error_code</em> attribute will
+<em>only</em> be set if there was a previous catcha which needed to be checked and
+that check failed.</p>
+
+<p>The pattern looks something like this:</p>
+
+<pre>
+$recaptcha = new ReCaptcha(domain, pub-key, priv-key, theme-name, https = TRUE or FALSE)
+
+<p>&lt;form&gt;
+. . .
+&lt;?php
+if (!$recaptcha->verify(Globals::$rc)) {
+if ($recaptcha->error_code) echo &#8221;... $recaptcha->error_code or translation&#8230;&#8221;;
+echo $recaptcha->render();
+}
+?&gt;
+. . .
+&lt;form&gt;
+</pre></p>
+
+<p>See <em>test_recaptcha.php</em> for an example of use.</p>
+
+<h2>Instantiation</h2>
+
+<p>$recaptcha = new ReCaptcha($domain, $public_key, $private_key, $theme_name, $https = ReCaptcha::HTTP)</p>
+
+<p>Where:</p>
+
+<ul>
+<li>domain &#8211; is the domain of validity of the reCaptcha account</li>
+<li>public_key &#8211; public key associated with this domain. Get this from
+recaptcha.net</li>
+<li>private_key &#8211; private key associated with this domain. Get this from
+recaptcha.net.</li>
+<li>$theme_name &#8211; name of a stock reCaptcha theme. Legal names are: red, white, blackglass, and clean.</li>
+<li>error &#8211; error string sent back by reCaptcha verification</li>
+<li>https &#8211; flag &#8211; if <span class="caps">TRUE</span>, use <span class="caps">HTTPS</span> to communicate with the reCaptcha server</li>
+</ul>
+
+<h2>Attributes</h2>
+
+<ul>
+<li>success &#8211; boolean &#8211; <span class="caps">TRUE</span> if last recaptcha was verified; <span class="caps">FALSE</span> if it failed; <span class="caps">NULL</span>
+if no test was made.</li>
+<li>error_code &#8211; string &#8211; error code from last recaptcha verify(), else <span class="caps">NULL</span></li>
+</ul>
+
+<h2>Class Constants</h2>
+
+<p>Use these constants (with care) by prefixing with the class name, as in ReCaptcha::HTTPS.
+The only ones normally used are <span class="caps">HTTP</span> and <span class="caps">HTTPS</span>. The server constants were supplied
+by <em>recaptcha.net</em> and are here for documentation purposes only. They are used internally,
+but not intended for external use.</p>
+
+<ul>
+<li>RECAPTCHA_API_SERVER = &#8220;<a href="http://api.recaptcha.net&#8221">http://api.recaptcha.net&#8221</a>;;</li>
+<li>RECAPTCHA_API_SECURE_SERVER = &#8220;<a href="https://api-secure.recaptcha.net&#8221">https://api-secure.recaptcha.net&#8221</a>;;</li>
+<li>RECAPTCHA_VERIFY_SERVER = &#8220;<a href="http://api-verify.recaptcha.net/&#8221">http://api-verify.recaptcha.net/&#8221</a>;;</li>
+<li><span class="caps">HTTP</span> = <span class="caps">FALSE</span>;</li>
+<li><span class="caps">HTTPS</span> = <span class="caps">TRUE</span>;</li>
+</ul>
+
+<h2>Class Methods</h2>
+
+<p>None</p>
+
+<h2>Instance Methods</h2>
+
+<ul>
+<li>render() &#8211; returns a string consisting of a recaptcha form</li>
+<li>verify(rc) &#8211; returns results of verifying a recaptcha response with the reCaptcha server.
+<em>rc</em> is a RequestCleaner instance. Returns <span class="caps">TRUE</span> on successful verification or
+<span class="caps">FALSE</span> on verifification failure or if there is nothing to verify.
+If the return is <span class="caps">FALSE</span>, the <em>error_code</em> attribute is set if the verify failed
+and <span class="caps">NULL</span> if there was nothing to check.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

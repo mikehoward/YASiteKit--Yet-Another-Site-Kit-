@@ -1,0 +1,5 @@
+# test dev version
+master = N
+owner = foobar
+master_version = 1
+dev_version = 2

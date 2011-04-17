@@ -1,0 +1,138 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>configurator.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>configurator.php &#8211; A Configuration <span class="caps">GUI</span></h1>
+
+<blockquote>
+<p>(c) Copyright 2010 Mike Howard. All Rights Reserved.
+Licensed under the terms of the <span class="caps">GNU</span> Lesser Public License, Version 3
+<a href="http://www.gnu.org/licenses/lgpl.html">see</a></p>
+</blockquote>
+
+<p>The <strong>configurator</strong> provides a web based interfact to YASiteKit configuration file (config.php)
+maintenance. It does this by parsing a config.php file or a config-template.php file and
+interpreting specially formatted comments.</p>
+
+<p>The parsing action operates in two modes:</p>
+
+<ul>
+<li>text &#8211; which is copied straight through and reproduced verbatum</li>
+<li>var &#8211; which interpreted as variable definition source.</li>
+</ul>
+
+<p>Switching between modes is controlled by the configurable start and stop comments:</p>
+
+<ul>
+<li>configurable-start &#8211; causes the parser to enter <em>var</em> mode on the <em>next</em> line of text.
+This comment is processed in <em>text</em> mode, so that it is copied to the output file.</li>
+<li>configurable-end &#8211; causes the parser to enter <em>text</em> mode. This line is also
+processed in <em>text</em> mode.</li>
+</ul>
+
+<p>Within <em>text</em> mode, text is accumulated, line by line.</p>
+
+<p>Within <em>var</em> mode, each line is matched against a set of regular expressions
+and parsed accordingly.</p>
+
+<h2><em>text</em> mode parsing</h2>
+
+<p>There isn&#8217;t any parsing as such. We just copy the text through verbatum.</p>
+
+<h2><em>var</em> mode parsing</h2>
+
+<p>In <em>var</em> mode, one or more &#8216;comment directives&#8217; preceed a <span class="caps">PHP</span> variable declaration.
+&#8216;comment directives&#8217; contain information which applies to the immediately succeeding
+<em>variable declaration</em>. They are accumulated until the <em>variable declaration</em> is
+found, at which point they are applied to the <em>variable declaration</em> and all
+&#8216;comment directives&#8217; are cleared.</p>
+
+<p>For example:</p>
+
+<pre>// comment: this is a comment which the user will see
+ type string
+public static $foo = 'initial value';  // this is an optional comment which is passed through to output
+</pre>
+
+<p><em>var</em> mode comment lines:</p>
+
+<ul>
+<li>// type &lt;string | int | bool | array | select&gt; &#8211; optional (more or less) &#8211; defines the data type of the variable</li>
+<li>// required &#8211; marks variable as <em>required</em>. This sets the
+color coding of the form generates error messages if missing</li>
+<li>// recommended &#8211; marks variable as <em>recommended</em>. This sets the color coding of the form</li>
+<li>// random(length) &#8211; tags the variable to be filled with a string of randomly generated characters
+of length <em>length</em>. The is only used to generate encryption keys. It might be useful for
+something else, but that hasn&#8217;t come up yet.</li>
+<li>// readonly &#8211; tags the variable as appearing in the form but not modifiable by the form.
+At present this is only used for <em>site_installation</em>, but may have other uses. These
+variables must be set programatically.</li>
+<li>// default &#8211; sets the default value for the variable. The default value supports {foo} type
+substitution, so {foo}<em>bar will expand to the value of _foo</em> followed by the literal string &#8216;_bar&#8217;.</li>
+<li>// annotation &#8211; followed by text which is displayed in the form. Contiguous <em>annotation</em>
+lines are concatenated (with a joining space character). <em>annotation</em> lines may not be
+continued to the next line. [That&#8217;s the reason for the contiguous combination rule]</li>
+<li>// option <em>choice</em> &#8211; only used for <em>select</em> types. Specifies one option available for
+the variable.</li>
+<li>// comment &#8211; optional &#8211; used to provide human readable text in the form</li>
+<li>// array-decl &#8211; semi-optional &#8211; used to define array components. <strong>array-decl</strong> lines follow
+a strict format: &#8217; // array-decl key value type comment
+<ul>
+<li>key &#8211; is the name of the key field in the array</li>
+<li>value &#8211; intitial value of the array entry. May be an empty string (&#8217;&#8217;) or zero, but must not
+be missing</li>
+<li>type is one of &#8216;string&#8217;, &#8216;int&#8217;, or &#8216;bool&#8217;</li>
+<li>comment &#8211; rest of text &#8211; used to give user a hint</li>
+</ul>
+</li>
+</ul>
+
+<p>The <strong>configurator</strong> attempts to deduce the type of a variable definition from the <em>variable declaration</em>
+line. This works if the following rules are followed:</p>
+
+<ul>
+<li>all variable declarations must begin with &#8216;public static &#8217; and must be separated from each
+other and the variable name by at least one white-space character.</li>
+<li>string data must be quoted strings using single or double quote marks (&#8217;) or (&#8221;)</li>
+<li>integer data must consist of one or more consecutive digits. For example, at least a
+zero (0)</li>
+<li>bool data must be initialized to one of the literals: <span class="caps">TRUE</span> of <span class="caps">FALSE</span></li>
+<li><span class="caps">NULL</span> initizializers must have a type word in the trailing comment text. The type word
+must be one of &#8216;string&#8217;, &#8216;int&#8217;, or &#8216;bool&#8217;.</li>
+</ul>
+
+<p>An explicit &#8216;type comment directive&#8217; takes precedence over inferred data types.</p>
+
+<p>If a variable is initialized to <span class="caps">NULL</span> and declared as an <em>array</em> type, it <em>must</em> be preceeded
+by one or more <strong>array-decl</strong> comment lines which define the fields in the array.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

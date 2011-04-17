@@ -1,0 +1,55 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>PageYASiteKit.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> PageYASiteKit.php &#8211; The YASiteKit Management <span class="caps">HTML</span> Page object.</h1>
+
+<p>Created by Mike Howard on 2010&#8211;07-17.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved. Licensed under the terms of the <span class="caps">GNU</span> Lesser
+<span class="caps">GNUL</span> License, version 3.  See <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a> for details.</p>
+</blockquote>
+
+<blockquote>
+<p><span class="caps">THIS</span> <span class="caps">SOFTWARE</span> <span class="caps">HAS</span> NO <span class="caps">WARRANTEE</span> OR <span class="caps">REPRESENTATION</span> <span class="caps">FOR</span> <span class="caps">FITNESS</span> OF <span class="caps">PURPOSE</span>.
+<span class="caps">USE</span> AT <span class="caps">YOUR</span> <span class="caps">OWN</span> <span class="caps">RISK</span>.</p>
+</blockquote>
+
+<p>PageYASiteKit is identical to the Page object distributed in the system/objects
+folder of YASiteKit. It is used by for management objects &#8211; so that they
+will work in a known page structure. This allows other Page objects to be
+defined on a site by site basis. See Page-simple.php in the site-framework
+for an example.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

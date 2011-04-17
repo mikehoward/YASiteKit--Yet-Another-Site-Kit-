@@ -1,0 +1,68 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Home.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> Home.php &#8211; Home Page</h1>
+
+<p>Created by  on 2010&#8211;09-28</p>
+
+<blockquote>
+<p>(c) Copyright 2010 Mike. All Rights Reserved.
+All Rights Reserved.
+Licensed under the terms of <span class="caps">GNU</span> <span class="caps">LGPL</span> Version 3</p>
+</blockquote>
+
+<p><strong>Home.php</strong> is a reconfigurable Home Page for YASiteKit sites.</p>
+
+<p>Edit this file to create a home page specific to your site.</p>
+
+<p>The default setup displays an article named <em>home</em> using the
+<em>DisplayArticle.php</em> page from the YASiteKit system.</p>
+
+<p>This allows easier maintenance of the site because the site owner
+can edit the <em>home</em> article using ManageArticle.php.</p>
+
+<p>Alternatively, one could simply replace the content of this page
+by raw <span class="caps">HTML</span>. <span class="caps">NOTE</span>: if you do that, remember that the page will still
+be rendered by Page.php, so the <span class="caps">HTML</span> will still
+be included in the <em>content</em> <em>div</em> of the page and all the headings,
+footers, etc will be rendered.  So, don&#8217;t put in a complete <span class="caps">HTML</span> page.
+Just put in the markup you need.</p>
+
+<p>As a Second alternative, you might have a specialized page that you
+have written and included in the site&#8217;s <em>pages</em> directory. In that
+case you would probably replace the content with:</p>
+
+<pre>include('MyPage.php');
+</pre>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

@@ -1,0 +1,29 @@
+/* 
+	most of this is stolen from the advanced template. It's mainly here
+	to change the url path from 'img/buttons.png' to '../img/buttons.png'
+	buttons.png is a button sprite with 2 fields: each 26 px high.
+*/
+#imgupload_do_button, #imgupload_cancel_button {
+	border:0; margin:0; padding:0;
+	font-weight:bold;
+	width:94px; height:26px;
+ 	background:green url(../img/buttons.png) 0 -52px;
+	cursor:pointer;
+	padding-bottom:2px;
+	float:left;
+}
+#imgupload_cancel_button {
+	background: red url(../img/buttons.png) 0 0px;
+	float:right;
+}
+#imgupload_iframe_target {
+  width:380px;
+	height:5em;
+	position:absolute;
+	left:-10000px;
+	top:-10000px;
+}
+.imgupload_ok { background: #4f4;} /* green */
+.imgupload_error { background: #f44;} /* red */
+.imgupload_warning { background: #ffaa00;} /* orange */
+.imgupload_info { background: #ffff00;} /* yellow */

@@ -1,0 +1,97 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>ObjectInfo.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>ObjectInfo.php &#8211; template to copy for YASiteKit AnInstance object_infos</h1>
+
+<p>Created by  on 2010&#8211;02-16.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>The primary use of ObjectInfo is to map object names into absolute paths
+so that we can cut down on the length of the <span class="caps">PHP</span> include path. It also
+has some other stuff &#8211; which will be useful for packages and generalizing
+object data management.</p>
+
+<h2>Attributes</h2>
+
+<p>All attributes are public</p>
+
+<h3>Instance Attributes.</h3>
+
+<ul>
+<li>object_name &#8211; string &#8211; Object Name</li>
+<li>valid &#8211; enum(N,Y) &#8211; Object Valid &#8211; an invalid object is one which does not
+have an include path.Epson America, Inc.
+Attn: Recycling Center
+18300 Central Avenue
+Carson, CA 90746</li>
+<li>path  &#8211; string &#8211; Absolute Path to Obj File</li>
+<li>source &#8211; enum(unknown,system,site,package) &#8211; Source Type</li>
+<li>source_name &#8211; string &#8211; Source Name &#8211; only valid if <em>source</em> is <em>package</em></li>
+<li>manageable &#8211; enum(Y,N) &#8211; Manageable? &#8211; must be Y if the object has persistent
+data. Otherwise, not.</li>
+<li>management_url &#8211; string &#8211; Management <span class="caps">URL</span></li>
+</ul>
+
+<h3>Class Attribute</h3>
+
+<ul>
+<li>ObjectInfo::$object_map &#8211; array &#8211; associative array which maps object names
+to ObjectInfo instances. Gets constructed upon first instantiation of an ObjectInfo
+instance OR first call to <em>load_object_map()</em></li>
+</ul>
+
+<h2>Class Methods</h2>
+
+<ul>
+<li>do_require_once(object_name) &#8211; use in place of <em>require_once()</em>. Uses
+the ObjectInfo database to require using the absolute path. Throw excption if
+the ObjectInfo entry for <em>object_name</em> is not valid. Returns <span class="caps">FALSE</span> if class <em>object_name</em>
+already exists.</li>
+<li>do_require(object_name) &#8211; just like <em>do_require_once()</em>, except that
+it throws an exception if <em>object_name</em> already exists.</li>
+<li>load_object_map(dbaccess) &#8211; loads the object map and saves in ObjectInfo::$object_map.
+Also returns the map in case you want to do something with it</li>
+</ul>
+
+<h2>Instance Methods</h2>
+
+<ul>
+<li>management_link($title = &#8217;&#8217;) &#8211; returns an <span class="caps">HTML</span> Anchor element pointing to the <em>management_url</em>
+or <span class="caps">FALSE</span>, if this object is not manageable.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

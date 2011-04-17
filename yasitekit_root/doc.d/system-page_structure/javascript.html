@@ -1,0 +1,83 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>javascript.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>javascript.php &#8211; Page Structure element initializing jQuery</h1>
+
+<p>.bq&#169; Copyright 2010 Mike Howard. All Rights Reserved.
+Licenced under terms of Lesser <span class="caps">GNU</span> Public License, Version 3.
+See <a href="http://www.gnu.org/licenses/lgpl.html">here</a> for details.</p>
+
+<p>This file is usually encorporated into a page by defining a
+PageSegFile segment which references it. See <a href="/doc.d/system-objects/PageSeg.html">PageSeg.php</a>
+and <a href="/doc.d/system-objects/PageYASiteKit.html">PageYASiteKit.php</a> for more information.</p>
+
+<p>It also includes jQuery code specific to YASiteKit which implement certain &#8216;features&#8217;
+based on <span class="caps">HTML</span> class and id attributes:</p>
+
+<ul>
+<li>class &#8216;hover-reveal&#8217; &#8211; [THIS <span class="caps">ISN</span>&#8216;T <span class="caps">WORKING</span> <span class="caps">PROPERLY</span> <span class="caps">YET</span>]
+used to change the <span class="caps">CSS</span> overlapping elements hack (using z-index
+changing when the hover state changes) to &#8216;click to reveal&#8217; &#8216;click to close&#8217; functioning
+so that they work touch devices.
+(see the side-bar menu on the yasitekit.org web site).
+This works by varying the z-index value of the element
+between 10 and 30, depending on the hover state. This means that the element must be
+absolutely positioned in a relatively positioned container. The &#8216;normal content&#8217;
+must be in the same container and should be relatively positioned with a z-index value
+between 11 and 29. The message which says something like &#8221;(mouse over to reveal)&#8221;
+should have the class &#8216;click-message&#8217;. Then the <span class="caps">HTML</span> will be replaced by Click
+to Open and Click to Close messsages.</li>
+<li>class &#8216;click-display&#8217; &#8211; put the class &#8216;click-display&#8217; in a container element which
+has some content on the screen. Include another element with the class &#8216;display-target&#8217;.
+Clicking the outer container toggles the <em>display</em> property of the the &#8216;display-target&#8217;
+element between <em>none</em> and <em>block</em>.</li>
+<li>class &#8216;click-offset&#8217; &#8211; works similarly to &#8216;click-display&#8217; except that it changes
+the <em>left</em> property of &#8216;display-target- between -100,000 px and 0 &#8211; thus moving it
+on and off the screen.</li>
+<li>class &#8216;filtered&#8217; &#8211; mates with the &#8216;filter&#8217; property of AnInstance objects to implement
+real-time input validation. It&#8217;s meant to be used with input <em>text</em> elements. There must
+be an attribute named &#8216;filter&#8217; which has a regular expression as a body. This code assumes
+that the regular expression does <span class="caps">NOT</span> have beginning and ending delimiters or anchors: they
+are added automatically. This code checks the content against the regular expression
+when the <em>change</em> event fires. If it matches, all is well; if it fails to match, then
+the background is colored red and focus goes back to the element. [It&#8217;s not fancy, but
+it&#8217;s also not cpu intensive and it does work]</li>
+<li>class &#8216;first-focus&#8217; &#8211; the first element with class &#8216;first-focus&#8217; needs to be a form input,
+textarea, etc element. It will be given focus as soon as the page loads.
+This makes forms easier to use. For AClass objects, you will need to assign this class
+to the propery &#8216;form_classes&#8217; in the object&#8217;s class definition.
+<span class="caps">NOTE</span>: It&#8217;s probably not a good idea to have more than
+one element with the class &#8216;first-focus&#8217;, but it won&#8217;t break the page.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

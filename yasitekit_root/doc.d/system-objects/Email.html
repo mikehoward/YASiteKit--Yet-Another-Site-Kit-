@@ -1,0 +1,64 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Email.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>Email.php &#8211; an Email record object</h1>
+
+<p>Created by  on 2010&#8211;02-16.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<h2>Instantiation</h2>
+
+<h2>Attributes</h2>
+
+<ul>
+<li>email_id &#8211; int &#8211; Email id</li>
+<li>userid &#8211; link(Account.userid) &#8211; User ID</li>
+<li>email &#8211; email &#8211; Email Address</li>
+<li>title &#8211; varchar(255) &#8211; Title &#8211; user visible name for forms and display</li>
+<li>image &#8211; file(images/email_pic/{user_id}_{email_id},private) &#8211; Avatar &#8211; a photo or cartoon</li>
+<li>create_timestamp &#8211; datetime &#8211; Creation Timestamp</li>
+</ul>
+
+<h2>Class Methods</h2>
+
+<p>None</p>
+
+<h2>Instance Methods</h2>
+
+<p>Normal AnInstance methods</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

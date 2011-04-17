@@ -1,0 +1,156 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>ImageMagickObject.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> ImageMagickObject &#8211; a Utility object for manipulating and displaying ImageMagicks using GD2</h1>
+
+<p>Class ImageMagickObject manages in-memory image data. ImageMagicks in ImageMagickObjects are automatically
+destroyed by the destructor when the objects are cleaned up. This is nice because
+it means you never have to call <em>imagedestroy()</em>.</p>
+
+<p>Created by  on 2008&#8211;09-09.
+Copyright&#169; 2008 Clove Technologies, Inc. All rights reserved.</p>
+
+<h1><span class="caps">DOESN</span>&#8216;T <span class="caps">WORK</span> <span class="caps">YET</span> &#8211; <span class="caps">NOT</span> <span class="caps">EVEN</span> <span class="caps">STARTED</span> &#8211; <span class="caps">DON</span>&#8216;T <span class="caps">USE</span> <span class="caps">YET</span>!!!!!!!</h1>
+
+<ul>
+<li>new ImageMagickObject(path OR width, height) &#8211; creates a new ImageMagickObject object from
+the file located by the <em>path</em> OR creates a new empty ImageMagick of size (width, height)</li>
+</ul>
+
+<h3>Attributes</h3>
+
+<ul>
+<li>width &#8211; image width</li>
+<li>height &#8211; image height</li>
+<li>max &#8211; max of width and height</li>
+<li>mime &#8211; mime type as in &#8216;image/jpeg&#8217; &#8211; May be <span class="caps">NULL</span></li>
+<li>image &#8211; reference to real, live image object. Don&#8217;t destroy it, but you
+can call various image&#8230;() functions if you have to. It&#8217;s a good idea to
+defer to the defined methods because some of them do some extra bookkeeping &#8211; for example <em>allocatecolor()</em> maintains a dictionary of colors allocated for
+the image and checks for and avoids duplicate color allocataion.</li>
+<li>path &#8211; path to this image &#8211; May be <span class="caps">NULL</span></li>
+</ul>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>save(path, format = GD2) &#8211; Refuses
+to clobber the original path. Throws exceptions on problems.</li>
+<li>convertToBlackAndWhite(threshold) &#8211; rewrites all colors as black or white pixels. Perserves
+alpha. <span class="caps">NOTE</span>: this is a destructive transformation and is <span class="caps">SLOW</span></li>
+<li>shrink(max-dimension) &#8211; returns an ImageMagickObject with width and height
+no greater than max-dimension.</li>
+<li>display(max-dimension = 0, output_format = IMAGETYPE_PNG) &#8211; outputs image to web browser.
+<em>max_dimension</em> == 0 displays at full size. Output format can be a numeric GD constant
+or one of &#8216;jpg&#8217;, &#8216;jpeg&#8217;, &#8216;gif&#8217;, &#8216;png&#8217;, &#8216;wbmp&#8217; or &#8216;bmp&#8217;</li>
+<li>merge(overlay_image, max_dimension, opacity = 100, ratio = 0, center_x = .5, center_y = .5) &#8211; returns the merged image.
+<em>opacity</em> is the opacity value &#8211; 0 to 100.
+<em>ratio</em> is overlay image size in percent relative to the resulting image. If 0, then the
+overlay is not rescaled other than to keep it within the size of the image.
+<em>center_x</em> and <em>center_y</em>
+are the 0 to 1.0 fractions used to position the center point of the overlay relative to the
+image. Returns a new ImageMagickObject</li>
+<li>overlay(overlay-image, max_dimension = 0, ratio = 100%, center_x = 0.5, center_y = 0.5) &#8211; does an overlay of the overlay image using <em>imagecopy()</em>. <span class="caps">NOTE</span>: there is no <em>opacity</em>
+parameter.Returns a new ImageMagickObject.</li>
+<li>displayWatermarked(watermark-imageObject = <span class="caps">NULL</span>, max_dimension = 0, output_format = IMAGETYPE_PNG) &#8211; outputs
+this image with the <em>watermark</em> image reduced 50% and centerd at 30% opacity.
+<span class="caps">NONDESTRUCTIVE</span></li>
+</ul>
+
+<h3>watermark(watermark_image = <span class="caps">NULL</span>, max_dimention = 0)</h3>
+
+<ul>
+<li>watermark(watermark_image = <span class="caps">NULL</span>, max_dimention = 0) &#8211; watermarks this image
+with either a dynamically generated string or a supplied ImageMagickObject. The default
+is dynamically generated string.</li>
+<li>displayMerged(watermark_image, max_dimension = 0, ratio = 100, opacity = 50, output_format = <span class="caps">PNG</span>) &#8211; merges <em>merg_file</em> into this image with specified ratio and opacity. Output goes
+to browser. <span class="caps">NONDESTRUCTIVE</span></li>
+<li>displaySigned(signature-image, max-dimension = 0, output-format = <span class="caps">PNG</span>) &#8211; merges
+the signature file &#8211; converted to black and transparent &#8211; at 10% size and 100%
+opacity into the bottom right hand corner of the image. <span class="caps">NONDESTRUCTIVE</span>
+Destructively converts signature image to black and transparent.</li>
+<li>sign(signature-image, max-dimension = 0, ratio = 10, opacity = 100, center_x = 1.0,
+center_y = 1.0) &#8211; signs the image. Destructively converts signature image to black and
+transparent.</li>
+</ul>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>emptyP() &#8211; returns <span class="caps">TRUE</span> if image is empty, else <span class="caps">FALSE</span></li>
+</ul>
+
+<h3>Protected Methods</h3>
+
+<ul>
+<li>protected rgbtocolor(red, green, blue, alpha = 0) &#8211; returns a packed 32 bit word
+containing the colors and alpha shifted into 8 bit positions (alpha, red, green, blue).
+Goes between truecolor and palatte</li>
+<li>protected colortorgba(color) &#8211; returns an array of 8 bit color values and alpha
+as array(red, green, blue, alpha). [Alpha is clipped to 7 bits]</li>
+<li>protected allocatecolor(name, red, green, blue, alpha = 0) &#8211; allocates a color
+for <em>this->image</em> and caches the image resource under <em>name</em>. This creates a central
+resevour of named colors so we don&#8217;t get duplication in the image. The allocated
+color handles are available in the associated array _this->color_allocations[&#8216;name&#8217;]</li>
+<li>protected set_transparent(color_index = <span class="caps">NULL</span>) &#8211; if <em>color_index</em> is <em>not</em> <span class="caps">NULL</span>,
+sets the <em>transparent</em> color for <em>this->image</em> to the indicated color and RETURNs
+the transparent color resource for <em>this->image</em>; If <span class="caps">NULL</span>, just
+returns the transparent color resources for <em>this->image</em>.</li>
+<li>protected fill(color_index) &#8211; Fills the entire image with a single color</li>
+<li>protected overwriteThis($source_image) &#8211; overwrites all of the attributes of <em>this</em>
+with the attributes of the <em>source_image</em>. Used as final step after
+manipulating an image using various imagecopy&#8230;() functions.</li>
+<li>protected getInfoArray(path) &#8211; returns the merged array from the GD2 function _getimagesize()
+or <span class="caps">FALSE</span> if the file is not readable or is not a file. <strong><span class="caps">NOTE</span>:</strong>
+width and height may be zero &#8211; which means the underlieing GD library couldn&#8217;t figure
+them out.
+Info is under the following keys:
+<ul>
+<li>width &#8211; width of image in pixels</li>
+<li>height &#8211; height of image in pixels</li>
+<li>image_type &#8211; defined constant from IMAGETYPE_XXX. values for <span class="caps"><span class="caps">JPG</span></span>, <span class="caps"><span class="caps">PNG</span></span>, and <span class="caps"><span class="caps">GIF</span></span> are 2, 3,
+and something else</li>
+<li>image_ext &#8211; defined for jpg, png and gif&#8217;s only and gives the common three letter extension
+for those type files</li>
+<li>img_attribute &#8211; gives the width and height attributes for an &lt;img&gt; tag.</li>
+<li>bits &#8211; may be defined and specifies number of bits of color information</li>
+<li>mime &#8211; is the <span class="caps"><span class="caps">MIME</span></span> type for an <span class="caps"><span class="caps">HTTP</span></span> header</li>
+<li>APP13 &#8211; if defined &#8211; <em>may</em> be the <span class="caps"><span class="caps">IPTC</span></span> data for the image</li>
+<li><span class="caps"><span class="caps">APP</span></span>?? &#8211; if defined &#8211; are other things which might be of interest, if you can find
+out what they are and how to decode them.</li>
+</ul>
+</li>
+<li>protected getImageMagick() &#8211; loads the image into memory from the given path</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

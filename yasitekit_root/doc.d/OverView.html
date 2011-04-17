@@ -1,0 +1,808 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>OverView.textile</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>Overview of YASiteKit: <strong>Start Here</strong></h1>
+
+<p style="clear:both;" class="advisory"><span class="caps">NOTE</span>: This is a Work In Progress. This Document is
+a Draft Document.</p>
+
+<p>YASiteKit is Yet Another Site Kit &#8211; a Web Site Construction Kit.</p>
+
+<p>This document discusses the general architecture, ending with a sketch of
+adding a new page.</p>
+
+<ul>
+<li><a href="#why">Why and What it Is</a></li>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#controller">The Controller Function</a></li>
+<li><a href="#model">The Model Function</a></li>
+<li><a href="#view">The View Infrastructure</a></li>
+<li><a href="#creating_a_page">Creating a New Page</a></li>
+<li><a href="#soapbox">Reinventing Wheels</a> <span class="caps">SOAPBOX</span> <span class="caps">ALERT</span>! &#8211; Opinions on Wheels, Invention and Innovation</li>
+</ul>
+
+<h2 id="why">Why YASiteKit when there are so many existing frameworks and <span class="caps">CMS</span>&#8216;s?</h2>
+
+<p>Why? I couldn&#8217;t find anything which fit what I was looking for.
+They all seemed <em>wrong</em> in some sense. Go Here for more <a href="#soapbox">&#8216;reasons&#8217;</a></p>
+
+<p>What it boiled down to is this:</p>
+
+<p>Every <span class="caps">CMS</span> or web framework is designed to solve a particular problem.
+Not that this is unusual &#8211; every program and programming system is designed
+to solve a particular problem.</p>
+
+<p>The problem for me is that every <span class="caps">CMS</span> and Framework I looked at wasn&#8217;t solving
+the problem I wanted solved. At least, not at the core level.</p>
+
+<p>Wordpress solves the &#8216;Blog&#8217; problem.</p>
+
+<p>Joomla! solves the &#8216;Internet Magazine / Newspaper&#8217; problem &#8211; as does Django</p>
+
+<p>Drupal &#8211; at core &#8211; is a &#8216;Mail Drop&#8217; &#8211; where &#8216;everything is a node&#8217;. It has evolved
+into something more by including primitives for comments, taxonomy and rolling fields
+into the core. But &#8211; to my mind &#8211; it is still hampered by the original design.</p>
+
+<p>Rails seems to mainly solve the &#8216;I need to write a one-off web site quickly&#8217;.</p>
+
+<p>Etc</p>
+
+<p>My Problem was &#8211; and still is &#8211; that I wanted a solid foundation to create
+web businesses that will:</p>
+
+<ul>
+<li>run almost anywhere</li>
+<li>be easy to construct</li>
+<li>be easy to migrate from database engine to database engine</li>
+<li>be easy to add data columns to</li>
+<li>automatically give me the <span class="caps">CRUD</span> code for each and every object I create
+(that&#8217;s Create/Retrieve/Update/and Delete &#8211; the most boring code to write,
+re-write, over and over and over and . . . again)</li>
+<li>manage accounts and sessions</li>
+<li>use industry standard languages: <span class="caps">PHP</span>, <span class="caps">HTML</span>, Javascript, and <span class="caps">CSS</span></li>
+<li>be flexible</li>
+</ul>
+
+<p>So . . .</p>
+
+<p>Every design has a fundamental abstraction that it implements.</p>
+
+<p>Drupal has the &#8216;node&#8217; &#8211; Joomla has an &#8216;article&#8217; &#8211; Wordpress has the &#8216;blog&#8217; &#8211; . . .</p>
+
+<p>What I want was very simple and flexible, so I based my design on the &#8216;web page&#8217; &#8211; which is exactly what a site is: a collection of web pages.</p>
+
+<p>Now &#8211; about 3 years and 50,000 lines of code later [more like 200,000 pared down to about 20,000 lines] &#8211; I&#8217;m getting to something I like &#8211; (I think).</p>
+
+<p>It&#8217;s an <span class="caps">MVC</span> design, which uses <span class="caps">PHP</span> 5 objects to construct web pages. Each page can be:</p>
+
+<ul>
+<li>as templated as you want or completely individual.</li>
+<li>each page can use it&#8217;s own javascript framework &#8211; it&#8217;s up to you</li>
+<li>you can specify different <span class="caps">CSS</span> for any page you want &#8211; every page if you really want to</li>
+<li>data is easy to specify</li>
+<li>it&#8217;s easy to add data to objects and rebuild the database <em>without</em> resorting to dbms
+dump/reload utilities. You don&#8217;t have to touch or write <span class="caps">SQL</span>.</li>
+<li>there is no Templating language to use. There&#8217;s no &#8216;special theming engine&#8217;. Just write
+your pages.</li>
+<li>all it needs for infrastructure is Apache, <span class="caps">PHP</span> 5.2.12+, and one of SQLite, Mysql or PostgreSQL.
+[mongodb coming &#8216;real soon now&#8217;]</li>
+</ul>
+
+<p>Here&#8217;s the overview:</p>
+
+<h2 id="overview">Overview</h2>
+
+<p>First of all &#8211; it&#8217;s an <span class="caps">MVC</span> design. In case you&#8217;ve been out of the country and deaf for
+the last couple of years, that means Model-View-Controller.</p>
+
+<p>This is a design method which <em>they</em> say dates back to Smalltalk &#8211; back in the mid &#8216;70&#8217;s or
+so. That&#8217;s why its called a &#8216;modern design methodology&#8217;. (as you can see, I have some
+issues with buzz word pollution).</p>
+
+<p>Anyway, <span class="caps">MVC</span> is a pretty good idea, but hard to get right. I won&#8217;t go into my criticisms
+of some of the <span class="caps">MVC</span> designs I studied before starting YASiteKit other than to say
+that they&#8217;ve impressed me on how hard it is to do a good <span class="caps">MVC</span> design.</p>
+
+<p>One of the key elements of <span class="caps">MVC</span> is separation of the M and the V and the C. This almost
+never happens &#8211; which often shows up as global variable proliferation and pollution
+between the different segments.</p>
+
+<p>I think I&#8217;ve achieved pretty good separation. And where separation is not possible, I&#8217;ve
+worked hard to use techniques which generate compile and run-time errors where other
+designs (including some I&#8217;ve implemented and tossed) fail silently.</p>
+
+<p>This is obvious to do in <span class="caps">PHP</span> because <span class="caps">PHP</span> will happily create and use misspelled variables
+and correctly spelled local variables (where a global was expected, but was not declared).
+This &#8216;feature&#8217; results in almost undetectable and un-findable errors. <em>unfindable</em> when
+the project grows to the 10,000 lines size. Undetectable because they do not trigger easily
+noticeable errors.</p>
+
+<p>No that I&#8217;ve impressed you with how smart I am, I&#8217;ll correct that. It turns out that all
+that&#8217;s needed is a rigorous use of <span class="caps">PHP</span> 5 objects to encapsulate all functionality &#8211; <em>including global variables</em>. Using Class static variables for what would normally be
+<em>global</em> has several very useful effects:</p>
+
+<ol>
+<li>They are always available</li>
+<li>the <strong>global</strong> keyword is not necessary. No global declarations needed</li>
+<li>misspelling generates errors</li>
+<li>they are easy to spot in the code [they look like: Globals::$foo instead of $foo], so it&#8217;s
+easy to tell if a <em>local</em> or <em>global</em> variable is being used</li>
+<li>the encapsulating object can have methods. This makes it <em>easy</em> to write generic diagnostic
+routines.</li>
+</ol>
+
+<h2 id="controller">The Controller Function</h2>
+
+<p><a href="img/RequestProcessing-1.jpg?target=:blank"><img src="img/RequestProcessing-1.jpg" style="width:30%;float:right;" title="YASiteKit Controller Diagram" alt="YASiteKit Controller Diagram" class="right" /></a></p>
+
+<h3 id="request_handling">Request Handling</h3>
+
+<p>We&#8217;ll start with an overview of what happens when a web page request hits the site.</p>
+
+<p>YASiteKit currently relies on the apache server. This is probably not an absolute requirement,
+but we do need a means of running <span class="caps">PHP</span> and intercepting and re-writing URLs.</p>
+
+<p>When a request hits the site &#8211; the first decision to make is whether the <span class="caps">URL</span> points to a file
+in the public directory.</p>
+
+<p>If it does, then the server serves it and we are done. If it does not
+exist, then the request is re-written as a request to <em>index.php</em> with a <span class="caps">GET</span> parameter of
+<em>page_name</em> set to the original page name requested.</p>
+
+<p><em>index.php</em> then loads the site configuration file so that it can connect to the database
+and find the rest of the site. The rest of the site is contained in a private directory which
+is not directly accessible by the server.</p>
+
+<p><em>index.php</em> then loads and runs <em>includes.php</em> which resolves Session and Account issues and
+initializes the RequestCleaner which acts as a central User Input sanitizer.</p>
+
+<p>Finally, <em>index.php</em> examines the extension of the requested page and selects a renderer.
+The extensions decode as:</p>
+
+<ul>
+<li>html or php &#8211; render_page.php &#8211; loads requested page, verifies page security and authentication
+of user, and renders page</li>
+<li>ajax &#8211; render_ajax.php &#8211; loads requested ajax code, verifies security and authentication requirements
+and returns ajax response.</li>
+<li>json &#8211; render_json.php &#8211; same as ajax, except for json requests</li>
+<li>xml &#8211; render_xml.php &#8211; same as ajax, except returns rendered <span class="caps">XML</span> request</li>
+<li>otherwise &#8211; renders page not found page via <em>render_page.php</em></li>
+</ul>
+
+<h3>Notes:</h3>
+
+<p>This design differs from Rails and similar designs in that site requests are <em>not</em> translated
+to function calls in the controller. They are translated into file names in the private data
+section of the site. This has several advantages:</p>
+
+<ol>
+<li>the controller is immutable. It does not require modification in order to add new pages</li>
+<li>each page is a separate entity. Any single page failure should not take down the site, so
+it is (relatively) safe to edit pages.</li>
+<li>each page is responsible for it&#8217;s own construction. As seen below, each page&#8217;s structure is
+defined by the content and ordering of PageSeg objects within a Page object. Each request
+generates and renders a single Page object &#8211; which is completely under the control of the
+page file being rendered.</li>
+<li>Account and Session handling are centralized and common to all forms of site interaction: normal
+page requests, <span class="caps">AJAX</span> requests and Web services requests &#8211; for <span class="caps">JSON</span> and <span class="caps">XML</span> formatted data</li>
+<li>probably something else, but I can&#8217;t think of it right now.</li>
+</ol>
+
+<h2 style="clear:both;" id="model">The Model Function</h2>
+
+<p><a href="img/RequestProcessing-2.jpg?target=:blank"><img src="img/RequestProcessing-2.jpg" style="width:30%;clear:both;float:right;" title="YASiteKit Model Diagram" alt="YASiteKit Model Diagram" class="right" /></a></p>
+
+<p>Data modeling is implemented by extending the AClass object OR &#8211; if there is no need for persistence &#8211; writing an object.</p>
+
+<p>Examples of Impermanent objects are:</p>
+
+<ul>
+<li>PageSeg objects &#8211; which implement page segments with different characteristics</li>
+<li>ACurl objects &#8211; which encapsulate cURL <span class="caps">HTTP</span> requests. These are used to communicate with
+other services &#8211; such as ReCaptcha and Paypal.</li>
+<li>PayPalAPI and PayPalButtonAPI objects &#8211; which manage paypal api requests</li>
+<li>ReCaptcha objects &#8211; which encapsulate and simplify use of ReCaptcha user authentication</li>
+</ul>
+
+<p>Permanent objects are implemented as extensions of AClass and AnInstance objects. (Refer to
+the <a href="/doc.d/system-includes/aclass.html">aclass.php</a> documentation for details.)</p>
+
+<p>AClass objects define named collections of data which are stored in an associated database
+table. They define and implement the translation between actual classes used in the site
+and the permanent storage implemented by the database engine. <a href="#site_data">See below</a>
+for an overview of the features of Permanent object data. See <a href="/doc.d/system-includes/aclass.html">aclass.php</a>
+for more detailed information and actual <span class="caps">API</span> details.</p>
+
+<p>The AnInstance object id designed to be extended to create useable classes for the site. Each
+AnInstance extension will reference a previously defined AClass instance. Both the associated
+AClass and AnInstance class provide a large number of services &#8211; such as instance display,
+edit form, save, load, and search and archiving/unarchiving functions for rebuilding the
+database.</p>
+
+<p>The <strong>aclass.php</strong> module also includes support for field level encryption, a management
+interface for each AnInstance extension, and many-to-many table joins using the AJoin
+object. Again, see <a href="/doc.d/system-includes/aclass.html">aclass.php</a> for details.</p>
+
+<h3><span class="caps">MVC</span> Separation</h3>
+
+<p>Separation between the Model and Controller segments is almost complete. The only classes
+directly used by the controller function are the Account class and the Session class.</p>
+
+<p>The Session class is used to extract user data for user accounts. Account information is
+tracked via cookies, so that repeated visits to the site from the same computer are
+associated with the same activity and &#8211; if the computer belongs to a registered user &#8211; an
+account.</p>
+
+<p>For registered users, the Session data tracks session activity and implements login requests
+based on need and activity timeout.</p>
+
+<p>User authority can be specified for any page (View) in terms of user authority field. If
+a page or web service requires a specific authority, the current user account is tested to
+make sure it complies. If that succeeds, then the user must also be in the &ldquo;logged in&rdquo;
+state, etc, etc. This allows page level security for each page and web service, independently
+specified. At most, the Controller needs to know how to determine if an account exists, if
+it is logged in, and what it&#8217;s authority level is.</p>
+
+<p>Models are separated from the View by each model&#8217;s interface. AnInstance extensions use
+a well defined and easily controlable interface to attributes and methods. Individual fields
+may be marked as <em>readonly</em> or <em>immutable</em> (initializable, but then read only). Additionally,
+non-key fields may be marked as <em>encrypt</em> so that data in the database is not readily
+accessible &#8211; without knowledge of key values. Models themselves are ignorant of the View
+segment.</p>
+
+<h3 style="clear:both;" id="dbaccess">Database Adaptor</h3>
+
+<p>Mapping Site data to database data uses two levels of abstraction. I don&#8217;t know if this is
+unique in web frameworks and <span class="caps">CMS</span>&#8216;s, but it is unusual.</p>
+
+<p>The first layer of abstraction is implemented in <a href="/doc.d/system-includes/aclass.html">aclass.php</a> and
+provides a standard set of data types with attributes for use in <span class="caps">PHP</span> objects. [This only
+applies to persistent data. Ephemeral data relies on the PHP5 object model and has no
+further constraints or augmentations]</p>
+
+<p>The second layer is implemented in the database adaptor which abstracts basic <span class="caps">SQL</span> database
+operations into 8 function calls and a few predicates and information functions.</p>
+
+<h4>Database Access Abstraction</h4>
+
+<p>This second layer removes any syntactic <span class="caps">SQL</span> dependence of database operations exterior to the
+database adaptor. In other words: All <span class="caps">SQL</span> is isolated to the database adaptor so that
+it is &#8216;easy&#8217; to port applications between <span class="caps">SQL</span> and non-SQL databases [plans are to support
+at least mongodb and possibly couchdb]. For details see <a href="/doc.d/system-includes/dbaccess.html">dbaccess.php</a>.</p>
+
+<p>This second layer is not completely unusual. It is however desirable because it makes
+it possible to completely decouple Site applications from vendor-specific database
+technology.</p>
+
+<p>The 8 function calls are:</p>
+
+<ul>
+<li>create and destroy database</li>
+<li>create and drop table</li>
+<li>insert_into_table, update_table, delete_from_table and select_from_table</li>
+</ul>
+
+<p>The predicates and info functions are:</p>
+
+<ul>
+<li>table_exists() &#8211; returns <span class="caps">TRUE</span> or <span class="caps">FALSE</span></li>
+<li>changes() &#8211; returns number of changed &#8216;rows&#8217; resulting from last table modification</li>
+<li>error() &#8211; returns text of the last error message generated</li>
+</ul>
+
+<p>Additionally there are some helper functions which are used to format and sanitize data
+which is passed to the database.</p>
+
+<h3 id="site_data">Site Data</h3>
+
+<p>The system uses what is essentially the <span class="caps">SQL</span> table data model with several enhancements.</p>
+
+<p>Each &#8216;object&#8217; is similar to an SQLl table. Persistent data is stored in a table &#8211; or
+similar entity &#8211; using a name which is the lower case version of the object name.</p>
+
+<p>The object will have one or more fields and must have a unique key.</p>
+
+<p>The key is the values of one or more fields. Thus, while any given component of the
+key may be non-unique, the combination of values must be unique for each data object.
+The simplest case is &#8211; of course &#8211; a single key field &#8211; and is the most frequently used
+case.</p>
+
+<p>The rest of the fields are simply data fields and may participate in <em>select_from_table</em>
+operations.</p>
+
+<p>Every field has a collection of properties:</p>
+
+<ul>
+<li>data type &#8211; this is chosen from a number of types which are supported by <a href="/doc.d/system-includes/aclass.html">aclass.php</a>.
+Valid types are char, varchar, text, enum, join, int, float, file, email, date, time, and datetime.
+<ul>
+<li>char, varchar, text, enum, and email all hold character data. enum and email have additional
+features and checks</li>
+<li>int and float hold integer and floating point data</li>
+<li>date, time and datetime do what you would expect. They are implemented as <span class="caps"><span class="caps">PHP</span></span> DateTime objects</li>
+<li>file is used to upload files and contains metatdata so that the file can be located and
+used later. Images can be managed using <em>file</em> fields</li>
+<li>join types indicate a many to one join to another object. Their data is essentially opaque
+and consists of the key value of the joined-to table.</li>
+</ul>
+</li>
+<li>title &#8211; human readable string used in diagnostic dumps, forms, etc</li>
+<li>sql_type &#8211; which is interpreted by the database adaptor to create a type which works with the database
+engine</li>
+</ul>
+
+<p>Each field also has an associated set of Properties. Properties are used to further describe
+the data field. See <a href="/doc.d/system-includes/aclass.html#aclass_props">aclass.php</a> for details.</p>
+
+<h4>Field Property Overview</h4>
+
+<p>Here is a brief overview of some of the properties.
+See <a href="/doc.d/system-includes/aclass.html#aclass_props">aclass.php</a> and <a href="/doc.d/system-includes/aclass.html#aninstance_props">aclass.php</a>
+for the complete list and for details.</p>
+
+<p>Not all data types support all properties. Some properties are set automatically &#8211; such as the
+<em>path</em> property which is always set for <em>file</em> types and the properties used to implement joins.</p>
+
+<ul>
+<li>default &#8211; default value if none is specified</li>
+<li>display_html, display_attributes and display_classes &#8211; html, classes and attributes which will
+be set for this field when using the default <em>render()</em> function to display
+the object.</li>
+<li>form_html, form_classes and form_attributes &#8211; same as display_. . ., but used in
+the default form</li>
+<li>encrypt &#8211; if present, then the field is stored as an encrypted string in the database</li>
+<li>enums &#8211; array &#8211; defined <span class="caps">ONLY</span> for <em>enum</em> data type</li>
+<li>format &#8211; string &#8211; defined only for int and floats</li>
+<li>immutable &#8211; marks this field as &#8216;initializable once, then read-only&#8217;. This
+means that the user may input the initial value, but never change it. Key fields
+are always <em>immutable</em></li>
+<li>readonly &#8211; may only be changed programatically</li>
+<li>invisible &#8211; never displayed</li>
+<li>joins and join_display_field &#8211; metadata used in join fields</li>
+<li>key &#8211; this field is part of the key</li>
+<li>sql_type &#8211; used to create data tables by the database engine</li>
+<li>path &#8211; substitution values of the form {field-name}. This is the same substitution
+mechanism used for <span class="caps">HTML</span> rendering.</li>
+<li>required &#8211; requires user to define this value when input using the default
+form</li>
+<li>title &#8211; Human readable title used to display the form</li>
+</ul>
+
+<h3 style="clear:both;" id="encryption">Encryption</h3>
+
+<p>Each Persistent object has an associated <a href="/doc.d/system-includes/aclass.html#anencryptor">AnEncryptor</a> object.
+Encryptors are used in two areas:</p>
+
+<ol>
+<li>all fields of an object with the <em>encrypt</em> property are stored as encrypted data</li>
+<li>all database dumps are stored as encrypted data.</li>
+</ol>
+
+<p>Each object has its own unique key value. The algorithm used is Blowfish. Encrypted data is
+stored as base64 encoded strings (using the <span class="caps">PHP</span> functions base64_encode() and base64_decode())
+because encryption output is typically 8-bit binary data. This allows the encrypted data
+to be stored as normal <em>text</em> database type data or as ascii files for database dumps.</p>
+
+<p>Encryptors are stored in the distinguished table <strong>_encryptors</strong>, where the data consists of the
+table name, key size, initial value, and key. The keys are stored as encrypted data using
+the encryption key specified in the site configuration file. <em>Thus</em>, the key to the whole
+thing is the site configuration file &#8211; which lives in site private data and must be readable
+by the apache web server.</p>
+
+<p>Why so convoluted?</p>
+
+<p>Encryption security depends on both keeping keys secret and keeping encrypted records short.
+This is obviously a workable compromise. (one of my discards was more complex system which
+created new keys for each instance of the object. That may still be useful when keys are
+encoded as <span class="caps">GET</span> parameters because it expands the space of possible keys and reduces the
+size of analyzable cypher-text).</p>
+
+<h2 style="clear:both;" id="view">The View Infrastructure</h2>
+
+<p><a href="img/RequestProcessing-3.jpg?target=:blank"><img src="img/RequestProcessing-3.jpg" style="width:30%;clear:both;float:right;" title="YASiteKit View Overview" alt="YASiteKit View Overview" class="right" /></a></p>
+
+<p>The View component is the real driver for this entire system.</p>
+
+<p>Views come in three basic forms:</p>
+
+<ul>
+<li>Web Pages &#8211; the most complex and completely developed view</li>
+<li><span class="caps">AJAX</span> interchanges &#8211; Working, but incomplete. These are potentially dangerous because <span class="caps">AJAX</span> requests
+can modify data on the server. Authentication and Authorization components are not sufficiently
+implemented yet. <span class="caps">AJAX</span> interchanges will always be limited to interactive sessions.</li>
+<li>Web Services &#8211; which we plan to limit to <span class="caps">JSON</span> and <span class="caps">XML</span> data requests. Again, this is stubbed out,
+but working. A general security model has not been designed, but will eventually allow:
+<ul>
+<li>Object and Field level visibility at the Persistent Object level</li>
+<li>Authorization and authentication via public key tokens. Both with and without handshake</li>
+<li>Session and Account authorization and authentication. This will be limited to web service
+requests which occur in the context of a normal session so that interactive Login requests
+can be made.</li>
+</ul>
+</li>
+</ul>
+
+<p>The rest of this section deals with Web Pages &#8211; how they are represented internally, how they
+are constructed, how they are rendered and how individual pages can taylor them.</p>
+
+<h3 style="clear:both;" id="page_seg">Page Segment Object Hierarchy</h3>
+
+<p><a href="img/RequestProcessing-4.jpg?target=:blank"><img src="img/RequestProcessing-4.jpg" style="width:30%;clear:both;float:right;" title="YASiteKit Page Segment Object Hierarchy" alt="YASiteKit Page Segment Object Hierarchy" class="right" /></a></p>
+
+<p>We pages are represented as a hierarchy of segments. Each segment is derived from the PageSeg object,
+which establishes the essential methods and attributes of all extensions. See <a href="/doc.d/system-objects/PageSeg.html">PageSeg.php</a>
+for details.</p>
+
+<p>Each Page has a root object &#8211; <a href="#default_page">see default page below</a> &#8211; which contains all of the
+segments which make up the page. The page is rendered to a &#8216;template&#8217; by calling the render()
+method on the root segment. <em>render()</em> recursively renders all the containing elements.</p>
+
+<p>The resulting &#8216;template&#8217; is a string which is passed to a Vars object, which replaces all
+replacement tokens &#8211; strings which look like &#8217;{foo}&#8217; or &#8217;{author}&#8217; &#8211; with values of its
+attributes. The replacement algorithm is simple: each attribute value replaces the token
+with it&#8217;s same name, enclosed in braces. That is, if the Vars object has an attribute
+named <em>foo</em> with the value &#8220;a replacement for foo&#8221;, then the part of the page which reads:</p>
+
+<pre>the rain in {foo} is mostly wet
+</pre>
+
+<p>will be rendered:</p>
+
+<pre>the rain in a replacement for foo is mostly wet.
+</pre>
+
+<p><strong>Important Points</strong> PageSeg element rendering does not immediately create output. All rendering
+results in filling the <em>content</em> attribute of the PageSeg Instance.</p>
+
+<p>It is also important because segments usually contain code
+which is executed when the segment is processed through the <span class="caps">PHP</span> interpreter. This applies
+mainly to the PageSegText and PageSegFile elements.</p>
+
+<ul>
+<li>For PageSegText elements, the code is processed as the text stuffed into the element.</li>
+<li>For PageSegFile elements the code is processed when the file is read, not when the PageSegFile
+element is created. The file is read when the <em>render()</em> method is run &#8211; not necessarily when
+it is displayed.</li>
+</ul>
+
+<p>The <em>render()</em> method is written so that code is never run twice and so that the content of
+the segment cannot be changed after rendering. If an attempt is made to change a PageSeg
+object after rendering, it throws an exception.</p>
+
+<p>The Vars object gets it&#8217;s attributes by simple attribute assignment and, because Vars is a Singleton
+object, attribute assignments can be easily distributed throughout the system and will all be
+gathered together when the page is rendered.</p>
+
+<p>See <a href="/doc.d/system-objects/PageSeg.html#vars">Vars</a> for details and an example of use.</p>
+
+<p>[it&#8217;s really, really easy to create templates]</p>
+
+<p>There are four extensions. Two function as elemental blocks of text and two as containers.
+All PageSeg extensions support the <em>render()</em> method and the <em>name</em> and <em>content</em> attributes.
+All PageSeg instances have a unique name and can be retrieved using the class method
+PageSeg::get_by_name(name). [there is also a <em>del_self()</em> class method which discards the named PageSeg
+reference in the PageSeg class (but does not destroy the page segment. Thus it&#8217;s possible to hurt
+yourself, but easy to discard a segment by removing all references to it and then _del_self()_ing it)]</p>
+
+<p>Here are the PageSeg extensions with their unique methods and attributes.</p>
+
+<ul>
+<li>PageSegText &#8211; Contains a single block of programmatically defined text. Existing PageSegText objects
+may be manipulated by pages to redefine or add to their content. Methods are <em>clear(), append(), open()</em>
+and <em>close()</em>, all of which do what you expect to the PageSegText content. The class method
+PageSegText::close_all_open() is a convenience function to perform cleanup of all open PageSegText
+instances.</li>
+<li>PageSegFile &#8211; includes the entire contents of a file. Has the additional attribute <em>file_name</em>.</li>
+<li>PageSegList &#8211; is an ordered list of PageSeg objects. When rendered, it concatenates the rendering
+of each element of the list in the order defined. Methods are append(), prepend(), insert_before(),
+insert_after(), del(), find_by_name(), get_index_of(). <a href="/doc.d/system-objects/PageSeg.html#page_seg_list">see</a>
+for details.</li>
+<li>PageSegElt &#8211; extends the PageSegList. <a href="/doc.d/system-objects/PageSeg.html#page_seg_elt">See</a> for details.
+When rendered, it wraps the rendering of it&#8217;s enclosed
+segments in an <span class="caps">HTML</span> element. It&#8217;s special methods are add_attribute() and del_attribute(), which
+support attribute manipulation. Attributes are:
+<ul>
+<li>elt &#8211; the element tag for the element which will be rendered.</li>
+<li>attributes &#8211; a string consisting of all the defined attribute=&#8220;value&#8221; pairs.</li>
+<li>anthing-else &#8211; is an attribute. Assigning an undefined attribute name to a PageSegElt instance
+creates the attribute. Thus, if $foo is a PageSegElt instance, $foo->class=&#8220;bar george&#8221; will
+create a <em>class</em> attribute with the value &#8220;bar george&#8221;.</li>
+</ul>
+</li>
+</ul>
+
+<h3 style="clear:both;" id="default_page">Default Page Implementation</h3>
+
+<p><a href="img/RequestProcessing-5.jpg?target=:blank"><img src="img/RequestProcessing-5.jpg" style="width:30%;clear:both;float:right;" title="YASiteKit Default Page Structure" alt="YASiteKit Default Page Structure" class="right" /></a></p>
+
+<p><em>render_page.php</em> defines the Page object which encapsulates and simplifies page construction.
+It defines the default PageSeg hierarchy depected in the diagram on the right, encapsulates
+an instance of the global Vars object (mapping it&#8217;s own attributes into that of the Vars object)
+and implements a <em>render()</em> method which renders the currently (possibly modified) default
+page using the template substitution supplied by the Vars object. (whew!)</p>
+
+<p>The rest of this is a walk through, element by element of the default page structure.</p>
+
+<p>All of these elements are created and initialized
+in the Page constructor method in <a href="/doc.d/system-includes/render_page.html">render_page.php</a>. Take a look at the
+code for (excruciating) detail and to modify for your site.</p>
+
+<p>In practice, to create a page, you will define a fairly short <span class="caps">PHP</span> file which sets a few attributes
+of the Page object, possibly add some stuff to one of the segments, and print the string
+returned the Page object&#8217;s <em>render()</em> method. See the <a href="#creating_a_page">example</a> below.</p>
+
+<h4>Root Element</h4>
+
+<p>The root element is a PageSegList with three list elements named <em>doctype</em>, <em>head</em>, and <em>body</em>.</p>
+
+<ul>
+<li><em>head</em> &#8211; a PageSetText element which contains the <span class="caps">DOCTYPE</span> of the document. The reference implementation
+uses <span class="caps">HTML</span> 4.01 Transitional</li>
+<li><em>head</em> &#8211; is a PageSegElt element which creates a &#8216;head&#8217;.</li>
+<li><em>body</em> &#8211; is a PageSegElt element which creates a &#8216;body&#8217; element.</li>
+</ul>
+
+<h4>Head Element</h4>
+
+<p>The <em>head</em> element is a PageSegElt containing three PageSegText elements. These are:</p>
+
+<ul>
+<li><em>title</em> &#8211; which looks something like &lt;title&gt;{page_title}&lt;&lt;title&gt;&gt;.</li>
+<li><em>meta</em> &#8211; which is initially empty, but has well formatted <em>meta</em> elements added to it,
+using Page object method: <em>add_meta()</em>.</li>
+<li><em>stylesheets</em> &#8211; again, initially empty, but can be populated by well formed <em>link</em> elements
+using the Page object method: <em>add_stylesheet()</em>.</li>
+</ul>
+
+<h4>Body Element</h4>
+
+<p>The <em>body</em> element is where you will probably want to change things around. Understanding
+the default should give you the understanding you need to modify your page structure &#8211; either globally by hacking <em>render_page.php &#8211; Page::__construct()</em> or by mucking with
+the segments on a page by page basis. Either works.</p>
+
+<p>The <em>body</em> element is a PageSegElt of type <em>body</em> containing four immediate children:</p>
+
+<ul>
+<li>header &#8211; a PageSegFile &#8211; it just grabs and interpolates the contents of <em>header.php</em>
+which is someplace along the <span class="caps">PHP</span> include path.</li>
+<li>content-container &#8211; a PageSegElt of type &#8216;div&#8217; which wraps the content. This can be
+set to &#8216;position:relative&#8217; to create a positioning context for elements which are
+physically below the main content (for <span class="caps">SOA</span> reasons), but must be displayed beside
+or above the main content.
+<ul>
+<li>content &#8211; a PageSegElt of type &#8216;div&#8217; which contains two elements
+<ul>
+<li>content_file &#8211; where we (finally!!!!!) pull in the Page file which this is all about.
+See <a href="#creating_a_page">the example</a> for more detail about how to create this file.</li>
+<li>account-nav &#8211; a PageSegFile which contains account navigation. This is conditioned
+on the existence of a valid Account record and that account being <em>logged in</em> in order
+to save a file access.</li>
+</ul>
+</li>
+<li>content-menu &#8211; PageSegFile &#8211; a file which supplies content navigation.</li>
+</ul>
+</li>
+<li>main-nav &#8211; a PageSegFile element. It is placed physically below the content, but
+will be displayed above using positioning. Pulls in &#8216;main_nav.php&#8217;</li>
+<li>footer &#8211; a PageSegFile element which pulls in &#8216;footer.php&#8217;</li>
+<li>javascript &#8211; a PageSegList &#8211; initially containing one PageSegFile element which pulls
+in the file &#8216;javascript.php&#8217;. Pages which contain &lt;textarea&gt; elements and which
+use the tinyMCE rich text editor, will <em>append()</em> a PageSegFile which pulls in &#8216;tinymce.php&#8217;.
+Include additional, hand crafted Javascript by appending PageSegText files as needed.</li>
+</ul>
+
+<h3 style="clear:both;" id="creating_a_page">Creating a New Page</h3>
+
+<p>Let&#8217;s say you want to create a feature to the site and it will contain some persistent
+data.</p>
+
+<p>First we will create a new object and management interface.</p>
+
+<p>Then we will create a public page for the stuff.</p>
+
+<h4>The New Object</h4>
+
+<p>The following code creates the class and manager class object. This guy
+goes in the <em>objects</em> directory &#8211; if you want to be neat. Technically, it
+just has to be in the <span class="caps">PHP</span> include path.</p>
+
+<p>The way to do this is by copying the Object.php file in the <em>objects</em> subdirectory
+and hacking it up. (it&#8217;s probably not a good idea to hack <em>Object.php</em>, just in case
+you want to create two objects)</p>
+
+<pre>
+<?php
+require_once('aclass.php');
+
+<p>// create the class which will be used to define the AnInstance extension
+AClass::define_class(
+&#8216;Foo&#8217;,  // name of the class
+&#8216;name&#8217;,  // name of the key field (if it were a compound key, this would be an array of field names)
+array(  // array of field definitions: array(name, data-type, title)
+array(&#8216;name&#8217;, &#8216;varchar(255)&#8217;, &#8216;Foo Name&#8217;),
+array(&#8216;public_data&#8217;, &#8216;text&#8217;, &#8216;Public Data&#8217;),
+array(&#8216;secret_data&#8217;, &#8216;text&#8217;, &#8216;Secret Data&#8217;),
+array(&#8216;view_count&#8217;, &#8216;int&#8217;, &#8216;View Count&#8217;)
+),
+array(  // properties
+&#8216;secret_data&#8217; => array(&#8216;encrypt&#8217;, &#8216;invisible&#8217;),
+&#8216;view_count&#8217; => &#8216;invisible&#8217;,
+));
+// end global variables</p>
+
+<p>// class definitions
+class FooException extends Exception {}  // optionally define FooException</p>
+
+<p>class Foo extends AnInstance {
+public function __construct($dbaccess, $attribute_values = array())
+{
+parent::__construct(&#8216;Foo&#8217;, $dbaccess, $attribute_values);
+*/
+} // end of __construct()</p>
+
+<p>public function render()
+{
+return $this->article_body;
+} // end of render()
+}</p>
+
+<p>class FooManagerException extends Exception {} // optionally defin FooManagerException</p>
+
+<p>class FooManager extends AManager {
+public function __construct($dbaccess)
+{
+parent::__construct($dbaccess, &#8216;Article&#8217;, &#8216;title&#8217;);
+} // end of __construct()
+}
+/// end class definitions
+?>
+</pre></p>
+
+<h4>Management Interface</h4>
+
+<p>The Management Interface is just a page which invokes the FooManager object. So,
+by showing this code, you get two examples of pages for the price of one. What a Deal!</p>
+
+<p>This guy goes into the <em>pages</em> directory, but that&#8217;s up to you. <span class="caps">PHP</span> include path again.</p>
+
+<p>Notice that all the global variables are prefixed with the Globals class.</p>
+
+<pre>
+<?php
+// global variables
+Globals::$page_obj->page_header = Globals::$site_name . " - Foo Management"; // this value is used in the header.php segment of the body
+Globals::$page_obj->page_title = "Foo Management";  // this defines the Page title used in the page head segment
+Globals::$page_obj->form_action = 'ManageFoo.php';  // FooManagement will display a form which can process it's own actions
+// this is brought out so you can select alternate actions
+Globals::$page_obj->required_authority = 'S';       // this is used to determine if the page is displayable.
+// if required authority is set, then the user account must
+// have authority of S or X (staff or admin) and be logged in
+$javascript_seg = Globals::$page_obj->get_by_name('javascript');  // get the segment with name Javascript
+$javascript_seg->append(new PageSegFile('tinymce', 'tinymce.html'));  // append the tinymce.html segment for tinyMCE
+
+<p>require_once(&#8216;Foo.php&#8217;);    // drag in the object and management object</p>
+
+<p>$obj = new FooManager(Globals::$dbaccess);  // create a management instance
+// Globals::$dbaccess is a database adaptor object (<a href="#dbaccess">see</a>)
+$obj->render_form(Globals::$rc);            // tell the management instance to display a form
+// Globals::$rc is the instance of the RequestCleaner (<a href="#request_handling">see</a>
+//  and <a href="/doc.d/system-includes/request_cleaner.html">RequestCleaner.php</a>)
+?>
+</pre></p>
+
+<h4>Page Example</h4>
+
+<pre>
+<?php
+// global variables
+Globals::$page_obj->page_header = Globals::$site_name . " - Foo"; // this value is used in the header.php segment of the body
+Globals::$page_obj->page_title = "Foo";  // this defines the Page title used in the page head segment
+
+<p>require_once(&#8216;Foo.php&#8217;);    // drag in the object</p>
+
+<p>$obj = new Foo(Globals::$dbaccess, &#8216;some-key-value&#8217;);         // create an object instance
+// Globals::$dbaccess is a database adaptor object (<a href="#dbaccess">see</a>)
+echo $obj->render();
+?></p>
+
+</pre>
+
+<h2 style="clear:both;" id="soapbox"><span class="caps">SOAPBOX</span> <span class="caps">ALERT</span>! &#8211; Opinions on Wheels, Invention and Innovation</h2>
+
+<p>Every time I tell somebody what I&#8217;m doing, they tell me about all the other things which
+&#8216;do the same thing&#8217;. And then there&#8217;s the &#8216;Don&#8217;t reinvent the wheel&#8217; crowd.</p>
+
+<p>Here&#8217;s where I strike back!</p>
+
+<p>First: Invention and Reinvention is not Innovation.</p>
+
+<p>Innovation is taking something which already exists, examining it, and building a better one.</p>
+
+<p>The &#8216;Wheel&#8217; (everybody&#8217;s iconic example) has been Innovated zillions of times since it&#8217;s original
+Invention.</p>
+
+<p>A <strong>Reinventor</strong> is someone who would have you believe that they&#8217;ve come up with a
+shiny new concept, when all they have is the same old, Mark 0, Model 1 Wheel.</p>
+
+<p>An <strong>Innovation</strong> is making a wheel out of wood rather than stone. This Mark 1 wheel is easier to
+manufacture, easier to fix (try patching a rock back together), and a lot lighter. Doesn&#8217;t get
+stuck in the mud as easily. Etc. It&#8217;s the Same Thing, but Better.</p>
+
+<p>An <strong>Innovator</strong> makes Innovations.</p>
+
+<p>Get the idea?</p>
+
+<p>Maybe you don&#8217;t, so here&#8217;s some modern examples:</p>
+
+<p>Apple invents stuff but <em>mostly</em> they innovate. And they innovate really,
+really well. They don&#8217;t re-invent computers.</p>
+
+<p>Twitter is an Innovation of the Blog.</p>
+
+<p>The Blog is an innovation of Newspaper and Magazine columns.</p>
+
+<p>Etc.</p>
+
+<p>That&#8217;s where progress, market advantage, new sales, new businesses, keeping up with fashion
+come from: Innovation.</p>
+
+<p>Anyway, that&#8217;s what I&#8217;ve been doing. Innovating. Because that&#8217;s what I do.</p>
+
+<p>Second: Why?</p>
+
+<p>I think I can design and implement the next generation of software for building web sites.
+I think I have some innovative ideas and that I&#8217;ve put them together in a cohesive, useful
+package.</p>
+
+<p>Before I started I looked at, studied, and used several different systems. I learned enough about
+them to build sites; used them to build small sites; and in several cases, read the code
+which implements them. Specifically I looked at Django, Rails, PostNuke, Joomla!, Drupal,
+Expression Engine, and ZenCart. [why not Wordpress? Because I want to sell stuff. Blogs
+are pretty well covered]</p>
+
+<p>Why do I think I&#8217;m qualified? That&#8217;s really a pointless question, but &#8211; in short &#8211; 40 years
+experience programming in a wide variety of areas, including implementing little languages
+and several (failed) application generators. But mostly I&#8217;m willing to do it and unwilling
+to put up with the short comings I see in the existing systems.</p>
+
+<p>Have I succeeded?</p>
+
+<p>I don&#8217;t know. That&#8217;s what <em>this</em> phase of the project will determine.</p>
+
+<p>Let me know if you like and trust this thing well enough to use it.</p>
+
+<p>If you do, then I&#8217;ve succeeded.</p>
+
+<p>Actually, if you like the design enough to steal a lot of it, then I&#8217;ve succeeded.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

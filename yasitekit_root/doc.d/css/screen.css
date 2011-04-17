@@ -1,0 +1,224 @@
+/*
+#doc-start
+bq. Copyright Mike Howard, 2008-2009. All Rights Reserved.
+
+bq. This file is part of YASiteKit. YASiteKit is free software: you can
+redistribute it and/or modify it under the terms of the GNU Lesser
+General Public License, Version 3 (LGPLv3) as published by the Free Software
+Foundation (or, at your option, any later version)
+
+bq. You are granted a non-exclusive, royalty free, world wide, perpetual
+license to use this software under the terms of LGPLv3.
+
+bq. YASiteKit is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+bq. A copy of the GNU Lesser General Public License,
+Version 3, is included in the system/include/etc directory of YASiteKit.
+You may also view it, along with any more recent versions,
+at <http://www.gnu.org/licenses/>.
+#doc-end
+*/
+/* general selector setups */
+
+body {
+    margin: 10px;
+    padding: 0 .5em;
+    background-color: #fffff4;
+    color:black;
+    border:1px solid black;
+}
+h1 { line-height:1.8em; font-size: 1.3em; font-family: sans-serif; font-weight:bolder; color:#001080; background-color: #ddddd0;
+  border:1px solid black;
+  border-top:3px solid black;
+  }
+h2 { padding-left:.2em;font-size: 1.20em; font-family: sans-serif; font-weight:normal; background-color: #dddd00;
+  border-top:2px solid black;}
+h3 { padding-left: .2em;font-size: 1.15em; font-family: sans-serif; font-weight:normal;font-style: italic; background-color:#dd9999;
+  border-top:1px solid black;}
+h4 { padding-left: 1em;font-size: 1em; font-family: sans-serif; font-weight:normal;font-style: italic;background-color:#44aa44;}
+h5 { padding-left: 1em;font-size: 0.9em; font-family: sans-serif; font-weight:normal;font-style: italic;background-color:#CCCCCC;}
+ul ul, ol ul { list-style: square;}
+ul li { list-style: circle;}
+a { text-decoration: underline;}
+
+/* forms */
+form {
+  padding: 5px;
+  margin: 5px;
+  border: #ddd solid 1px;
+  background: #eee;
+}
+form ul, form ol { margin-left: -2em; margin-right:1em;}
+form li { list-style: none outside; clear:both}
+form input { color: inherit; background-color: inherit;}
+form li label { float: left; font-weight: bold; color:inherit ; width: 15em;}
+.field-width-15em { width: 15em;}
+form li input { color: inherit; background-color: white;}
+
+.inline-form {
+  display:inline-block; /* This might maybe should be 'inline' instead */
+  background:inherit;
+  padding:0
+}
+/* named sections */
+#header {
+    height: 100px;
+    margin:0;
+    background: #eaeaea;
+    padding-bottom: 10px;
+    border-bottom: #aaa solid 1px;
+}
+#header img {
+    float:left;
+    margin: 5px 20px 0 5px;
+    margin-left:5px;
+    margin-right: 20px;
+}
+#header h1 {
+  font-size: 1.8em;
+  margin: 0;
+  padding-top: 25px;
+  text-align: center;
+}
+#left {
+    clear:left;
+    float:left;
+    width: 200px;
+    background: #eee;
+    padding-left: 10px;
+    margin-left:0;
+    margin-right: -1px;
+    border-right: #999 solid 1px;
+}
+#left ul, #left ol {
+  list-style: outside;
+}
+
+#outer-wrapper {
+  padding: 0;
+  padding-right: 10px;
+  margin: 0;
+  background: #eee;
+}
+#content-container {
+  margin-right: 10px;
+  background: white;
+  overflow: auto;
+  padding-left: 10px;
+  padding-right: 10px;
+  border-left: #aaa solid 1px;
+}
+
+#footer {
+  clear: both;
+  background: #eee;
+  padding-bottom: 10px;
+  border-top: #aaa solid 1px;
+  border-bottom: #aaa solid 1px;
+}
+#footer ul li {
+  text-align: center;
+  list-style: none inside;
+}
+li label, li input { color: inherit; background-color: inherit;}
+
+/* Some Link Stuff */
+.img-link {
+	padding: 5px;
+	border:3px solid black;
+	background-color: #fffff4;
+	magin: 0 5px;
+}
+.img-link:hover {
+	background-color: #eeeef4;
+}
+
+/* colors used in striping */
+.clicker-background { background:#FF9E2C;}
+.light-medium-gray {background:#eee;}
+.medium-light-gray {background:#ddd;}
+.medium-gray {background:#aaa;}
+.red { background:red;}
+.light-medium-red {background:#ffeeee;}
+.medium-light-red {background:#ffdddd;}
+.medium-red {background:#ffaaaa;}
+.light-medium-green {background:#eeffee;}
+.medium-light-green {background:#ddffdd;}
+.medium-green {background:#aaffaa;}
+.green {background:#00ff00;}
+.light-medium-blue {background:#eeeeff;}
+.medium-light-blue {background:#ddddff;}
+.medium-medium-blue {background:#ccccff;}
+.medium-blue {background:#aaaaff;}
+.blue {background:#0000ff;}
+.light-medium-yellow {background:#ffffee;}
+.medium-light-yellow {background:#ffffdd;}
+.medium-medium-yellow {background:#ffffcc;}
+.medium-yellow {background:#ffffaa;}
+.yellow {background:yellow;}
+
+/* text classes */
+.text-red { color: red;}
+.text-blue { color:blue;}
+.text-green { color:green;}
+.text-magenta { color:magenta;}
+.text-cyan {color:cyan;}
+.text-yellow { color:yellow;}
+.text-black {color:black;}
+.bold { font-weight: bold;}
+.italic { font-style: italic;}
+.smaller { font-size: smaller;}
+.bigger { font-size: large;}
+
+/* content weight */
+/* This hokeyness is caused by using textile - which doesn't have any way to wrap
+a block of text in a span. All I can do is attach classes to block level elements
+and indicate spans over lines _on the same line_ using bounding % characters. The
+in-line character escapes do NOT span lines */
+.warning span { background-color: #fdd; color:#600;}
+.advisory span { background-color:#ffc000; color:#0000ff;}
+
+/* form table styling */
+table th { text-align: left;}
+
+/* formatting elements */
+.line { margin:0; padding:0; border-top: solid #aaa 1px; height: 1px;}
+/* float classes */
+.clear { clear:both ;}
+.clear-left { clear:left ;}
+.clear-right { clear:right ;}
+.float-left { float: left;}
+.float-right { float: right;}
+/* vertical alignment classes*/
+.valign-top { vertical-align: top;}
+.valign-middle { vertical-align: middle;}
+.valign-middle { vertical-align: bottom;}
+/* li classes */
+.li-none { list-style: none outside; }
+/* width specifications */
+.width-680 { min-width: 680px;}
+.width-760 { min-width: 760px;}
+.width-960 { min-width: 960px;}
+.width-1024 { min-width: 1024px;}
+.width-15em { width: 15em;}
+.width-20em { width: 20em;}
+.width-25em { width: 25em;}
+.width-30em { width: 30em;}
+/* box stuff */
+.underline { margin-bottom: 3px; border-bottom: 1px solid black;}
+.outline { margin: 3px; border: 1px solid black; padding:3px;}
+.outline-thick, .thick-outline { margin: 3px; border: 2px solid black; padding:3px;}
+/* text alignment */
+.text-right { text-align:right;}
+.text-left { text-align:left;}
+.text-center { text-align:center;}
+
+/* Article Navigation */
+.next_prev { float: right; padding:6px; border: solid brown 1px;}
+.next_prev li { display: inline; list-style: none; padding-left: 4px; border-left: solid 2px brown; font-style: italic;}
+.next_prev li form { display: inherit; background: inherit;}
+.next_prev li form input { font-style: italic;}
+.next_prev li:first-child { border-left: none; }

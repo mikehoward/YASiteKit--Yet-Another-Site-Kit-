@@ -1,0 +1,77 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>ArticleGroup.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> ArticleGroup.php &#8211; ArticleGroups of Articles</h1>
+
+<p>Created by  on 2010&#8211;02-13.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>Article Groups are just categories for articles. Articles don&#8217;t use the more
+general Category object because they predated Category. That&#8217;s the only
+reason.</p>
+
+<h2>Instantiation</h2>
+
+<pre>$agrp = new ArticleGroup($dbaccess, $name);
+</pre>
+
+<p>where <em>$name</em> is the name of an existing article group.</p>
+
+<h2>Attributes</h2>
+
+<ul>
+<li>name &#8211; string &#8211; name of group. Used as the key to the <em>articlegroup</em> table.
+Best practics is to follow rules for a <span class="caps">PHP</span> identifier</li>
+<li>title &#8211; string &#8211; short pity title. Limit is 255 characters. Free text</li>
+<li>description &#8211; text &#8211; longer description of article group.</li>
+</ul>
+
+<h2>Class Methods</h2>
+
+<p>None</p>
+
+<h2>Instance Methods</h2>
+
+<ul>
+<li>select_article_group($element_name, $selected, $classes = <span class="caps">NULL</span>, $attributes = <span class="caps">NULL</span>) &#8211; returns an <span class="caps">HTML</span> <em>select</em> element named <em>$element_name</em>. If <em>$selected</em> occurs as
+one of the ArticleGroup instance <em>name</em> attributes, that option is selected.
+<em>$classes</em>, if not <span class="caps">NULL</span>, are stuffed into a &#8216;class=&#8221;...&#8221;&#8217; attribute.
+<em>$attrbutes</em>, if not <span class="caps">NULL</span>, are inserted into the <em>select</em> element directly.</li>
+<li>articles() &#8211; returns array of all Article objects in this group.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

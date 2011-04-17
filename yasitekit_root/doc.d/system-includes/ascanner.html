@@ -1,0 +1,371 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>ascanner.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>ascanner.php &#8211; YAScanner: the Yet Another lexical Scanner</h1>
+
+<blockquote>
+<p>(c) Copyright 2010 Mike Howard. All Rights Reserved.
+licensed under the terms of <span class="caps">LGPL</span> version 3. See <a href="http://www.gnu.org/licenses/lgpl-3.0.html">http://www.gnu.org/licenses/lgpl-3.0.html</a></p>
+</blockquote>
+
+<p>YAScanner is a programmable finite state machine written in <span class="caps">PHP</span> for creating
+lexical scanners.</p>
+
+<p>To create a scanner, you must create a program for the machine, as follows:</p>
+
+<ol>
+<li>create a collection of state transition rules. See <a href="#yastate">YAState</a> for details.</li>
+<li>instantiate a machine for that set of state transition rules.</li>
+<li>debug the rules by writing a test file and processing it using <em>process()</em> or <em>process_file()</em>
+and then examining the scan using <em>display_chunks()</em>.</li>
+</ol>
+
+<p>To use a scanner, you must:</p>
+
+<ol>
+<li>instantate a machine for the set of rules you want to use</li>
+<li>call the <em>process()</em> or <em>process_file()</em> method as appropriate.</li>
+<li>call the <em>next_token()</em> and <em>push_back()</em> methods, as required, to scan
+and parse the string.</li>
+</ol>
+
+<p>The classes:</p>
+
+<ul>
+<li><a href="#yascannerbase">YAScannerBase</a> &#8211; abstract class used to construct YAScanner
+and YAScanner compatable scanners</li>
+<li><a href="#yascanner">YAScanner</a> &#8211; the machine itself.</li>
+<li><a href="#yarule">YARule</a> &#8211; a simple class for holding finite state machine transition rules.</li>
+<li><a href="#yastate">YAState</a> &#8211; a simple class for holding a finite state machie state. It is a container
+for one or more rules plus a default rule.</li>
+</ul>
+
+<h2 id="yarule">YARule</h2>
+
+<h3>Instatiation</h3>
+
+<p>Never instatiated directly</p>
+
+<pre>$rule = new YARule($regx, $next_state, $actions = array())
+</pre>
+
+<ul>
+<li><em>$regx</em> is a regular expression which is applied to the string. It is used
+as stated, so it&#8217;s ususally necessary to place an anchor at the beginning of
+the expression to avoid skipping important, leading text. You should <em>not</em>
+put a trailing anchor at the end.</li>
+<li><em>$next_state</em> &#8211; string &#8211; the next state matching this rule invokes.</li>
+<li><em>$actions</em> may be an array or a comma separated list of actions.
+See the <a href="#apply_action">apply_action()</a> method in the description of YAScanner
+for allowable actions and programming parameters.</li>
+</ul>
+
+<h3>Attributes</h3>
+
+<ul>
+<li>actions &#8211; an array of actions. See YAScanner for defined actions</li>
+<li>regx &#8211; a regular expression which &#8211; when matched against the supplied
+string &#8211; causes a rule to be chosen</li>
+<li>matched_length &#8211; int &#8211; length of matched text [strlen($match_ar<sup class="footnote"><a href="#fn0">0</a></sup>)]</li>
+<li>match_ar &#8211; array &#8211; array returned from <em>preg_match()</em></li>
+<li>next_state &#8211; the name of the next state to go to after the rule is triggered</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<h3>Instance Methods</h3>
+
+<p>Magic methods and <em>dump($msg = &#8217;&#8217;)</em> are defined. They do the usual things.</p>
+
+<h2 id="yastate">YAState</h2>
+
+<p>YAState holds information for a single state.</p>
+
+<h3>Instantiation</h3>
+
+<p>Never instantiated directly.</p>
+
+<pre>$state = new YAState($state, $default_actions, array-of-rules);
+</pre>
+
+<p>See <a href="#yarule">YARule for details of array-of-rules arguments</a></p>
+
+<h3>Attributes</h3>
+
+<ul>
+<li>state &#8211; name of this state</li>
+<li>default_rule &#8211; the default YARule object. Used when no <em>event</em> is matched
+in the <em>rules</em> array.</li>
+<li>rules &#8211; array of YARule objects &#8211; an associative array with <em>events</em> as keys
+and YARule objects as values. Used by <em>apply_rule()</em> to indicate actions and
+next state in response to an event.</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<p>In addition to the usual magic methods and <em>dump()</em>, there are:</p>
+
+<ul>
+<li>add_rule(event, next_state, actions) &#8211; the arguments are passed directly to <a href="#yarule">YARule</a>
+and the new rule is saved in the <em>rules</em> attribute under the <em>event</em> key.</li>
+<li>apply_rule(event) &#8211; if <em>event</em> is a key in <em>rules</em>, then the associated YARule object
+is returned. Otherwise, the <em>default</em> YARule is returned.</li>
+</ul>
+
+<h2 id="yascannerbase">YAScannerBase</h2>
+
+<p>The <strong>YAScannerBase</strong> is an abstract class which defines both the YAScanner interface
+and the minimum number of attributes and methods which
+we expect from a scanner which emulates the YAScanner.</p>
+
+<h3>Attributes</h3>
+
+<p>All attributes are read-only, except <em>verbose</em>.</p>
+
+<ul>
+<li>advance &#8211; boolean &#8211; flag used in state machine. used to control advancing
+through the token string while changing internal states</li>
+<li>chr_buffer = &#8217;&#8217; &#8211; string &#8211; an internal buffer which is built as the
+machine processes text.</li>
+<li>chunk_buffer = array() &#8211; array &#8211; a sequential array of two element arrays.
+The first element is one of &#8216;html&#8217;, &#8216;php&#8217;, or &#8216;yat&#8217;, depending upon the
+context of the second element.</li>
+<li>chunk_buffer_len &#8211; int &#8211; number of chunks in the chunk buffer</li>
+<li>counter &#8211; int &#8211; top of counter stack. Counters can be incremented and decremented.
+Combined with the <em>stop_if_counter</em> action, the scanner can count nested parentheticals.
+Combined with <em>init_counter</em> and <em>destroy_counter</em>, this allows the scanner to deal
+with nested strings which contain nested parentheticals.</li>
+<li>error_count_limit &#8211; int &#8211; max number of scan errors detected prior to terminating scan.
+Default is 1.</li>
+<li>error_tag &#8211; string &#8211; token string returned when a scan error occurs. Defaults to &#8216;error&#8217;</li>
+<li>file_name &#8211; string name of file being processes</li>
+<li>force_new_state &#8211; boolean &#8211; internal flag used to force a state change via a rule</li>
+<li>initial_state &#8211; string &#8211; normal starting state when processing text.</li>
+<li>line_count &#8211; int &#8211; number of lines in a chunk. (may be 0 if the chunk does
+not contain any line feeds)</li>
+<li>line_no &#8211; int &#8211; starting line number of a chunk.</li>
+<li>state &#8211; string &#8211; current state &#8211; used internally. ignor it</li>
+<li>tag &#8211; string &#8211; current tag of current token. It is actually the top of
+the <em>tag_stack</em>. Pushing and popping are accomplished by &#8217;$foo->tag = value&#8217;
+and &#8216;unset($foo->tag)&#8217;</li>
+<li>token_pointer &#8211; int &#8211; position in the input stream of the current pointer.</li>
+<li>verbose = <span class="caps">FALSE</span> &#8211; string &#8211; a diagnostic flag. Normally you want to leave
+it set to <span class="caps">FALSE</span>.</li>
+</ul>
+
+<h3>Methods</h3>
+
+<p>YAScannerBase only defines three abstract methods. The other methods are
+pretty generic to the parsing process and scanner interface. You probably
+won&#8217;t need to override them. You may need to augment the magic methods:
+see the YAScanner implementation for how to do that.</p>
+
+<h4>Defined Methods</h4>
+
+<p>The basic magic methods and . . .</p>
+
+<ul>
+<li>public function process_file($file_name); &#8211; calls <em>process()</em> on the content of <em>file_name</em></li>
+<li>public function token(); &#8211; returns current <em>token</em> or <span class="caps">FALSE</span>, if none</li>
+<li>public function next_token(); &#8211; returns the next <em>token</em> or <span class="caps">FALSE</span>, if none</li>
+<li>public function advance(); &#8211; advances to the next <em>token</em></li>
+<li>public function push_back($amount = 1); &#8211; moves token pointer back <em>amount</em> spaces</li>
+</ul>
+
+<h4>Abstract Methods</h4>
+
+<ul>
+<li>abstract public function __construct($initial_state, $states) &#8211; where <em>$initial_state</em>
+is a string which is the name of one of the <em>$states</em>. It is the starting state
+for the machine. <em>$states</em> is an array of YAState definitions.</li>
+<li>abstract public function process($str, $file_name = &#8217;-&#8217;) &#8211; does a complete scan of
+the string <em>$str</em> in preparation for delivering tokens. This must be implemented
+by an extension. <em>$file_name</em> is not used except in diagnostic output. It defaults
+to the <span class="caps">UNIX</span> symbol for <span class="caps">STDIN</span>.</li>
+<li>abstract public dump($msg = &#8217;&#8217;) &#8211; returns a string which displays the state
+of the scanner.</li>
+</ul>
+
+<p>The constructor</p>
+
+<h2 id="yascanner">YAScanner</h2>
+
+<p>A YAScanner object implements a scanner defined by State Transition Rules.
+Once the scanner is constructed, it can be used to process strings or files.
+A processed file is broken into an array of tagged <em>chunks</em> in the <em>chunk_buffer</em>.
+Each <em>tag</em> identifies the type of content and is defined by an action in the state
+transition rules. <span class="caps">NOTE</span>: not all text in the original string or file need be in
+the processed data &#8211; that is controlled by the Actions of State Transitions.</p>
+
+<p>This seems all very complex &#8211; and it probably is &#8211; so the best thing to do is study
+some rule sets.</p>
+
+<h3>Instantiation</h3>
+
+<pre>$machine = new YAScanner(initial_state, states, error_tag = 'error')
+</pre>
+
+<p>where,</p>
+
+<ul>
+<li>initial_state is the name of the state the machine starts in when processing
+text.</li>
+<li>states is an array of YAState definitions</li>
+<li>error_tag is the tag returned when a scan error is detected and reported.
+See <a href="#token">below</a> for more details of returned tokens.</li>
+</ul>
+
+<p><strong><span class="caps">NOTE</span>:</strong> this creates a reusable scanner. You must invoke the <em>process()</em> method
+to add a string. After <em>process()</em> has been called, then the <em>token</em> access
+and <em>advance</em> methods work.</p>
+
+<p>To process another string, call <em>process()</em> again and the scanner will reinitialize
+itself for the new string.</p>
+
+<h3>Defining States Transition Rules</h3>
+
+<p>Each rule consists of
+* an event &#8211; which is simply a regular expression
+* a next state &#8211; which is simply a string naming an existing rule
+* a list of actions &#8211; which are a comma separated list of action names which are executed in order.
+Actions may have one parameter (called &#8216;param&#8217;) appended by a period (.) &#8211; as in &#8216;push_tag.php&#8217;.</p>
+
+<p>Possible actions are defined in the doc for the <a href="#apply_action">apply_action()</a> method.</p>
+
+<p>A rule is normally formed by creating an array, something like:</p>
+
+<pre>array('A', 'bar', 'release_hold,add_char,emit')
+</pre>
+
+<p>When the machine &#8216;sees&#8217; the letter &#8216;A&#8217; it will invoke the rule by performing
+the three actions: <em>release_hold</em>, <em>add_char</em>, and <em>emit</em> and then transition
+to state <em>bar</em>.</p>
+
+<h3>Attributes</h3>
+
+<p>All the attributes of YAScannerBase plus:</p>
+
+<ul>
+<li>chunk_line_no &#8211; int &#8211; the starting line of each token.</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<p>The normal magic methods plus <em>dump()</em>.</p>
+
+<h4>Public Instance Methods</h4>
+
+<p>Processing methods: The entire input stream must be tokenized prior to scanning
+by calling either <em>process()</em> or <em>process_file()</em>.</p>
+
+<ul>
+<li>process($str) &#8211; processes the string <em>$str</em> using the defined
+state transition rules.</li>
+<li>process_file($file_name) &#8211; processes contents of named file or error message
+if the file cannot be included.</li>
+</ul>
+
+<p id="token">Token access methods:
+Neither <em>token()</em> nor <em>next_token()</em> advance the token pointer, so that repeated
+calls to either return the same value &#8211; unless <em>advance()</em> or <em>push_back()</em> are
+called.</p>
+
+<ul>
+<li>token() &#8211; returns the current token or <span class="caps">FALSE</span> if there isn&#8217;t one. A token is a three
+element array: (tag, value, line_no) &#8211; where <em>tag</em> is the tag associated with the data,
+<em>value</em> is the actual value identified during the scan, and <em>line_no</em> is the starting
+line number of this chunk. <span class="caps">NOTE</span>: neither <em>token()</em>
+nor <em>next_token()</em> advance the token pointer. The token pointer is manipulated
+by <em>advance()</em> and <em>push_back()</em>.</li>
+<li>next_token() &#8211; returns the next token or <span class="caps">FALSE</span> if there isn&#8217;t one.</li>
+<li>advance() &#8211; moves the token pointer one position forward</li>
+<li>push_back($amount = 1) &#8211; pushes the current <em>amount</em> tokens back into the input stream.
+The final position never goes past the beginning of the token stream</li>
+</ul>
+
+<h4>Private Instance Methods</h4>
+
+<ul>
+<li>private add_state(state, default_actions, array(event, next, actions), ...) &#8211; adds the YAState object for <em>state</em> to the <em>rules</em> attribute. All arguments
+are passed to the YAState constructor and <em>add_rule()</em> methods.</li>
+</ul>
+
+<ul>
+<li id="apply_action">private apply_action($action, $event) &#8211; performs the specified action. This is a <em>private</em> method
+which is never called directly. Actions may take 0, 1 additional parameters by appending
+it with a dot (.) separator &#8211; as in &#8216;push_tag.foo&#8217;.
+<span class="caps">RETURNS</span> <span class="caps">TRUE</span> if to continue the action sequence, <span class="caps">FALSE</span> if the action sequence should terminate.
+<span class="caps">WARNING</span>: this machine is fragile. For example, it provides nested counters, but doesn&#8217;t bother
+to check if any exist.
+Actions:
+<ul>
+<li>add_literal &#8211; appends <em>param</em> to <em>chr_buffer</em>. Use when you need to add specific strings
+to the chr_buffer, such as separators when you need to use more than one <em>add_matched</em></li>
+<li>add_matched &#8211; appends the matched entry to the <em>chr_buffer</em>. May take an integer parameter
+to specify the index into _$rule->match_ar. Default index is 0.</li>
+<li>add_matched_if_counter &#8211; appends the matched entry to the <em>chr_buffer</em> <span class="caps"><span class="caps">ONLY</span></span> if the
+top of the counter stack > 0.</li>
+<li>discard_matched &#8211; essentially a nop &#8211; doesn&#8217;t do anything</li>
+<li>no_advance &#8211; do not consume input from the string &#8211; this is used to detect the start
+of an escape and then pass that start to another rule which expects the escape start
+to be present.</li>
+<li>empty_buffer &#8211; discards matched data and sets chr_buffer to &#8217;&#8217;</li>
+<li>push_tag.tag &#8211; pushes the parameter <em>tag</em> onto the tag stack</li>
+<li>push_tag_matched &#8211; pushes specified element of <em>$rule->match_ar</em> onto the tag stack.
+The specified element is the integer value of <em>param</em>. <em>param</em> may be omitted if
+it&#8217;s value is 0 &#8211; the default.</li>
+<li>pop_tag &#8211; pops the top off the tag stack and discards value</li>
+<li>init_counter &#8211; pushes 1 onto the counter stack. Used for counting matching paren&#8217;s</li>
+<li>inc_counter &#8211; adds 1 to the current counter</li>
+<li>dec_counter &#8211; subtracts 1 from current counter.</li>
+<li>destroy_counter &#8211; pops counter stack</li>
+<li>stop_if_counter &#8211; terminates processing of actions if counter > 0
+If counter is now zero, then pops the counter stack and continues processing actions</li>
+<li>new_state.param &#8211; sets next state to <em>param</em></li>
+<li>emit &#8211; if the <em>chr_buffer</em> is not empty, then appends the tagged segment to
+the <em>chunk_buffer</em> array. The no stacks are disturbed</li>
+<li>emit_error &#8211; appends the chunk array(&#8216;html&#8217;, $param) to the <em>chunk_buffer</em>. [Note: $param
+may include embedded blanks]</li>
+</ul>
+</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

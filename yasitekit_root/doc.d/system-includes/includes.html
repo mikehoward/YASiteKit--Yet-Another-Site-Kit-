@@ -1,0 +1,161 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>includes.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> includes.php &#8211; Controller common initialization after config and prior to dispatch</h1>
+
+<p>Created by  on 2010&#8211;02-09.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p><strong>includes.php</strong> examines the request for presence of cookies and then
+initializes the primary access control objects: Globals::$session_obj
+and Globals::$account_obj. It sets four flags which describe the type
+of request:</p>
+
+<ul>
+<li>Globals::$flag_is_robot &#8211; <span class="caps">TRUE</span> if the request came from a known robot</li>
+<li>Globals::$flag_cookies_ok &#8211; <span class="caps">TRUE</span> if all required cookies are present
+and the &#8216;detector&#8217; cookie is valid</li>
+<li>Globals::$flag_session_ok &#8211; <span class="caps">TRUE</span> if the session object has been initialized.
+Essentially equivalent to checking &#8216;Globals::$session_obj instanceof Session&#8217;,
+but faster.</li>
+<li>Globals::$flag_account_ok &#8211; <span class="caps">TRUE</span> if the account object has been initialized
+to an Accont instance. Essentially equivalent to checking
+&#8216;Globals::$account_obj instanceof Account&#8217;, but faster.</li>
+</ul>
+
+<p><span class="caps">IMPORTANT</span>: <em>includes.php</em> sets no cookies or headers &#8211; other than the session
+cookie which is set <em>if</em> it is possible to create a session object. [If it finds
+that the session has timed out, that cookie is expired]</p>
+
+<p>This also defines a collection of utility functions as class methods of
+the class IncludeUtilities. This creates a namespace which protects from
+name collisions and provides some error trapping.</p>
+
+<p>It also modifies the exception handler and provides common diagnostic support
+and support for request redirection.</p>
+
+<h2>Function Definitions</h2>
+
+<p>All functions are wrapped in the IncludeUtilities object by declaring them
+as <em>static public</em> methods. This avoids name-space collisions and catches
+spelling errors.</p>
+
+<h3>Diagnostics:</h3>
+
+<ul>
+<li>IncludeUtilities::report_bad_thing($msg) &#8211; sends an error report to the webmaster</li>
+<li>IncludeUtilities::write_to_tracker($msg) &#8211; a diagnostic tool. It is essentially a
+<span class="caps">NOP</span> if <em>IncludeUtilities::$enable_tracking</em> is <span class="caps">FALSE</span>.</li>
+</ul>
+
+<h3>Utilities:</h3>
+
+<ul>
+<li>IncludeUtilities::array_flatten($ar) &#8211; recursively flattens out an array by discarding keys
+and creating a linear array of all elements. [does not flatten objects, they
+are treated as scalars]</li>
+<li>IncludeUtilities::_encrypt($value, $key_value, $iv_len) &#8211; encrypts <em>$value</em> using the TwoFish algorithm and returns the encrypted value as
+a base64 encoded string.</li>
+<li>IncludeUtilities::_encrypt($value, $key_value, $iv_len) &#8211; the matching decryption routine. <em>$value</em> must be a base64 encoded encryption value
+created by _encrypt(). Naturally the <em>$key_value</em> and <em>$iv_len</em> must match</li>
+</ul>
+
+<h3>Redirection:</h3>
+
+<ul>
+<li>IncludeUtilities::rewrite_qs($url, $add_to_qs = array(), $del_from_qs = array()) &#8211; returns a rewritten url where get parameters in <em>$add_to_qs</em> are redefined and
+in <em>$del_from_qs</em> are removed. Both <em>$add_to_qs</em> and <em>$del_from_qs</em> can be arrays
+of <span class="caps">GET</span> parameter names, <span class="caps">GET</span> parameter definitions ( as in foo=bar ), or a string
+containing comma separated definitions.</li>
+<li>IncludeUtilities::redirect_to($where, $diverted_from) &#8211; sends a Location heder to redirect to
+<em>where</em>. <em>diverted_from</em> should be a string containing <i><span class="caps">FILE</span></i> and <i><span class="caps">LINE</span></i>. It
+is writen someplace we can find it.</li>
+<li>IncludeUtilities::redirect_to_with_return($where, $diverted_from) &#8211; if Sessions are running and the key
+&#8216;reserved_page_name&#8217; is not set, then $_SERVER[&#8216;REQUEST_URI&#8217;] is saved, so
+we can return to the page we redirect to. Redirection is implemented by calling
+<em>diverted_to()</em></li>
+</ul>
+
+<h3>Cookie Management</h3>
+
+<p>These routines facilitate monitoring the connecting client&#8217;s cookie
+handling.</p>
+
+<p>Briefly, if a request is made which does not contain all the expected cookies and
+the client is not known to be a robot, then we check to see if the unique query string
+parameter is set in the <span class="caps">GET</span> query string. If it is not, then
+cookies are set and the client is redirected back to this page with a query string
+parameter which is set uniquely to this request. If it is, then we just die and don&#8217;t
+respond.</p>
+
+<p>These routines help manage this algorithm.</p>
+
+<ul>
+<li>IncludeUtilities::is_botP() &#8211; returns <span class="caps">TRUE</span> if the client is a known robot. This
+is a sufficient, but not in any way a necessary condition test.</li>
+<li>IncludeUtilities::handle_no_cookies($from_msg) -</li>
+<li>IncludeUtilities::qs_token_plus_tag() &#8211; returns a query string parameter which is specific
+to both the client and the request.</li>
+<li>IncludeUtilities::check_qs_token_plus_tag() &#8211; Check a returned <span class="caps">GET</span> parameter to see if
+it makes sense. The token is the md5 hash of the HTTP_USER_AGENT and REMOTE_ADDR values
+from the $_SERVER superglobal. The tag is the integer time() value at the time the token
+is generated. The check requires that the returned token matches a newly computed value
+and that the return come back within 10 seconds of generating the redirect.</li>
+<li>IncludeUtilities::set_all_cookies() &#8211; If a session is running (Globals::$session_obj instanceof Session),
+then set&#8217;s the user cookie and detector cookie, saves their values in appropriate places and
+returns <span class="caps">TRUE</span>. If a session is not running, reports the problem and returns <span class="caps">FALSE</span>. The
+session id is created and set by creating the <a href="/doc.d/system-includes/session.html">Session object</a>
+[which is stored in Globals::$session_obj].</li>
+<li>IncludeUtilities::check_detector_cookie() &#8211; this function is used to determine if
+cookies are indeed being allowed by the client. A detector cookie is sent with each
+response with the value set to the <em>time()</em> value at the time of the response and that
+value saved in the session store. Returns <span class="caps">TRUE</span> if the cookie is defined, a session
+is running, and the value returned matches the value in the session store.</li>
+</ul>
+
+<h3>Exception Handling</h3>
+
+<ul>
+<li>IncludeUtilities::exception_handler() &#8211; our exception handler.
+Packages up a bunch of useful information and passes it to <em>report_bad_thing()</em>.
+Closes the session if a session is active.
+If Globals::$flag_exceptions_on is <span class="caps">TRUE</span>, restores the exception handler and re-throws
+the exception. If <span class="caps">FALSE</span>, redirects to /exceptho_thrown_page
+It respects Globals::$flag_exceptions_on.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

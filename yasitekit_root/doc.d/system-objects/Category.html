@@ -1,0 +1,369 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Category.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>Category.php &#8211; Category objects for tags, classifications, etc</h1>
+
+<p>Created by  on 2010&#8211;02-16.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p><strong>Category</strong> objects are used to create a hierarchic structure of tags or classifications.
+This module also provides an interface to the Session object (<a href="/doc.d/system-includes/session.html">see</a>)</p>
+
+<p>Most category operations do not directly use the Category classes but rather use
+<em>category</em> data types which are defined in <a href="/doc.d/system-includes/aclass.html#category">aclass.php</a></p>
+
+<p>Read the next section in order to find out how to use them. Read the following for a detailed
+discussion of Category objects.</p>
+
+<h2>How to Use Categories</h2>
+
+<h3>Classifying with Sub-Categories</h3>
+
+<p>First of all, you use can Categories to put AnInstance subclasses into one or more
+classifications.</p>
+
+<p>Let&#8217;s say we have a newsletter, so we set up a &#8216;top level&#8217; category called &#8216;_newsletter&#8217;.
+We can add a bunch of subcategories, such as &#8216;_newsletter_latest&#8217;, &#8216;_newsletter_jan2010&#8217;,
+and things like that.</p>
+
+<p>To do this, we&#8217;ll create a Newsletter object by extending
+<a href="/doc.d/system-includes/aclass.html#aninstance">AnInstance</a>. One of the attributes will
+have the name <em>category</em> and will have the type &#8216;category(<em>newsletter</em>)&#8217;. This
+will automatically classify every Newsletter object as a member of the <em>newsletter</em>
+category.</p>
+
+<p>Every AnInstance extension &#8211; Newsletter in our case &#8211; has several &#8216;support&#8217; methods
+which interface with Category objects. We&#8217;ll look at them first before we start
+looking at Category methods.</p>
+
+<p>First of all, when we create a new Newsletter instance, we probably want to assign
+it to a few categories. For example we might want one for the month and year and and
+another for the year alone and maybe a few for special topics. The easiest way to
+do this is to assign a bunch of categories to the <em>category</em> attribute. So we
+might write something which does:</p>
+
+<pre>$this-&gt;category = '_newsletter_y2010,_newsletter_jun2010,_newsletter_special'
+</pre>
+
+<p>This will replace the current set of categories by the comma separated list show &#8211; plus the root category of &#8216;_newsletter&#8217;.</p>
+
+<p>If you want to add or delete categories individually, you will use the <em>add_category()</em>
+and <em>delete_category()</em> methods. For example to make this Newsletter the latest,
+you could write:</p>
+
+<pre>$this-&gt;add_category('category', '_newsletter_latest');
+</pre>
+
+<p>But this would result in two <em>latest</em> newsletters unless you find the current
+newsletter and write:</p>
+
+<pre>$latest_newsletter-&gt;delete_category('category', '_newsletter_latest');
+</pre>
+
+<p>The easiest way to get the latest newsletter object is to use a Category class method:</p>
+
+<pre>$latest_newsletter = Category::get_instances_for_category('_newsletter_latest', $this-&gt;dbaccess, 'Newsletter');
+</pre>
+
+<p>Then &#8211; of course &#8211; you can add categories at will.</p>
+
+<h3>Using Categories to Relate Objects</h3>
+
+<p>An additional feature is that if objects of different types &#8211; say Products and Deliverables &#8211; share the same Categories, then it&#8217;s easy to manage them.</p>
+
+<p>The YASiteKit system has both a Product and a Deliverable class. The Product class
+defines the content of a product &#8211; say an image or book content. The Deliverable
+class defines the format of the deliverable &#8211; say a print, electronic pdf, engraving,
+etc.</p>
+
+<p>Both classes have a <em>deliverable_category</em> attribute. As an example, let&#8217;s assume
+we have set up the following deliverable categories:</p>
+
+<ul>
+<li>_deliverable &#8211; the root of all deliverables</li>
+</ul>
+
+<p>For deliverable formats which are free</p>
+
+<ul>
+<li>_deliverable_freedownload &#8211; the root of all free products and product samples</li>
+<li>_deliverable_freedownload_image &#8211; free downloadable images</li>
+<li>_deliverable_freedownload_sw &#8211; free downloadable software</li>
+<li>_deliverable_freedownload_report &#8211; free downloadable reports</li>
+</ul>
+
+<p>And for deliverables which are for sale:</p>
+
+<ul>
+<li>_deliverable_image &#8211; images</li>
+<li>_deliverable_image_download &#8211; images download</li>
+<li>_deliverable_image_print &#8211; physical print of an image</li>
+<li>_deliverable_sw &#8211; software</li>
+<li>_deliverable_sw_download &#8211; downloadable software delivery</li>
+<li>_deliverable_sw_physical &#8211; packaged software</li>
+</ul>
+
+<p>Suppose we have &#8211; as is often the case &#8211; software for sale which operates in both
+a licensed and trial mode. Then we for the product, we will probably have a line
+of code which looks like:</p>
+
+<pre>$this-&gt;deliverable_category = '_deliverable_freedownload_sw,_deliverable_sw_download,_deliverable_sw_physical';
+</pre>
+
+<p>When we want to retrieve a list of all the Deliverable objects which relate to this product,
+we will use the <em>select_objects_in_category()</em> method of the Product class:</p>
+
+<pre>$deliverables = $this-&gt;select_objects_in_category('deliverable_category', 'Deliverable');
+</pre>
+
+<p>We can then create a shopping cart style menu which displays the product information and
+all deliverables which are appropriate.</p>
+
+<p>Notice that we can change the deliverable mix without modifying the program by using
+Deliverable and Product management.</p>
+
+<p>If we want to dress up our item menu a little, we can use the <em>category_paths_of()</em>
+and <em>category_objects_of()</em> to retrieve all the Categories [either path name only or
+entire objects] for any <em>category</em> attribute. This makes it easy to write code
+which describes the general types of deliverables which are available for any given
+product.</p>
+
+<h3>Category Class Methods</h3>
+
+<p>The Category class methods are described in boring-ease below. Here we concentrate
+on when you might want to use them.</p>
+
+<ul>
+<li>get_instances_for_category(category, dbaccess, class-name) &#8211; this is useful if you
+need to find instancs of <em>class-name</em> objects in a category specific category or
+in a different database or something like that. Mostly you <em>won&#8217;t</em> use this because
+the AnInstance <em>select_objects_in_category()</em> is what you want.</li>
+</ul>
+
+<ul>
+<li>add_to_category() and delete_from_category() &#8211; shouldn&#8217;t be used directly. Use the
+AnInstance support methods instead because they manage the instance bookeeping for
+your AnInstance derived object. The Category add and delete methods only manage
+the category objects and join tables.</li>
+</ul>
+
+<ul>
+<li>categories_for_instance() &#8211; gets all the categories a specific instance is in.
+It does not restrict the list by attribute &#8211; not surprisingly. The return is an array
+of category paths. It may be useful in some cases.</li>
+</ul>
+
+<h2>Category Objects</h2>
+
+<p>Each Category object is represented by a sequence of tokens which are connected
+by the underscore (_) character. This string is called the category <em>path</em>.
+This is similar to <span class="caps">UNIX</span> path names. [The
+underscore was chosen so that the category name satisfies the <span class="caps">PHP</span> identifier
+construction rules &#8211; which makes many things much easier.]</p>
+
+<h3>Path Name Syntax</h3>
+
+<p>Each token must satisfy [a-z0&#8211;9]{1,15} &#8211; lower case letters and digits.
+Thus, each token may be at most 15 characters long.</p>
+
+<p>The rightmost segment of a <em>path</em> is called the <em>name</em>.</p>
+
+<p>If a <em>path</em> contains an underscore, then the string to the
+left of the rightmost underscore is a path and is called the
+<em>parent</em>. If it does not contain an underscore, then the <em>path</em>
+is a &#8216;top level&#8217; path and it&#8217;s parent is empty &#8211; or the &#8216;root&#8217;
+category &#8211; which is represented by the empty string (&#8217;&#8217;).
+The &#8216;root&#8217; category can never be instantiated.</p>
+
+<p>Some examples of legal paths:</p>
+
+<pre>
+foo - the immediate child of the root category with name 'foo'
+foo_bar - name _bar_, parent _foo_
+foo_bar_baz - name _baz_, parent _foo_bar_
+</pre>
+
+<h4>Children and Subpaths</h4>
+
+<p>Each Category may have zero or more sub-categories represented by <em>subpath</em>
+strings. A <em>subpath</em> of a <em>path</em> is a legal path string which consists
+of <em>path</em> followed by a connecting underscore (_) and another legal path string.</p>
+
+<p>Thus, if <em>foo</em> is a path, then <em>foo_bar</em> and <em>foo_baz_beez</em> are both
+<em>subpaths</em> of <em>foo</em> and <em>bar_foo</em> is not.</p>
+
+<p>If a <em>subpath</em> of <em>path</em> consists of <em>path</em> conjoined to a single <em>token</em>,
+then <em>subpath</em> is a <em>child</em> of <em>path</em> (also called a <em>direct child</em> or
+<em>direct descendent</em>). Otherwise, it is a <em>descendent</em>.</p>
+
+<p>In the above examples, the subpath <em>foo_bar</em> of <em>foo</em> is a <em>child</em>,
+wherease <em>foo_baz_beez</em> is a descendent, but not a child.</p>
+
+<h4>Membership Implementation</h4>
+
+<p>Membership in a category is implemented using AJoin objects to join
+Category instances to other instances of classes derived from AnInstance.</p>
+
+<p>The Category class supports primatives to associate other AClass objects
+with specific categories, disassiocate them and retrieve lists of objects
+&#8216;in a category&#8217;.</p>
+
+<p>The Category class also supports default categories.
+This is
+implemented by interfacing with the <a href="/doc.d/system-includes/session.html">Session</a>
+object. See <a href="#session_interface">below</a> for details.</p>
+
+<h3>Instantiation</h3>
+
+<pre>$cat = new Category(dbaccess, arg), where _arg_ can be:
+</pre>
+
+<ul>
+<li>an array defining the keys <em>parent</em> and <em>name</em>.</li>
+<li>a category name of the form &#8216;foo_bar&#8217; &#8211; as described above.</li>
+<li>a string of the form <em>name</em>, which recreates a top level category which is
+a child of the (nameless) root category.</li>
+</ul>
+
+<h3>Instance Attributes</h3>
+
+<ul>
+<li>path &#8211; string &#8211; the underscore separated names of all category tokens
+from &#8216;root&#8217; to the</li>
+<li>parent &#8211; string (read only) &#8211; underscore (_) separated names of all ancestor categories.</li>
+<li>name &#8211; string (read only) &#8211; name for this category. Must be unique within the parent</li>
+<li>sibling_ordinal &#8211; int &#8211; order of sorting within parent. Must be monotonically increasing within
+a parent</li>
+<li>title &#8211; string &#8211; visible title</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<p>Theses Class methods support category mapulation for instances of other objects.
+This is implemented by defining AJoin objects between Category and other
+objects.</p>
+
+<p>In these methods, <em>category</em> must be an appropriate key which can
+be used to instantiate a Category object (see above). Instance is the instance
+of the class we want to join the category to.</p>
+
+<ul>
+<li>Category::add_to_category(category, instance) &#8211; adds instance and category to the
+AJoin table for <em>category</em>. Recursively adds all antecedents of <em>category</em>.</li>
+<li>Category::delete_from_category(category, instance) &#8211; Deletes AJoin entries
+for <em>instance</em> and <em>category</em> and all descendents of <em>category</em> from AJoin
+table.</li>
+<li>Category::get_instances_for_category(category, dbaccess, aclass_name) &#8211; returns an array of all object instances joined to the specified <em>category</em>
+which are <em>aclass_name</em> objects in database <em>dbaccess</em></li>
+</ul>
+
+<ul>
+<li>Category::categories_for_instance(instance) &#8211; returns an array of category
+names for the specified instance. <em>instance</em> can be an class deriveed from
+AnInstance.</li>
+</ul>
+
+<p>General Stuff:</p>
+
+<ul>
+<li>Category::subpath_of_pathP($subpath, $path) &#8211; returns <span class="caps">TRUE</span> if <em>$subpath</em>
+is a subpath of <em>$path</em>, but not equal to <em>$path</em>. Otherwise, returns <span class="caps">FALSE</span>.</li>
+<li>Category::subpath_of_path_groupP($subpath, $path_group) &#8211; returns <span class="caps">TRUE</span>
+if <em>$subpath</em> is a subpath of any member of <em>$path_group</em>. <em>$path_group</em> can
+be empty, a string of zero or more comma separated Category paths, or an
+array of Category paths.</li>
+<li>Category::options_elt_for_category(dbaccess, parent = &#8217;&#8217;, select_list = <span class="caps">NULL</span>, deep = <span class="caps">FALSE</span>) &#8211; returns an <span class="caps">HTML</span> options string for all children (or descendents if <em>deep</em> is <span class="caps">TRUE</span>)
+of <em>parent</em>. <em>parent</em> defaults to the root category. <em>select_list</em> may be empty,
+a single category path string, or an array of paths.</li>
+</ul>
+
+<p>Session Support:
+Each Category with children may have a <em>default</em> child stored in the session.
+The session interface consists of two methods:</p>
+
+<ul>
+<li>Category::set_default_category(parent_path, sub_path) &#8211; sets _sub_path as the
+default sub-path for <em>parent_path</em> in the session store.</li>
+<li>Category::get_default_category(parent_path) &#8211; gets the default sub-category of <em>parent_path</em> from the
+session store. Returns a Category instance or <span class="caps">FALSE</span> if the default is not set.</li>
+</ul>
+
+<!--
+* Category::select_elt_for_instance(instance, category, other_class, name_of_select, multi = FALSE) -
+returns an HTML select element which can be used in a form. The _name_of_select_
+is the name of the select element. Values for options are urlencoded key values.
+The display text is default display field for the object.
+-->
+
+<h3>Instance Methods</h3>
+
+<p>Category Support:</p>
+
+<ul>
+<li>children() &#8211; returns a list of all immediate children of <em>this</em></li>
+<li>descendents(include_self = <span class="caps">FALSE</span>) &#8211; returns a list of all descendents of <em>this</em>.
+If <em>include_self</em> is <span class="caps">TRUE</span>, then the array includes <em>this</em></li>
+<li>antecedients(include_self = <span class="caps">FALSE</span>) &#8211; like descendents(), but goes upward.</li>
+</ul>
+
+<p>Form support:</p>
+
+<ul>
+<li>options_elt_for_category($dbaccess, $selected_list = <span class="caps">NULL</span>, $parent = &#8217;&#8217;) &#8211; returns options elements for all children of <em>$parent</em></li>
+<li>table_of_categories($parent = <span class="caps">NULL</span>) &#8211; <span class="caps">WARNING</span> &#8211; only used by the Category management
+form.
+Returns an <span class="caps">HTML</span> table of all category data
+for the supplied <em>parent</em> or all Category instances. ManageCategory.php has some
+javascript which supports easy manipulation of the sort order within parents</li>
+<li>process_form() &#8211; overrides the default AnInstance::process_form() method in order
+to provide special functioning for Category objects. (See
+<a href="http://doc.d/system-includes/aclass.html">aclass.php</a> for general details)</li>
+</ul>
+
+<p>Misc</p>
+
+<ul>
+<li>delete() &#8211; overrides the default AnInstance <em>delete()</em> method to handle some special
+stuff for categories. Relies on parent::delete() to actually do the delete and on
+AnInstance::delete_category_references(). This method screws up synchronization between
+any effected AnInstance subclass instance which is in memory. You should not trust
+them after running <em>delete()</em>, so you should either terminate processing the <span class="caps">HTML</span>
+request OR regenerate any instances you need to mess with. Of course you only have
+to do this with AnInstance subclasses which contain <em>category</em> attributues.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

@@ -1,0 +1,125 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Link.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>Link.php &#8211; the link management object.</h1>
+
+<p>Created by Mike on 2011&#8211;02-20</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2011.
+All Rights Reserved.</p>
+</blockquote>
+
+<p><strong>Link</strong> objects are used to manage site links.</p>
+
+<p>Features:</p>
+
+<ul>
+<li>the <em>link()</em> method returns an anchor link &#8211; complete with attributes which
+can be assigned programatically or via the management interface.</li>
+<li>the <em>site_map_entry()</em> method returns the properly formatted <span class="caps">XML</span> url element
+for inclusion of this link in the site map &#8211; if appropriate.</li>
+<li>menus can be constructed dynamically by examining the Category <em>links</em>
+<a href="#construct_menu">see Constructing Menus</a></li>
+</ul>
+
+<h2>Attributes</h2>
+
+<p><strong>Link</strong> instances have two types of attributes: <em>intrinsic</em> and <em>additional</em></p>
+
+<p>The <em>intrinsic</em> attributes are:</p>
+
+<ul>
+<li>link_id &#8211; int &#8211; Link Number &#8211; automatically assigned and automatically
+incremented. This is the key field and is used to join Link instances
+to LinkGroup instances</li>
+<li>title &#8211; varchar(255) &#8211; Title &#8211; the title used in the link</li>
+<li>uri &#8211; varchar(255) &#8211; Link <span class="caps">URI</span>, w/o protocol or domain &#8211; required</li>
+<li>id &#8211; varchar(255) &#8211; Link id attribute &#8211; optional</li>
+<li>name &#8211; varchar(255) &#8211; Link name attribute &#8211; optional</li>
+<li>classes &#8211; varchar(255) &#8211; Link Class Attribute(s) &#8211; bundled into the <em>class</em> attribute</li>
+<li>follow &#8211; enum(Y,N) &#8211; Google &amp; friends (&amp; competition) should follow this link and
+it should go into the site map.</li>
+<li>link_attributes &#8211; pile &#8211; anchor linke attributes &#8211; arbitrary</li>
+<li>url_param_names &#8211; pile &#8211; key-values for <span class="caps">URL</span> parameter names</li>
+<li>blocks &#8211; join(LinkGroup.link_group_name) &#8211; Link Blocks &#8211; the LinkGroups this Link
+is joined to. Note this is a 1 to N join, so an item may be part of many Link Blocks</li>
+</ul>
+
+<p>The <em>additional</em> attrbutes are created by assignment &#8211; as in</p>
+
+<pre>$foo-&gt;title = 'This title text for the menu link'
+</pre>
+
+<p>and are interpolated as attributes of the menu link returned by the <em>link()</em>
+method. Nothing is checked.</p>
+
+<p>They may be manually managed via the Attributes &lt;textarea&gt; element
+at /manage/Link.</p>
+
+<h2>Class Methods</h2>
+
+<ul>
+<li>create_site_maps($dbaccess) &#8211; creates an array of <span class="caps">XML</span> Sitemaps for the site.
+Each map is guaranteed to be less than 10 Meg in size and hold fewer than 50,000
+entries. Everything is done &#8216;in memory&#8217; so this probably won&#8217;t work for large sites.
+A better technique will be to open a file and write the things out. This is a <span class="caps">FIXME</span> <span class="caps">LATER</span>!!!!</li>
+</ul>
+
+<h2>Instance Methods</h2>
+
+<ul>
+<li>link() &#8211; returns an <span class="caps">HTML</span> Anchor element pointing to this link</li>
+<li>site_map_entry() &#8211; if <em>follow</em> is Y, returns the <span class="caps">XML</span> url element for the site map for this link.
+If <em>follow</em> is N, returns &#8217;&#8217;</li>
+</ul>
+
+<h2 id="constructing_menus">Constructing Menus</h2>
+
+<p>The <em>links</em> category forms a tree of Link objects. The most specific Category
+a Link is in consists of the Link itself and is named by replacing all the
+slashes (/) in the <em>uri</em> with underscores and appending the result to the token
+<em>links</em>.</p>
+
+<p>Thus the Category links_foo_bar_baz holds the Link to /foo/bar/baz.</p>
+
+<p>To get all the &#8216;foo&#8217; links, use the Category static method:</p>
+
+<pre>$list = Category::get_instances_for_catgory('links_foo', Globals::$dbaccess, 'Link');
+</pre>
+
+<p>This will return all the Link instances which begin with &#8217;/foo&#8217;.</p>
+
+<p>See <a href="/doc.d/system-objects/Category.html">Category.php</a> for gory details and alternatives.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

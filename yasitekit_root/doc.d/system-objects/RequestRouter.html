@@ -1,0 +1,120 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>RequestRouter.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>RequestRouter.php &#8211; Maps url&#8217;s into a dispatcher + parameters</h1>
+
+<p>Created by  on 2011&#8211;02-11</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>The RequestRouter maps URLs of the form http:host.dom/routing_key/parm1/parm2/.../parmN
+to display and managements routines with security information.</p>
+
+<h2>Instantiation</h2>
+
+<p>The normal instantiation is simply:</p>
+
+<pre>$foo = new RequestRouter($dbaccess, $routing_key)
+</pre>
+
+<p>where,</p>
+
+<ul>
+<li>$dbaccess is a DBAccess instance</li>
+<li>routing_key is an identifier &#8211; normaly the lead component of a <span class="caps">URL</span>.</li>
+</ul>
+
+<p>The <em>routing_key</em> is normally a word derived from the package name. It
+may include diferentiating words separated by underscores (_). For
+example, say the &#8216;foo&#8217; package provides for the display of both single &#8216;foo&#8217;
+objects and lists of &#8216;Foo&#8217; objects. Then there may be two routing_keys:</p>
+
+<ul>
+<li>foo_single &#8211; which will map <span class="caps">URL</span>&#8216;s like &#8217;/foo_single/foo_key&#8217; to the
+Foo displayer for single Foo objects</li>
+<li>foo_list &#8211; which will map <span class="caps">URL</span>&#8216;s of the form &#8217;/foo_list/start_date/end_date&#8217;
+to the Foo list displayer which is displays all Foo&#8217;s with dates in a range.</li>
+</ul>
+
+<h2>Attributes</h2>
+
+<p>The normal AnInstance, permanent attributes are:</p>
+
+<ul>
+<li>routing_key &#8211; string &#8211; single word taken from the first segment of the <span class="caps">URL</span>.
+This is the key which is used to chose the display and management templates</li>
+<li>resource_name &#8211; string &#8211; Display string for management and report</li>
+<li>script_name &#8211; string &#8211; the YATheme template which will display the
+requested <span class="caps">URL</span></li>
+<li>path_map &#8211; string &#8211; slash (/) separated path name. Essentially, a map into the pathinfo
+part of the <span class="caps">URL</span>. This gives names for each component and specifies how many components
+this RequestRouter instance handles.</li>
+<li>required_authority &#8211; set &#8211; the authority required to view URLs of this type. Defaults to &#8217;&#8217;,
+meaning anyone may access.</li>
+<li>authority_field_name &#8211; string &#8211; name of the &#8216;authority&#8217; field in objects referenced
+in these <span class="caps">URL</span>&#8216;s. Only applies to URLs which point to objects and is only used to
+override the <em>manage_authority</em> values. Defaults to &#8217;&#8217; &#8211; which is empty and means that
+the field does not exist in these records.</li>
+</ul>
+
+<p>Additional <em>transcient</em> attributes are:</p>
+
+<ul>
+<li>component_map &#8211; the results of calling <em>map_pathinfo($pathinfo)</em> are
+saved in this variable. If <em>map_pathinfo()</em> has not yet been called, it is array().</li>
+<li>path_map_array &#8211; array &#8211; contains the components of the path from <em>path_map</em>
+after exploding the string based on the slash (/) character.</li>
+<li>uri &#8211; this is the host relative <span class="caps">URI</span> for a specific path. It is created by
+<em>map_pathinfo($pathinfo)</em> and is composed of the <em>routing_key</em> followed
+by <em>$pathinfo</em>. If <em>map_pathinfo()</em> has not yet been called, it is <span class="caps">FALSE</span>.</li>
+</ul>
+
+<h2>Class Methods</h2>
+
+<p>None</p>
+
+<h2>Instance Methods</h2>
+
+<p>The usual AnInstance methods plus . . .</p>
+
+<ul>
+<li>map_pathinfo($pathinfo) &#8211; returns an associative array where the keys are taken from
+the <em>path_map</em> attribute and values are taken from the $pathinfo string, split on slash
+marks (/)</li>
+<li>link($title = &#8217;&#8217;) &#8211; returns an <span class="caps">HTML</span> anchor pointing to <span class="caps">URL</span> last processed by <em>map_pathinfo()</em></li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

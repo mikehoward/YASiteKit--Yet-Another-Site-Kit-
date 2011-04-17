@@ -1,0 +1,88 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Package.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>Package &#8211; the Package Management Class</h1>
+
+<p>Created by  on 2010&#8211;02-16.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<h2>Instantiation</h2>
+
+<pre>$foo = new Package(Globals::$dbaccess, package_name);
+</pre>
+
+<p>where <em>package_name</em> is the name of a package.</p>
+
+<h2>Attributes</h2>
+
+<ul>
+<li>package_name &#8211; string &#8211; Packaage Name in a subset of camel case. The name consists
+of one or more words concatenated together. Each word must begin with a capital letter
+and be followed by at least one lower case letter or digit. The regular expression
+is &#8217;^[A-Z][a-zA-Z]+$&#8217;. [Note: this identical to ObjectInfo::OBJECT_NAME_REGX]</li>
+<li>package_dir &#8211; string &#8211; the Package Directory derived from the package name by converting
+all of the upper case letters to lower case and prefixing the interior ones by an underscore.
+Use IncludeUtilities::camel_to_words($package_name) to do this programatically.</li>
+<li>package_abs_path &#8211; string &#8211; absolute path to package_dir</li>
+<li>enabled &#8211; enum(N, Y) &#8211; defaults to N</li>
+<li>readme &#8211; text &#8211; the content of the packages <span class="caps">README</span> file. It may contain <span class="caps">HTML</span> elements and
+will be sanitized to remove <em>script</em> tags</li>
+<li>required_packages &#8211; string &#8211; comma separated list of package names which are required to be installed
+and enabled for this packaage to function properly.</li>
+<li>required_objects &#8211; string &#8211; comma separated list of required objects which are not
+in some package.</li>
+</ul>
+
+<h2>Class Methods</h2>
+
+<ul>
+<li>name_to_dir($package_name) &#8211; converts camel case to underscore separated by
+replacing all (except the leading) upper case character by and underscore and
+the lower case version. The leading upper case character is lower cased.</li>
+<li>dir_to_name($dir) &#8211; inverse of name_to_dir() &#8211; only works for package names and directories</li>
+<li>install($package) &#8211; locates <em>$package</em> and installs it if it exists. Creates all tables
+required for objects, creates a Package instance, and parses and <em>install.txt</em>.
+Returns the Package instance. Otherwise, returns <span class="caps">FALSE</span>.</li>
+</ul>
+
+<h2>Instance Methods</h2>
+
+<ul>
+<li>load_package() &#8211; simply (uniquely) adds the package directory to the include path.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

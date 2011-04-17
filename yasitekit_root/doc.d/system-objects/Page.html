@@ -1,0 +1,182 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Page.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> Page.php &#8211; The Basic <span class="caps">HTML</span> Page object.</h1>
+
+<p>Created by Mike Howard on 2010&#8211;07-17.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved. Licensed under the terms of the <span class="caps">GNU</span> Lesser
+<span class="caps">GNUL</span> License, version 3.  See <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a> for details.</p>
+</blockquote>
+
+<blockquote>
+<p><span class="caps">THIS</span> <span class="caps">SOFTWARE</span> <span class="caps">HAS</span> NO <span class="caps">WARRANTEE</span> OR <span class="caps">REPRESENTATION</span> <span class="caps">FOR</span> <span class="caps">FITNESS</span> OF <span class="caps">PURPOSE</span>.
+<span class="caps">USE</span> AT <span class="caps">YOUR</span> <span class="caps">OWN</span> <span class="caps">RISK</span>.</p>
+</blockquote>
+
+<p>The <strong>Page</strong> object extends the PageBase object. It only exists so to allow
+page structure specialization for web sites.</p>
+
+<p>Web pages are constructed of parts and pieces which appear to be scattered around.
+Take a look in the <em>page_structure</em> directories &#8211; both site and system &#8211; and look
+over the fragments.</p>
+
+<p>Each of these fragments is a mixture of <span class="caps">HTML</span>, <span class="caps">PHP</span>, and <em>tokens</em>. <span class="caps">HTML</span> and <span class="caps">PHP</span>
+you already know. <em>tokens</em> are specific to YASiteKit. They are the names of
+YASiteKit object attributes wrapped in braces &#8211; such as <em>{page_title}</em>.</p>
+
+<p>The final rendering of a page includes replacing all <em>tokens</em> which contain
+valid Page object attributes with their current values. This allows each
+page to specialize itself. <a href="#page_content">see Page Content Files</a>, below.</p>
+
+<h2>Page class definition pattern</h2>
+
+<p>The basic pattern for a Page object is:</p>
+
+<pre>class Page extends PageBase {
+&nbsp;  public function __construct($page_name)
+&nbsp;  {
+&nbsp;    parent::__construct($page_name);
+&nbsp;    #page layout definition
+&nbsp;    $this-&gt;prepare($name-of-content = 'content');
+&nbsp;  } // end of __construct()
+}
+</pre>
+
+<ul>
+<li><a href="#instantiation">Instantiation</a></li>
+<li><a href="#attributes">Attributes</a></li>
+<li><a href="#class_methods">Class Methods</a></li>
+<li><a href="#instance_methods">Instance Methods</a></li>
+</ul>
+
+<h2 id="instantiation">Instantiation</h2>
+
+<p>The Page object is created in <a href="/doc.d/system-includes/includes.html">includes.php</a>, so
+you normally don&#8217;t have to worry about it. If you want to, do it like this:</p>
+
+<pre>$page_obj = new Page($page_name);
+</pre>
+
+<p>where <em>$page_name</em> is the name of a file containing the page content.</p>
+
+<h2 id="attributes">Attributes</h2>
+
+<p>See <a href="/doc.d/system-objects/PageBase.html">PageBase.php</a></p>
+
+<h2 id="class_methods">Class Methods</h2>
+
+<p>See <a href="/doc.d/system-objects/PageBase.html">PageBase.php</a></p>
+
+<h2 id="instance_methods">Instance Methods</h2>
+
+<p>See <a href="/doc.d/system-objects/PageBase.html">PageBase.php</a></p>
+
+<h2 id="page_content">Page Content Files</h2>
+
+<h3>Access Control et al</h3>
+
+<p>Access Control is managed by setting the <em>required_authority</em> attribute of the
+global Page object. It must be either <span class="caps">NULL</span> or a list of authority values [X A C, etc] &#8211; as a string of comma separated values or as an array of separate strings.
+See the &#8216;has_authority()&#8217; instance method in <a href="/doc.d/system-objects/Account.html">Account.php</a>
+for more detail.</p>
+
+<ul>
+<li>Globals::$page_obj->required_authority = <span class="caps">NULL</span>;  // unrestricted access</li>
+<li>Globals::$page_obj->required_authority = &#8216;X&#8217;;   // administrative only</li>
+<li>Globals::$page_obj->required_authority = &#8216;A,S,X&#8217;; // Artist, Staff, and Admin access</li>
+</ul>
+
+<h3>Meta Values</h3>
+
+<p>You can add metadata as using the <em>add_meta(name, content)</em> method. This will add
+OR replace metadata values of the the same name.</p>
+
+<p>For convenience, the <em>protected</em> static variable <em>$default_meta</em> contains:</p>
+
+<ul>
+<li>content-type: &#8220;text/html; charset=utf-8&#8221;</li>
+<li>imagetoolbar: &#8220;no&#8221;</li>
+<li>robots: &#8220;nofollow, noindex&#8221;</li>
+</ul>
+
+<p>You will probably want to override the <em>robots</em> entry for pages you want accessed
+by search engines.</p>
+
+<h3>Style Sheets.</h3>
+
+<p>Add style sheets using the <em>add_style_sheet($name, path, media, $ie = <span class="caps">FALSE</span>)</em> instance method.
+This ensures the style sheet PageSeg object has a unique name, by prefixing it with <strong>style_sheet_</strong>.</p>
+
+<p>If the argument &#8217;$ie&#8217; is not false, then the stylesheet link is wrapped in an IE conditional
+comment and the value of &#8217;$ie&#8217; is inserted as the condition. Thus if &#8217;$ie&#8217; is &#8216;LE 6&#8217;,
+the conditional comment will start with &amp;l</p>
+
+<p>For convenience, the <em>protected</em> static variable _$default_stylesheets contains:
+pre. array(
+&nbsp;    array(&#8220;stylesheets_screen&#8221;, &#8221;/css/screen.css&#8221;, &#8220;screen&#8221;, <span class="caps">NULL</span>),
+&nbsp;    array(&#8220;stylesheets_print&#8221;, &#8221;/css/print.css&#8221;, &#8220;print&#8221;, <span class="caps">NULL</span>),
+&nbsp;    array(&#8220;stylesheets_ie&#8221;, &#8221;/css/ie.css&#8221;, &#8220;screen&#8221;, &#8216;LT 6&#8217;),
+&nbsp;    array(&#8216;stylesheets_handheld&#8217;, &#8217;/css/handheld.css&#8217;, &#8216;handheld&#8217;, <span class="caps">NULL</span>),);</p>
+
+<h3>Modifying PageSeg elements</h3>
+
+<p>Every PageSeg has a unique name. Get the actual object using <em>Globals::$page_obj->get_by_name(name)</em>,
+where <em>name</em> is the name of the segment.</p>
+
+<p>At that point you can modify the content using the objects methods. See
+<a href="/doc.d/system-objects/PageSeg.html">PageSeg.php</a> for details.</p>
+
+<h3>Templating</h3>
+
+<p><span class="caps">NOTE</span>: the attributes described here are those used in the YASiteKit site
+and in the supplied page fragments in the <strong>site-framework</strong> kits. You are
+free to replace any and all of the fragments with your own and then change
+the names of the attributes you use. The principal will still be the same.</p>
+
+<p>Page content files must define some page attributes in order to use the supplied
+page fragments / page structure:</p>
+
+<ul>
+<li>Globals::$page_obj->page_title &#8211; string &#8211; required &#8211; the title at the top of the page</li>
+<li>Globals::$page_obj->page_header &#8211; string &#8211; required &#8211; the h1 header content at the top of
+content portion of the page.</li>
+</ul>
+
+<p>You should also set the <em>required_authority</em> header for all pages which do not allow
+general, unrestricted access and the <em>robots</em> metadata (see metadata above) for pages
+you want to have indexed by search engines.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

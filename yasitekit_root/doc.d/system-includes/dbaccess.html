@@ -1,0 +1,348 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>dbaccess.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> dbaccess.php &#8211; the DBAccess Database Adaptor</h1>
+
+<p>Created by  on 2010&#8211;02-11.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>A bunch of database routines bundled up into an Object.</p>
+
+<p><span class="caps">IMHO</span> most database interface layers are too complicated. That&#8217;s because they
+try to do too much stuff. This interface layer aims at simplicity, which is
+achieved by only supporting a bare bones subset of <span class="caps">SQL</span>.</p>
+
+<p>The module currently supports 5 <span class="caps">PHP</span> database drivers:</p>
+
+<ul>
+<li>sqlite</li>
+<li>sqlite3</li>
+<li>mysql</li>
+<li>mysqli</li>
+<li>postgresql</li>
+</ul>
+
+<p>Everything is accessed by creating a DBAccess object &#8211; which creates the
+connection or throws an exception.</p>
+
+<p>Persistent Attributes are automatically created and maintained by the object.
+This provides a means of managing the state of the database. For example,
+the application may define a DBAccess attribute called <em>error</em> and save
+a value of &#8216;T&#8217; or &#8216;F&#8217; in it. This can be used to take the application off
+line for maintenance and to signal asynchonously running processes that the
+system is not available. <a href="#attributes">see</a> below.</p>
+
+<p>The Database State has evolved and now supports fairly complex safeguards
+of data for data modeling evolution. See <a href="/doc.d/state_transitions.html">State Transitions</a>
+for details.</p>
+
+<h2>Error Handling</h2>
+
+<p>Error handling is non-invasive, but the programmer&#8217;s responsibility. This
+contrasts sharply with the rest of the system which almost always throws
+an exception. This was a conscous choice &#8211; although not necessarily the
+right one &#8211; because it seemed more likely to want to deal with errors
+programatically than by defaulting to aborting. It also makes it easy
+to ignore errors.</p>
+
+<p>Generally, methods which have side effects &#8211; creating tables, dropping, etc &#8211; return <span class="caps">FALSE</span> on failure and something non-FALSE on success. Check using
+the triple equals ($dbaccess->operation(...) !== <span class="caps">FALSE</span>) { ... }.</p>
+
+<p>After an error is detected, the error information can be retrieved using the
+<em>error()</em> method. This always contains the last error message emitted by the
+underlying database handler.</p>
+
+<p>If you don&#8217;t check it, then the bad things go unnoticed.</p>
+
+<h2>Instantiation</h2>
+
+<p>To use, create a DBAccess object:</p>
+
+<pre>$dbaccess = new DBAccess($db_params, $verbose = FALSE);
+</pre>
+
+<p>where <em>db_params</em> is an associative array containing the following keys:</p>
+
+<ul>
+<li>db_params &#8211; is an array containing all the information needed to connect
+to a database using the <span class="caps">PHP</span> database adapter specified. It has the following
+keys:
+<ul>
+<li>db_engine &#8211; one of none, sqlite, sqlite3, mysql, mysqli, postgresql</li>
+<li>dbname &#8211; name of database to connect to</li>
+<li>host &#8211; name of host &#8211; mysql, mysqli, postgresql</li>
+<li>port &#8211; port number &#8211; mysql, mysqli, postgresql</li>
+<li>user &#8211; user id for connection &#8211; mysql, mysqli, postgresql</li>
+<li>password &#8211; password for user in connection &#8211; mysql, mysqli, postgresqlf</li>
+<li>create_database &#8211; boolean &#8211; if present and <span class="caps"><span class="caps">TRUE</span></span>, then the database will
+be created if it does not yet exist.</li>
+<li>recreate_database &#8211; boolean &#8211; if present and <span class="caps"><span class="caps">TRUE</span></span>, then the database will
+be dropped if it exists, and then recreated</li>
+</ul>
+</li>
+</ul>
+
+<h2>Conventions</h2>
+
+<p>Conventions used in this module:</p>
+
+<ul>
+<li>sql &#8211; is a string which is passed to the underlieing query function. It needs to be
+properly escaped <em>prior</em> to passing it on.</li>
+<li>$dict &#8211; is a dictionary of key/value pairs where the <em>keys</em> are column names and the
+<em>values</em> are text strings. All data is treated as text and quoted.</li>
+<li>$where &#8211; is a dictionary identical in format to <em>$dict</em>. It is used to construct
+<em>where</em> clauses in select, delete, and update statements.</li>
+</ul>
+
+<h2 id="attributes">Attributes / aka Database State</h2>
+
+<p>All DBAccess attributes are used to maintain Database State.</p>
+
+<p>Very briefly each DBAccess object operates in three main states:</p>
+
+<ul>
+<li>Off-Line &#8211; on_line == &#8216;F&#8217; &#8211; this is used to do maintenance on the database &#8211; typically
+rebulding the struture needed for an application.</li>
+<li>On-Line &#8211; on_line == &#8216;T&#8217; &#8211; full functioning of the database is available <span class="caps">EXCEPT</span> for
+dropping or modifying table definitions.</li>
+<li>Read-Only &#8211; on_line == &#8216;R&#8217; &#8211; data may be read, but not modified <span class="caps">EXCEPT</span> for specified
+metadata tables. See <em>append_metadata_table()</em> and <em>del_metadata_table()</em> <a href="#class_methods">below</a></li>
+</ul>
+
+<p>See <a href="/doc.d/DatabaseState.html">DatabaseState</a> for details.</p>
+
+<p>Each Database and Database Engine has a unique set of state variables. More
+than one database/database engine many be active at any time. Their states
+are maintained separately under the private key <em>dbaccess_id</em> &#8211; which is the
+string returned by __toString().</p>
+
+<h3 id="attribute_defaults">Default Attributes</h3>
+
+<p>The following attributes are always defined for all databases. They are all initialized
+to &#8216;F&#8217; (false) when the database is created and first accessed, which places the
+database in the offline state and marks it as invalid, but consistent.
+See <a href="/doc.d/state_transitions.html">State Transitions</a> for (exhaustive) detail.</p>
+
+<ul>
+<li>on_line</li>
+<li>database_valid</li>
+<li>archive_stale</li>
+<li>model_mismatch</li>
+</ul>
+
+<h3 id="attribute_implementation">Attribute Implementation</h3>
+
+<p>Attributes are stored in the distinguished table <strong>_dbaccess</strong>. All values are read
+at instantiation time &#8211; which forms a sort of caching &#8211; so read access is inexpensive.
+Assignment both creates attributes and writes them to the data store &#8211; so we
+have &#8211; in effect &#8211; a write-through cache.</p>
+
+<p>This is all implemented via the <span class="caps">PHP</span> magic methods:</p>
+
+<ul>
+<li>__get(attribute) &#8211; returns the value of the named attribute or throws an AttributeError
+exception if it is not defined. This is a <em>feature</em> to help detect spelling errors.</li>
+<li>__set(attribute, value) &#8211; creates or redefines the named attribute. <em>value</em> must
+be a non-empty string. If it is anything else throws an AttributeError exception.
+Assigning a <span class="caps">NEW</span> value or <span class="caps">CREATING</span> a new attribute results in the name/value pair
+written to the database, but not otherwise.
+Does not return a meaningful value.</li>
+<li>__isset(attribute) &#8211; returns <span class="caps">TRUE</span> or <span class="caps">FALSE</span> if <em>attribute</em> is defined in the database.</li>
+<li>__unset(attribute) &#8211; removes <em>attribute</em> from both the instance and the database.</li>
+</ul>
+
+<p>The table <strong>_dbaccess</strong> contains two fields:</p>
+
+<ul>
+<li>tag &#8211; varchar(255) &#8211; the key field</li>
+<li>value &#8211; text &#8211; the value field</li>
+</ul>
+
+<p><span class="caps">WARNING</span>: the cache is implemented as a static class variable. This means that
+separate instances of a DBAccess object which point to the identically same database
+<span class="caps">AND</span> are running the the same process context will share the cache. Instances
+started in different processes will <span class="caps">NOT</span> share the cache, after the initial load.</p>
+
+<p>This sets up a sort of <em>race</em> condition. The likelyhood of instabilities are small
+as long as competing processes have short run times. However, it is possible for
+a process to start, followed immediately by a second one, and the first process to
+set a value in the cache. In this case the second process will not see the new
+value. This can be a problem if the first process is taking the application off line.</p>
+
+<h2 id="class_methods">Class Methods</h2>
+
+<ul>
+<li>available_db_engines() &#8211; returns array of available database engines</li>
+<li>append_metadata_table($tablename) &#8211; appends <em>$tablename</em> to the list of
+tables which may be modified in Read-Only mode. The list is initially:
+<ul>
+<li>_dbaccess &#8211; the database state table</li>
+<li>sessions &#8211; the web site sessions table</li>
+</ul>
+</li>
+<li>del_metadata_table($tablename) &#8211; deletes <em>$tablename</em> from the list of
+tables which may be modified in Read-Only mode</li>
+</ul>
+
+<h2 id="instance_methods">Instance Methods</h2>
+
+<p>Instance methods are described in functional groups. Pay attention to
+the warnings.</p>
+
+<h3 id="admin_methods">Administrative methods</h3>
+
+<ul>
+<li>close() &#8211; closes the connection and makes the object useless</li>
+<li>register_close_function() &#8211; registers a function with args to be called just
+prior to closing the database</li>
+<li>unregister_close_function() &#8211; removes function from list to call on closing
+database.</li>
+<li>attribute_names() &#8211; returns array of currently defined attributes.</li>
+<li>verbose(value = <span class="caps">TRUE</span>) &#8211; sets and resets the <em>verbose</em> flag.</li>
+</ul>
+
+<h3 id="info_methods">Information Methods</h3>
+
+<ul>
+<li>connectedP() &#8211; returns <span class="caps">TRUE</span> if connection to database exists, else <span class="caps">FALSE</span></li>
+<li>error() &#8211; returns the string value of the last database error.</li>
+<li>errorP() &#8211; returns <span class="caps">TRUE</span> if the last operation resulted in an error, else <span class="caps">FALSE</span></li>
+<li>changes() &#8211; returns number of rows changed by last data manipulation operation</li>
+<li>table_exists(table_name) &#8211; returns <span class="caps">TRUE</span> if &#8216;select count(*) from table_name&#8217; works, else <span class="caps">FALSE</span>.</li>
+<li>rows_in_table(table_name) &#8211; returns integer number of rows in table OR <span class="caps">FALSE</span> if table
+does not exist (or select statement fails)</li>
+</ul>
+
+<h3 id="data_def_methods">Data Definition Methods:</h3>
+
+<p class="warning"><span><span class="caps">WARNING</span>: These two functions are very dangerous &#8211; so don&#8217;t use them.</span>
+<span>(I haven&#8217;t figured out how to make them safe yet.</span>
+<span>Will probably open a connection and make sure that the database to be created does not exist</span>
+<span>OR</span> <span>that it has a fresh archive or something like that)</span></p>
+
+<ul>
+<li>create_database($dbname) &#8211; creates the specified database
+in the database engine specified in <em>$db_params</em>. <span class="caps">NOTE</span> that this is <span class="caps">NOT</span> a class function
+and must be called on a DBAccess instance.</li>
+<li>drop_database($dbname) &#8211; drops the specified database. Same issues as <em>create_database()</em>.</li>
+</ul>
+
+<p class="advisory"><span>These functions <span class="caps">ONLY</span> work when the database is in the <em>offline</em> state.</span></p>
+
+<ul>
+<li>create_table(table_name, field_definitions, drop_first = <span class="caps">FALSE</span>) &#8211; attempts to
+define table <em>table_name</em> using the array <em>field_definitions</em>.  If the flag <em>drop_first</em>
+is <span class="caps">TRUE</span>, then the table is dropped before being created. If <span class="caps">FALSE</span> and the table exists,
+then returns <span class="caps">FALSE</span>. The <em>field_definitions</em> array is a simple array of arrays
+holding two or three values:
+<ul>
+<li>field name &#8211; string &#8211; required &#8211; gives name of field. Must satisfy [a-z]\w*</li>
+<li>field definition &#8211; string &#8211; required &#8211; full <span class="caps"><span class="caps">SQL</span></span> style data definition.</li>
+<li>key_flag &#8211; boolean &#8211; optional &#8211; Must be <span class="caps"><span class="caps">TRUE</span></span> if field_name is key field</li>
+</ul>
+</li>
+<li>drop_table(table_name) &#8211; drops named table</li>
+</ul>
+
+<h3 id="data_manipulation_methods">Data Maniuplation Methods</h3>
+
+<p>These methods provide a database portable interface. Use them
+rather than writing <span class="caps">SQL</span> because they will continue to work when this
+thing supports Couchdb, Mongodb and other non-SQL engines, whereas the <span class="caps">SQL</span> won&#8217;t.
+[NOTE: the system is in process of migration to strictly using these functions]</p>
+
+<p class="advisory"><span><span class="caps">NOTE</span>: insert, update, and delete operations <span class="caps">ONLY</span> work if the database is <span class="caps">NOT</span> in <em>readonly</em> mode.</span></p>
+
+<ul>
+<li>insert_into_table($table, $dict) &#8211; uses the key/value pairs in <em>$dict</em>
+to construct an <em>insert</em> statement for <em>$table</em> and executes it. Returns <span class="caps">TRUE</span> or <span class="caps">FALSE</span>.</li>
+<li>update_table($table, $dict, $where) &#8211; uses the key/value pairs in <em>$dict</em>
+to construct an update statement for <em>$table</em>. <em>$where</em> is passed through <em>db_escape_where()</em>.</li>
+<li>delete_from_table($table, $where) &#8211; similar to the other two functions,
+except it deletes the specified records from <em>$table</em>.</li>
+<li>select_from_table($table, $select_list = <span class="caps">NULL</span>, $where = <span class="caps">NULL</span>, $orderby = <span class="caps">NULL</span>) &#8211; provides an abstract interface to <em>select_as_array()</em>. <em>$select_list</em> can be
+<span class="caps">NULL</span>, a string containing a comma separated list of items, or an array of selections.
+Each selection is treated as an opaque string, so phrases such as &#8216;foo as bar&#8217;
+will work. Each selection item is passed through the database specific string
+escape method to deal with <span class="caps">SQL</span> injection.</li>
+</ul>
+
+<h3 id="utility_methods">Utilties</h3>
+
+<p>The following are utility functions which abstract various database specific escape
+methods. Generally you won&#8217;t need to use them because they are automatically
+used in the data manipulation functions immediately above. If you do opt
+to use the raw database query functions below, then you should examine the
+code to see how these escapes are used.</p>
+
+<ul>
+<li>escape_string($str) &#8211; returns <em>$str</em> as modified by the database driver&#8217;s
+db_escape_string() method.</li>
+<li>escape_array_values($ar) &#8211; returns an array where each <em>key</em> in <em>$ar</em>
+is replaced by one which every character which is not in the range: [a-zA-Z0&#8211;9_]
+is deleted and each <em>value</em> is quoted using <em>db_escape_string()</em>.</li>
+<li>escape_where($where) &#8211; returns a where clause as follows:
+<ul>
+<li>if $where is empty or False, returns an empty string (&#8217;&#8217;)</li>
+<li>if $where is an array, constructs a where clause which tests for simultaneous equality
+on all key-value conditions</li>
+<li>otherwise, $where is assumed to be a non-empty string. The returned string is guarenteed
+to begin with the word &#8216;where&#8217;.</li>
+</ul>
+</li>
+</ul>
+
+<h3 id="low_level_methods">Low Level Methods</h3>
+
+<p>These methods are include for completeness.</p>
+
+<p class="warning"><span><span class="caps">WARNING</span>: the following functions do not check the state of the database, so</span>
+<span>you have no protection when using them.</span></p>
+
+<p class="advisory"><span>Lower Level functions which should be avoided when writing portable code:</span></p>
+
+<ul>
+<li>select_as_array($sql)- returns an array of results.  If the $sql is not a <em>select</em>, then
+the query is diverted to <em>query()</em> and returns an empty array if <em>query()</em> succeeded.
+Returns <span class="caps">FALSE</span> on failure.</li>
+<li>query($sql) &#8211;  attempts to execute <em>$sql</em>. If <em>$sql</em> contains the word
+<em>select</em>, then <em>query()</em> returns the result of calling <em>db_select_as_array()</em>. Otherwise,
+returns <span class="caps">TRUE</span> if the <em>$sql</em> succeeds, else <span class="caps">FALSE</span>.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

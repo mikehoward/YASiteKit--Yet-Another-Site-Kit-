@@ -1,0 +1,210 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>render_web_service.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> render_web_service.php &#8211; returns a <span class="caps">JSON</span> or <span class="caps">XML</span> object &#8211; as requested</h1>
+
+<p>Created by  on 2010&#8211;03-11.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>This module implements a framework for several web services. Additionally, it
+implements json and xml services to return the values of specified objects.</p>
+
+<p>Web services are inheritly unsafe. This model addresses this by implementing
+a simple security model which allows Object and Field level control over which
+objects are retrievable. Specific service commands are free to add to, or ignore
+this.</p>
+
+<p>The bulk of common processing is bundled into a single WebService class &#8211; which
+is available to service commands via the variable <strong>Globals::$web_service</strong>.</p>
+
+<p class="warning"><span>Web Services silently abort if the database is <span class="caps">NOT</span> online.</span></p>
+
+<h2>Web <span class="caps">API</span></h2>
+
+<h3>Request <span class="caps">URL</span></h3>
+
+<p>Web service requests are made using a normal http request with an encoded <span class="caps">URL</span>.</p>
+
+<p>The service request defines the data protocol &#8211; such as raw <span class="caps">JSON</span> or <span class="caps">RSS</span>, the
+specific service requested, and passes parameters to the service request.</p>
+
+<p>The url will look like:</p>
+
+<p>http://<em>host-name</em>/<em>data_protocol</em>/<em>service_command</em>?<em>query_string</em></p>
+
+<p>Where:</p>
+
+<ul>
+<li><em>host-name</em> is the name of the site. For example, www.yasitekit.org</li>
+<li><em>data_protocol</em> defines how the data will be returned. Data protocols are:
+<ul>
+<li>xml &#8211; implemented &#8211; returns an <span class="caps"><span class="caps">XML</span></span> document <a href="#json_format">see</a></li>
+<li>json &#8211; implemented &#8211; returns a <span class="caps"><span class="caps">JSON</span></span> document <a href="#xml_format">see</a></li>
+<li>rss &#8211; planned &#8211; <span class="caps"><span class="caps">TBD</span></span></li>
+<li>atom &#8211; planned &#8211; <span class="caps"><span class="caps">TBD</span></span></li>
+</ul>
+</li>
+<li><em>service_command</em> &#8211; this is either the distinguished name <em>object</em> or the name
+of a script in the <em>web_service</em> directory.</li>
+<li><em>query_string</em> is a normal <span class="caps">GET</span> command query string which is passed to the <em>service_command</em>.
+These values are available to <em>service commands</em> via the request cleaner at <strong>Globals::$rc</strong>.
+See <a href="/doc.d/system-includes/request_cleaner.html">request_cleaner.php</a> for details.</li>
+</ul>
+
+<h3>The <em>object</em> service command</h3>
+
+<p>The format of the returned data depends on the <em>data_protocol</em> requested.</p>
+
+<h4><span class="caps">JSON</span> returned data</h4>
+
+<p>The returned object is a <span class="caps">JSON</span> object, created by the <span class="caps">PHP</span> function json_encode().
+It contains the following standard fields:</p>
+
+<ul>
+<li>result &#8211; always returned &#8211; string &#8211; &#8216;success&#8217; or &#8216;failure&#8217;</li>
+<li>explanation &#8211; always returned &#8211; string &#8211; free text</li>
+<li>object_count &#8211; only returned on success &#8211; integer &#8211; number of objects which follow</li>
+<li>object_ar &#8211; only returned on success &#8211; array of <span class="caps">JSON</span> objects.</li>
+</ul>
+
+<p>Each object in the array is a <span class="caps">JSON</span> encoded array of (field, value) pairs, where <em>field</em>
+is the field name of a YASiteKit object and <em>value</em> is its value.</p>
+
+<h4><span class="caps">XML</span> returned data</h4>
+
+<p>The returned data is well formed <span class="caps">XML</span> according to version 1.0 of the <span class="caps">XML</span> specification.</p>
+
+<p>The top level element has the element name taken from <strong>Globals::$site_tag</strong> &#8211; typically a
+lower case version of the web site name &#8211; with the &#8216;www.&#8217; prefix stripped.</p>
+
+<p>This element will contain two or four child elements:</p>
+
+<ul>
+<li>result &#8211; always present &#8211; which will be either &#8216;success&#8217; or &#8216;failure&#8217; [quote marks omitted]</li>
+<li>explanation &#8211; always present &#8211; which will be empty on success and human readable text on failure</li>
+<li>object_count &#8211; only returned on success &#8211; integer &#8211; number of objects returned</li>
+<li>object_ar &#8211; only returned on success. This will contain 0 or more object elements. This
+element has two attributes
+<ul>
+<li>count &#8211; integer &#8211; number of objects contained</li>
+<li>object_name &#8211; string &#8211; the class name of the objects being returnd</li>
+</ul>
+</li>
+</ul>
+
+<p>Object elements are well formed <span class="caps">XML</span>. The element tag is the case sensitive name of the
+object returned. There is one attribute:</p>
+
+<ul>
+<li><em>index</em> &#8211; integer &#8211; the 0 based index of the element in the array of elements.</li>
+</ul>
+
+<p>Each object element will contain 0 or more elements containing field data. The name of
+each field element is the <em>field name</em> as defined in the class definition. The value is
+the value of that field for the returned instance of the object.</p>
+
+<p>Only fields with the &#8216;public&#8217; property set are returned.</p>
+
+<h4><span class="caps">RSS</span> returned data</h4>
+
+<p><span class="caps">TBD</span></p>
+
+<h4><span class="caps">ATOM</span> returned data</h4>
+
+<p><span class="caps">TBD</span></p>
+
+<h3>Other Service Commands</h3>
+
+<p>Other service commands will return data in their own formats. See the documentation
+in the <em>web_service</em> directory for details.</p>
+
+<h2>Security</h2>
+
+<p>Web services appear to be inherently insecure, so this feature adopts a simple
+&#8216;controlled visibility&#8217; model. The default for all objects and fields within
+objects is &#8216;invisible&#8217;.</p>
+
+<p>Each object has a parameter value in the Parameters object named &#8216;webservice&#8217;
+which is a boolean. It may take the values T or F. Absence of the parameter
+OR anything which is not the literal character &#8216;T&#8217; is equivalent to F.</p>
+
+<p>Further, each field which is visible must be have the property <em>public</em>. This
+property is set in object definition, is a programatic value, does not persist
+in the data store, but is defined in the code.</p>
+
+<h2>Command Interface &#8211; aka <span class="caps">API</span> &#8211; aka WebService Class</h2>
+
+<p>This module defines the WebService object. The instance reflecting this <span class="caps">HTTP</span>
+request is assigned to the variable <strong>Globals::$web_service</strong> and provides
+the bulk the services required for completing a request.</p>
+
+<p>Service Commands <span class="caps">MUST</span> use the services of the WebService class as described below.</p>
+
+<h2>WebService Class</h2>
+
+<h3>Instantiation</h3>
+
+<pre>Globals::$web_service = new WebService(_service_type_, _service_command_);
+</pre>
+
+<p>Where <em>service_type</em> is:</p>
+
+<ul>
+<li>json &#8211; supported</li>
+<li>xml &#8211; supported</li>
+<li>rss &#8211; Planned</li>
+<li>atom &#8211; planned</li>
+</ul>
+
+<h3>Attributes</h3>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>render() &#8211; causes the object to render its content.</li>
+<li>obj_to_array($object) &#8211; returns an associative array with all the <em>attributes</em> of the <em>$object</em>
+as keys with the same values as in <em>$object</em>.</li>
+<li>array_to_xml($name, $ar) &#8211; returns an <span class="caps">XML</span> 1.0 string containing the array. The outermost element
+will have element tag <em>$name</em>. It will contain elements with tags equal to the array keys and values
+equal to their values. No elements have attributes.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

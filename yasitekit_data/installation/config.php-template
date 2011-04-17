@@ -1,0 +1,482 @@
+<?php
+/*
+#doc-start
+h1.  config.php - The Configuration file
+
+Created by SOMEBODY on ISO DATE
+ 
+bq. Derived from config-template.php which is Copyright Mike Howard and Clove Technologies, Inc, 2008-2010.
+All Rights Reserved. Licensed for use in YASiteKit based projects under the terms of
+the GNU Lesser Public License, Version 3. See http://gnu.org/licenses/ for details.
+
+Do not muck with this.
+
+Us the "*configurator.php*":/doc.d/installation/configurator.html instead.
+
+#end-doc
+*/
+
+// class definitions
+
+class Globals {
+  // variables which will be 'exposed' when dump() is invoked
+  private static $exposed = array(
+    'flag_exceptions_on', 'flag_email_reports',
+    'site_id', 'site_domain', 'site_url', 'site_tag', 'site_installation', 'site_url_relocation_prefix',
+      'timezone', 'upload_file_extentions', 'page_name', 'page_ext',
+    'messages',
+    );
+  // flags - Leave this stuff Alone
+  public static $flag_exceptions_on = TRUE;
+  public static $flag_email_reports = TRUE;
+	public static $flag_is_robot = FALSE;
+	public static $flag_cookies_ok = FALSE;
+	public static $flag_account_ok = FALSE;
+	public static $flag_session_ok = FALSE;
+
+  // site info
+  // Edit site_id, site_name, and site_tag
+  // configurable-start
+  // annotation Main Site Parameters - used for naming and control. Each needs a value, 
+  // required
+  // type string
+  public static $site_id = NULL;    // used in site versioning. Set once and NEVER change it. All lower case, digits or underscore
+  // required
+  // type string
+  public static $site_domain = NULL;  // string domain name of site, for use in email, etc. For Example: yasitekit.org
+  // required
+  // type string
+  // default http://www.{site_domain}
+  public static $site_url = NULL; // string main URL of site
+  // required
+  // type string
+  public static $site_name = NULL; // string formal name of site - used in title element. e.g. YASiteKit.org
+  // recommended
+  // type string
+  // default {site_name}
+  public static $site_tag = NULL;     // string used in web service data returns.
+  // type select
+  // required
+  // readonly
+  // option development
+  // option alpha
+  // option production
+  public static $site_installation = NULL; // select Site Installation Type
+  // required
+  // type string
+  public static $timezone = 'America/Denver'; // official time zone. Required by PHP 5.3
+  // type string
+  public static $upload_file_extentions = 'jpg,jpeg,png,gif'; // comma separated list of file extensions
+  // annotation Master Encryption Key: This is a string value used as the key to the encryptors table.
+  // annotation Once set, don't change it, or the database will become unreadable.
+  // annotation If you Leave this NULL, then it will be filled in randomly.
+  // annotation You may put in a value if you want, but make sure you know what you're doing
+  // required
+  // type string
+  // random 250
+  public static $encryption_key = NULL; // string url encoded master encryption key for database - leave blank for random value
+  // configurable-end
+  public static $rc = NULL;
+  public static $page_obj = NULL;
+  public static $router_obj = NULL;  // the RequestRouter object
+  public static $page_name = 'index.php';
+  public static $page_ext = 'php';
+  public static $product_menu = NULL;
+
+  // web service and ajax
+  public static $web_service = NULL;
+  
+  // Paths
+  // Edit document_root and private_data_root below on a per-installation basis
+  // configurable-start
+  // annotation Site Directory Paths:
+  // annotation These are the paths used to find the root directories of the site
+  // annotation There are three roots used: documentation_root, private_data_root, and system_root.
+  // annotation The easiest site to build has the system_root as an immediate subdirectory of private_data_root.
+  // annotation This is the default: just leave 'system_root' blank
+  // type string
+  // required
+  public static $document_root = NULL;    // string absolute file system path to document root
+  // type string
+  // required
+  public static $private_data_root = NULL; // string absolute file system path to private data
+  // type string
+  // default {private_data_root}/system
+  public static $system_root = NULL;  // string Normally leave this NULL to automatically put system in Private Data
+  // type string
+  // default default_template.tpl
+  // annotation The name of the default template - used if yatemplate is not defined in content files.
+  // annotation Leave blank for pure page sites.
+  public static $default_template = NULL; // string default template file for when yatemplate is not present
+  // configurable-end
+  public static $pages_root = NULL;
+  public static $system_pages = NULL;
+  public static $page_structure = NULL;
+  public static $system_page_structure = NULL;
+  public static $templates_root = NULL;
+  public static $system_templates_root = NULL;
+  public static $packages_root = NULL;
+  public static $system_packages = NULL;
+  public static $utility_pages_root = NULL;
+  public static $includes_root = NULL;
+  public static $system_includes = NULL;
+  public static $objects_root = NULL;
+  public static $system_objects = NULL;
+  public static $images_root = NULL;
+  public static $dump_dir = NULL;
+  public static $user_upload_root = NULL;
+  
+  // site
+  // edit webmaster, info_email, and support email
+  // configurable-start
+  // annotation Email Addresses: these are the three main email addresses for the site
+  // annotation the webmaster gets email about site problems, missing pages, etc
+  // annotation the info_email site is for customer contact and sales
+  // annotation the support email site is for ignoring customer problems
+  // default webmaster@{site_domain}
+  // type string
+  public static $webmaster = NULL; // email address of webmaster
+  // default info@{site_domain}
+  // type string
+  public static $info_email = NULL;  // email address of info contact
+  // default support@{site_domain}
+  // type string
+  public static $support_email = NULL;  // email address of support contact
+  // configurable-end
+
+  // database info
+  // Edit db_type and db_params below on per-installation basis
+  // configurable-start
+  // annotation Database Parameters:
+  // annotation Each Site Installation should have a separate database.
+  // annotation NOTE: not all adaptors are available on all PHP installation. You can use command 'php -m'
+  // annotation to check the installed modules. That should help picking a db engine.
+	// annotation db engine notes:
+	// annotation NOTE: the db_engine picked here overrides anything place in the db_params array
+	// annotation  sqlite & sqlite3 - database is created automatically, all other params ignored
+	// annotation  for mysql & mysqli - you may need a unix socket path for localhost or (null) host
+  // type select
+  // option sqlite
+  // option sqlite3
+  // option mysql
+  // option mysqli
+  // option postgresql
+  public static $db_type = NULL;  // select sqlite,sqlite3,mysql,mysqli,postgersql Database Engine
+  // type array
+  // array-decl db_engine '' string same value as $db_type
+  // array-decl dbname '' string name of database. [Automatically Set for sqlite & sqlite3]
+  // array-decl host '' string name of database host
+  // array-decl user '' string administrative user name
+  // array-decl password '' string password for administrative user
+  // array-decl port 3306 int port number - default is 3306 for mysql; 5432 for postgresql
+  // array-decl unix_socket '' string path to unix socket. Only used if host is NULL or localhost
+  public static $db_params = NULL; // associative array: read the doc
+  // configurable-end
+  public static $dbaccess = NULL;
+  
+  // user information
+  public static $account_obj = NULL;  // Account instance or NULL
+  // configurable-start
+  // annotation Cookie Names:
+  // annotation Cookies are used to manage user sessions and to manage and track users.
+  // annotation User Cookies are required for registered users - such as the adminiatrator, staff, etc.
+  // annotation They can also provide continuity of the user experience between sessions.
+  // annotation Session Cookies are used to implement the session logic. This is
+  // annotation more secure than shipping the session cookie as a GET parameter - which we do not support.
+  // type string
+  // required
+  // default {site_id}
+  public static $user_cookie_name = 'cookie-name'; // user cookie name
+  // annotation The Detector Cookie is used to detect changes in the client browser's cookie
+  // annotation management. It is set to a time value on each request. The value of the time
+  // annotation value is saved in the session store and compared with the next request.
+  // annotation NOTE: this scheme doesn't play well with the Back Button - so be warned
+  // type string
+  // required
+  // default {site_id}_detector
+  public static $detector_cookie_name = NULL; // detector cookie name
+  // configurable-end
+  public static $user_cookie_value = NULL;  // value of user cookie
+  public static $cookie_track = NULL; // CookieTrack instance
+  public static $messages = '';
+
+  // user session info
+  // configurable-start
+  // type string
+  // required
+  public static $session_cookie_name = 'PHPSID'; // session cookie name
+
+  // configurable-end
+  public static $additional_session_keys = array(); // additional keys. [for future use]
+  public static $session_id = NULL;
+  public static $session_obj = NULL;
+  
+  // user timers
+  // Edit these timers if you want to - here or on an installation basis
+  // configurable-start
+  // annotation Timers:
+  // annotation Timers are used to invalidate various things. The inactivity timer voids a
+  // annotation login after so-many seconds between site accesses [clicks, page loads, etc].
+  // annotation NOTE: this does NOT include filling in a form PRIOR to clicking a submit button.
+  // annotation The 'session timeout' invalidates a session. It does the same checks as the
+  // annotation 'inactivity_timeout', but is usually much longer. It's easy to protect activities
+  // annotation from unauthorized activity during a long session by requiring logged in account
+  // annotation authority to use them.
+  // annotation max failed login attempts should be obvious. The 'cookie timeout' isn't actually
+  // annotation necessary - it's used to expire cookies after a long time between visits to the
+  // annotation site.
+  // type int
+  public static $inactivity_timeout = 300;  // five minutes
+  // type int
+  public static $session_timeout = 43200;    // 12 hours
+  // type int
+  public static $max_failed_login_attempts = 7;
+  // type int
+  public static $cookie_timeout = 7776000; // 3600 * 24 * 90 - 90 days in seconds
+  // configurable-end
+  
+  // reCaptcha Parameters
+  // go to recaptcha.net to get the values for these
+  // configurable-start
+  // annotation Recaptcha Parameters:
+  // annotation These four items are required to make the reCaptcha robot-detector work.
+  // annotation It's Highly Recommended you use them.
+  // type string
+  public static $recaptcha_domain = NULL; // string reCaptcha domain name
+  // type string
+  public static $recaptcha_theme = 'red'; // reCaptcha theme name: red, white, blackglass or clean
+  // type string
+  public static $recaptcha_pub_key = NULL; // string reCaptcha.net supplies this
+  // type string
+  public static $recaptcha_priv_key = NULL; // string reCaptcha.net supplies this
+  // configurable-end
+  
+  // PayPal API credentials
+  // go to paypal.com to get values for these. You'll need get them for the
+  //  Paypal API
+  // configurable-start
+  // annotation PayPal Parameters:
+  // annotation you need these if you sell stuff through paypal. You get them by
+  // annotation signing up for a paypal merchant account.
+  // annotation Leave Blank if you're not collecting money.
+  // type string
+  public static $paypal_api_username = NULL;  // string get from paypal - if you use it
+  // type string
+  public static $paypal_api_password = NULL;  // string
+  // type string
+  public static $paypal_api_signature = NULL; // string
+  // type bool
+  public static $paypal_api_live = FALSE;     // bool TRUE for live; FALSE for paypal sandbox
+  // configurable-end
+  
+  public static function dump($msg = 'Default Message')
+  {
+    $str = '';
+    $ar = get_class_vars('Globals');
+    $key_list = array_keys($ar);
+    sort($key_list);
+    foreach (Globals::$site_installation == 'development' ? $key_list : Globals::$exposed as $var) {
+      $value = $ar[$var];
+      if (method_exists($value, 'dump')) {
+      	$str .= "OBJ(" . get_class($value) . "): $var: ";
+        $str .= $var != 'page_obj' ? implode("\n   ", explode("\n", $value->dump($var))) . "\n":
+            " Page Object Not Dumped\n";
+      } elseif (is_string($value)) {
+        $str .= "VAR: $var: ";
+        ob_start();
+        print_r(htmlentities($value));
+        $str .= ob_get_clean() . "\n";
+      } elseif (is_array($value)) {
+        $str .= "ARRAY: $var: ";
+        foreach ($value as $k1 => $v2) {
+          $str .= "  $k1 => '$v2'\n";
+        }
+        $str .= "\n";
+      } elseif (is_bool($value)) {
+        $str .= "VAR: $var: " . ($value ? 'TRUE' : 'FALSE') . "\n";
+      } else {
+        ob_start();
+        print_r($value);
+        $str .= "VAR: $var: " . trim(ob_get_clean()) . "\n";
+      }
+    }
+    $str .= "Stack Backtrace\n";
+    $backtrace = debug_backtrace(FALSE);
+    foreach ($backtrace as $tmp) {
+      $func_context = (isset($tmp['class']) ? $tmp['class'] : '') . (isset($tmp['type']) ? $tmp['type'] :'');
+      $str .= "Called From {$func_context}{$tmp['function']}()";
+      if (isset($tmp['line'])) {
+        $str .= " at line {$tmp['line']}";
+      }
+      if (isset($tmp['file'])) {
+        $str .=       " in {$tmp['file']}";
+      }
+      $str .= "\n";
+    }
+    return "<div class=\"dump-output\">\nGlobals: $msg\n" . $str . "\n</div>\n";
+  } // end of dump()
+
+  public static function add_message($msg)
+  {
+    if (!Globals::$messages) {
+      Globals::$messages = $msg;
+    } else {
+      Globals::$messages .= "\n" . $msg;
+    }
+  } // end of add_message()
+  
+  public static function clear_messages()
+  {
+    Globals::$messages = NULL;
+  } // end of clear_messages()
+  
+  public static function render_messages($classes = 'error-fixed-format')
+  {
+    static $messages_rendered = FALSE;
+    
+    // only render messages ONCE per request. This allows Globals::render_messages() to be called
+    //  repeatedly w/o rendering the messages more than once.
+    if ($messages_rendered) {
+      return '';
+    }
+
+    require_once('session.php');
+    $str = trim((isset(Globals::$messages) && Globals::$messages ? Globals::$messages . "\n" : '')
+      . (Globals::$session_obj instanceof Session ? Globals::$session_obj->render_messages_and_clear('') : ''));
+    if ($str) {
+      $classes = $classes ? "class=\"$classes\"" : '';
+      return "<div $classes>" . $str . "</div>\n";
+   } else {
+     return '';
+   }
+  } // end of render_messages()
+}  // end Globals class
+// end class definition
+
+// function defintions
+
+
+// end function defintions
+// finish initialization
+// install debugging objects
+class NoObjectException extends Exception {}
+
+class NoObject {
+  private $tag;
+	public $placebo = FALSE;  // causes all thrown exceptions to transform into a return of FALSE
+
+  public function __construct($tag)
+  {
+		if (Globals::$site_installation == 'production') {
+			$this->placebo = TRUE;
+		}
+    $this->tag = $tag;
+  } // end of __construct()
+  private function throw_trace($msg)
+  {
+		if ($this->placebo) {
+			return FALSE;
+		}
+    ob_start();
+	echo "<div class=\"dump-output\">\n";
+   echo htmlentities(Globals::dump());
+    $backtrace_ar = debug_backtrace();
+    echo "\nAbbreviated Backtrace:\nLevel file:line function/method\n";
+    $idx = 0;
+    foreach ($backtrace_ar as $ar) {
+      echo "#{$idx} " . basename($ar['file']) . ":" . $ar['line'] . " ";
+      $idx += 1;
+      if (isset($ar['class'])) echo $ar['class'] . $ar['type'];
+      echo $ar['function'] . "(...)\n";
+    }
+    echo "</div>\n";
+    $backtrace = ob_get_clean();
+    throw new NoObjectException("NoObject({$this->tag})::$msg\n$backtrace");
+  } // end of throw_trace()
+  public function __toString()
+  {
+    $this->throw_trace("_toString(): attempt to convert a NoObject to string");
+  } // end of __toString()
+  public function __isset($name)
+  {
+    $this->throw_trace("__isset($name): Attempt to test isset on attribute");
+  } // end of __isset()
+  public function __unset($name)
+  {
+    $this->throw_trace(":__unset($name): Attempt to unset an attribute");
+  } // end of __unset()
+  public function __get($name)
+  {
+    $this->throw_trace("__get($name): Attempt to get attribute");
+  } // end of __get()
+  public function __set($name, $value)
+  {
+    $this->throw_trace("__set($name, ...): Attempt to set attribute");
+  } // end of __set()
+  public function __call($func, $args)
+  {
+    $this->throw_trace("__call($func, ...): Attempt to call {$func}()");
+  } // end of __call()
+  public function __invoke($func, $args)
+  {
+    $this->throw_trace("__invoke( ...): Attempt to invoke NoObject($this->tag) as a function");
+  } // end of __call()
+  public function dump($msg = '')
+  {
+    static $recursion = FALSE;
+    if ($recursion) return;
+    $recursion = TRUE;
+    return "NoObject::dump($msg)\n";
+  } // end of dump()
+}  // end NoObject class
+
+Globals::$product_menu = new NoObject('product_menu');
+Globals::$account_obj = new NoObject('account_obj');
+Globals::$cookie_track = new NoObject('cookie_track'); // CookieTrack instance
+Globals::$dbaccess = new NoObject('dbaccess');
+Globals::$page_obj = new NoObject('page_obj');
+Globals::$router_obj = new NoObject('router_obj');
+Globals::$web_service = new NoObject('web_service');
+Globals::$rc = new NoObject('rc');
+Globals::$session_obj = new NoObject('session_obj');
+
+// set up derived paths - used for convenience
+Globals::$pages_root = Globals::$private_data_root . DIRECTORY_SEPARATOR . 'pages';
+Globals::$page_structure = Globals::$private_data_root . DIRECTORY_SEPARATOR . 'page_structure';
+Globals::$templates_root = Globals::$private_data_root . DIRECTORY_SEPARATOR . 'templates';
+Globals::$packages_root = Globals::$private_data_root . DIRECTORY_SEPARATOR . 'packages';
+Globals::$utility_pages_root = Globals::$private_data_root . DIRECTORY_SEPARATOR . 'utility_pages';
+Globals::$includes_root = Globals::$private_data_root . DIRECTORY_SEPARATOR . 'includes';
+Globals::$objects_root = Globals::$private_data_root . DIRECTORY_SEPARATOR . 'objects';
+if (!Globals::$system_root) {
+  Globals::$system_root = Globals::$private_data_root . DIRECTORY_SEPARATOR . 'system';
+}
+Globals::$system_includes = Globals::$system_root . DIRECTORY_SEPARATOR . 'includes';
+Globals::$system_objects = Globals::$system_root . DIRECTORY_SEPARATOR . 'objects';
+Globals::$system_packages = Globals::$system_root . DIRECTORY_SEPARATOR . 'packages';
+Globals::$system_pages = Globals::$system_root . DIRECTORY_SEPARATOR . 'pages';
+Globals::$system_page_structure = Globals::$system_root . DIRECTORY_SEPARATOR . 'page_structure';
+Globals::$dump_dir = Globals::$private_data_root . DIRECTORY_SEPARATOR . 'dump.d';
+Globals::$user_upload_root = Globals::$document_root .DIRECTORY_SEPARATOR . 'images';
+Globals::$images_root = 'images' . DIRECTORY_SEPARATOR;
+Globals::$system_templates_root = Globals::$system_root . DIRECTORY_SEPARATOR . 'templates';
+// set up include paths
+set_include_path(
+    Globals::$includes_root . PATH_SEPARATOR .
+    Globals::$objects_root . PATH_SEPARATOR .
+    Globals::$templates_root . PATH_SEPARATOR .
+    Globals::$packages_root . PATH_SEPARATOR .
+    Globals::$page_structure . PATH_SEPARATOR .
+    Globals::$pages_root . PATH_SEPARATOR .
+    Globals::$system_includes . PATH_SEPARATOR .
+    Globals::$system_objects . PATH_SEPARATOR .
+    Globals::$system_packages . PATH_SEPARATOR .
+    Globals::$system_page_structure . PATH_SEPARATOR .
+    Globals::$system_pages . PATH_SEPARATOR .
+    get_include_path() . PATH_SEPARATOR .
+    Globals::$utility_pages_root . PATH_SEPARATOR .
+    Globals::$system_templates_root . PATH_SEPARATOR
+    );
+
+// set up random defaults required for various versions of PHP
+date_default_timezone_set(Globals::$timezone);

@@ -1,0 +1,74 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>installerator.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>installerator.php &#8211; The YASiteKit Installation Script Utility</h1>
+
+<blockquote>
+<p>(c) Copyright 2010 Mike Howard. All Rights Reserved.
+Licensed for use under the <span class="caps">GNU</span> Lesser <span class="caps">GNU</span> Public License, version 3
+See <a href="http://www.gnu.org/licenses/lpgl.html">http://www.gnu.org/licenses/lpgl.html</a> for details</p>
+</blockquote>
+
+<p>The <strong>Installerator</strong> is the companion script to the
+<a href="/doc.d/system-installation/configurator.html"><strong>Configurator</strong></a>.
+It must be run <em>after</em> the <strong>configurator</strong>, because it reads and uses the
+<em>config.php</em> files the <strong>configurator</strong> produces.</p>
+
+<p><span class="caps">NOTE</span>: this means it <em>must</em> be re-run each time a configuration file is modified &#8211; either by the <strong>configuration</strong> or by hand.</p>
+
+<p>The <strong>installerator</strong> creates several files in the <em>config-dir</em> directory for
+use in installing and re-installing versions of a site. All of these files
+take their names from the template files in the system/installation directory.
+[template files all have the <em>-template</em> suffix, so they are easy to spot].
+All created files have the <em>-template</em> suffix replaced by <em>-development</em>,
+<em>-alpha</em>, or <em>-production</em>.</p>
+
+<p>The files created are:</p>
+
+<ul>
+<li>htaccess-... &#8211; the <strong>.htaccess</strong> file which must be used in the installation.</li>
+<li>index.php-... &#8211; the <em>index.php</em> file which goes in <em>document_root</em></li>
+<li>make_tarfiles.sh-development &#8211; this is a Unix/Linux/Mac <span class="caps">OSX</span> compatable shell script
+which will create the distribution <em>tar</em> files. It expects to use the <em>maketar</em>
+python script found in &#8216;Useful utilities&#8217; on the YASiteKit site
+<a href="http://www.yasitekit.org/downloads/msh-utilities-1.0.0.zip">download</a> page.</li>
+<li>remote_install.sh-... &#8211; a <span class="caps">UNIX</span>/LINUX/Mac <span class="caps">OSX</span> shell script which runs on a remote
+host and installs the site.</li>
+<li>upload_script.sh-... &#8211; a <span class="caps">UNIX</span>/LINUX/Mac <span class="caps">OSX</span> shell script which runs locally. It
+uses <em>scp</em> and <em>ssh</em> to copy the tar archive files to the remote site and then
+remotely execute the <em>remote_install.sh</em> script.</li>
+<li>vhost-... &#8211; the Apache Virtual Hosts entry you will need for the site. This
+needs to go into the configuration file.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

@@ -1,0 +1,149 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>yastream.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h2>YAStream &#8211; base code from and modified the <span class="caps">PHP</span> manual VariableStream example</h2>
+
+<p>You don&#8217;t really use YAStream or YAMemFile objects directly. What you do is include
+this file, which registers the &#8220;var&#8221; protocol with <span class="caps">PHP</span> Streams and
+then you &#8216;simply&#8217; open files of the form &#8220;var://<em>some_path</em>&#8221; and
+everything works like magic.</p>
+
+<p>The rest of this document describes the internals &#8211; for the curious.</p>
+
+<h2>Internals</h2>
+
+<p><strong>YAStream</strong> implements a &#8216;var&#8217; protocol for the <span class="caps">PHP</span> streams interface.</p>
+
+<p>We implement two objects:</p>
+
+<ul>
+<li>YAMemFile &#8211; a path accessable file-like in-memory object.</li>
+<li>YAStream &#8211; a <span class="caps">PHP</span> stream wrapper which implements the &#8216;var://path&#8217; stream
+protocol.</li>
+</ul>
+
+<p>The code here is based on, but modifies and extends the VariableStream example
+in the Streams section of the <span class="caps">PHP</span> manual.</p>
+
+<h2 id="yamemfile">YAMemFile</h2>
+
+<p>A <strong>YAMemFile</strong> object is similar to a <span class="caps">UNIX</span> file except that:</p>
+
+<ul>
+<li>it does not support directories, nor any directory operations</li>
+<li>it does not support &#8216;sparce&#8217; writes</li>
+<li>it does not support locking</li>
+<li>it is impermenent &#8211; once the process it is created in ends, it
+evaporates.</li>
+<li>parameters to various functions differ from <span class="caps">UNIX</span> low level I/O
+standards</li>
+</ul>
+
+<p>It supports multiple, simultaneous access. <span class="caps">PHP</span> is sequentially executed,
+so contention is pretty much impossible, unless you know what you
+are doing and intentionally create it.</p>
+
+<h3>Instantiation</h3>
+
+<p><strong>get_yasmemfile_var()</strong> is a factory function which will find or (by default)
+create a YAMemFile instance in the YAMemFile cache. This allows multiple,
+independent access to the same YAMemFile instance.</p>
+
+<pre>$foo = YAMemFile::get_yasmemfile_var($varname, $create_ok = TRUE);
+</pre>
+
+<p><strong>get_yasmemfile_var()</strong> is a factory function which will find or (by default)
+create a YAMemFile instance in the YAMemFile cache.</p>
+
+<p>The &#8217;$create_ok&#8217; argument is used when opening an instance in &#8216;x&#8217; mode and
+during &#8216;unlink&#8217; operations.</p>
+
+<h3>Attributes</h3>
+
+<ul>
+<li>path &#8211; string &#8211; path to this YAMemFile instance</li>
+<li>content &#8211; string &#8211; the content of the instance</li>
+<li>uid &#8211; int &#8211; <span class="caps">UNIX</span> style uid &#8211; owner of this instance</li>
+<li>gid &#8211; int &#8211; <span class="caps">UNIX</span> style gid &#8211; group of the owner of this instance</li>
+<li>mode &#8211; int &#8211; <span class="caps">UNIX</span> style mode &#8211; defaults to 0644</li>
+<li>atime &#8211; int &#8211; <span class="caps">UNIX</span> time stamp &#8211; last access time</li>
+<li>mtime &#8211; int &#8211; <span class="caps">UNIX</span> time stamp &#8211; last modification time</li>
+<li>ctime &#8211; int &#8211; <span class="caps">UNIX</span> time stamp &#8211; creation time</li>
+<li>blksize &#8211; int &#8211; defaults to 512</li>
+<li>size &#8211; int &#8211; strlen(content)</li>
+<li>blocks &#8211; int &#8211; number of blocks required for &#8216;content&#8217;</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<ul>
+<li>rename($from, $to) &#8211; renames the instance <em>$from</em> to <em>$to</em> if possible.
+Fails if <em>$from</em> does not exist or <em>$to</em> does. Returns <span class="caps">TRUE</span> on success, else <span class="caps">FALSE</span></li>
+<li>unlink($varname) &#8211; deletes <em>$varname</em> if it is in the cache and open_count is 0; then returns <span class="caps">TRUE</span>.
+Otherwise returns <span class="caps">FALSE</span>.</li>
+</ul>
+
+<h3>Instance Methods</h3>
+
+<p>usual magic methods</p>
+
+<ul>
+<li>open() &#8211; Increments open count and sets atime.</li>
+<li>close() &#8211; decrements open count</li>
+<li>read_data($offset, $count) &#8211; returns (at most) <em>$count</em> data characters
+from <em>$this</em> beginning at offset <em>$offset</em>. Both must be non-negative integers.
+This simply returns <em>substr()</em>, so the returned string may be empty or less
+than <em>$count</em> characters long.</li>
+<li>write_data($offset, $data) &#8211; attempts to write the _$data
+beginning <em>$offset</em> characters from the head of the buffer. If the
+current content is less than <em>$offset</em> characters, then the data will be
+appended. Returns the number of characters written. Fails and returns 0
+if <em>$offset</em> is <= 0 or <em>$data</em> is empty</li>
+<li>truncate($position) &#8211; if <em>$position</em> < 0, returns <span class="caps">FALSE</span>. Otherwise,
+discards all content beyond <em>$position</em> and returns <span class="caps">TRUE</span>. <span class="caps">NOTE</span>: if
+<em>$position</em> < <em>$this->size</em>, does nothing.</li>
+<li>stat() &#8211; returns the status array &#8211; see <span class="caps">PHP</span> <em>stat()</em> function.</li>
+</ul>
+
+<h2 id="yastream">YAStream</h2>
+
+<p>YAStream is the glue which connects YAMemFile objects to the <span class="caps">PHP</span> Streams
+protocol, using the &#8220;var&#8221; <span class="caps">URI</span> protocol.</p>
+
+<p>The file simply defines an object which implements <em>stream_open()</em>, <em>stream_close()</em>,
+<em>stream_read()</em>, <em>stream_write()</em>, <em>stream_flush()</em>, <em>stream_tell()</em>, <em>stream_eof()</em>,
+<em>stream_seek()</em>, and <em>stream_stat()</em> as required by the streamWrapper class.
+See <a href="http://www.php.net/manual/en/class.streamwrapper.php">streamWrapper</a> for
+details.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

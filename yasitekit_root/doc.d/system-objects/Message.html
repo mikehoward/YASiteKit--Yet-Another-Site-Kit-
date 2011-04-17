@@ -1,0 +1,82 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Message.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> Message.php &#8211; an Email Message</h1>
+
+<p>Created by  on 2010&#8211;02-13.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>Message objects encasulate an e-mail message form</p>
+
+<h2>Instantiation</h2>
+
+<pre>$msg = new Message($dbaccess, args);
+</pre>
+
+<p>where args can be:</p>
+
+<ul>
+<li>a string &#8211; which is taken as <em>email</em> address</li>
+<li><span class="caps">NULL</span> &#8211; in which case an empty, undated message is created</li>
+<li>an array &#8211; in which case the key <em>email</em> must be defined</li>
+</ul>
+
+<h2>Attributes</h2>
+
+<ul>
+<li>email &#8211; string &#8211; required &#8211; email address of sender. This must be a valid return address as well</li>
+<li>timestamp &#8211; datetime &#8211; required and auto-generated &#8211; this is a read-only attribute used to time-tag when the message
+was generated</li>
+<li>name &#8211; string &#8211; required &#8211; name of correspondent</li>
+<li>ordernumber &#8211; string &#8211; optional &#8211; used if message refers to an order</li>
+<li>subject &#8211; string &#8211; required &#8211; it&#8217;s the subject</li>
+<li>message &#8211; text &#8211; optional &#8211; what it&#8217;s all about</li>
+</ul>
+
+<h2>Class Methods</h2>
+
+<p>None</p>
+
+<h2>Instance Methods</h2>
+
+<ul>
+<li>form($top_half = <span class="caps">NULL</span>, $bottom_half = <span class="caps">NULL</span>, $actions = array(&#8216;Send&#8217;, &#8216;Cancel&#8217;)) &#8211; extends
+the AnInstance <em>form()</em> function slightly to include a reCAPTCHA guard</li>
+<li>mail($to_email) &#8211; formats an e-mail message from <em>this</em> and sends it to <em>$to_email</em>.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

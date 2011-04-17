@@ -1,0 +1,107 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>YATheme.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h2>YATheme.php &#8211; the YASiteKit Theme object</h2>
+
+<blockquote>
+<p>(c) Copyright 2010 Mike Howard. All Rights Reserved.
+Licensed under terms of <span class="caps">LGPL</span> Version 3. For details
+go to <a href="http://www.gnu.org/licenses/lgpl.html">http://www.gnu.org/licenses/lgpl.html</a></p>
+</blockquote>
+
+<p>This documents the <strong>YATheme</strong> object. For details of writing theme files
+see <a href="/doc.d/YAThemeSpec.html">YAThemeSpec</a></p>
+
+<h2 id="yatheme">YATheme &#8211; the main YATheme interface</h2>
+
+<p>YATheme is the primary interface. None of the other classes
+should be used directly.</p>
+
+<p>YATheme is an AnInstance object, so it inherits all of the capabilities
+of an object defineds as an AClass. See <a href="/doc.d/system/includes/aclass.html">aclass.php</a>
+for details.</p>
+
+<h3>Instantiation</h3>
+
+<pre>$foo = new YATheme($dbaccess, $file_name) -
+</pre>
+
+<p>where,</p>
+
+<ul>
+<li>$dbaccess &#8211; a DBAccess instance</li>
+<li>$file_name &#8211; is the name of a file which is on the include path.
+<em>file_name</em> should be an <span class="caps">HTML</span>, <span class="caps">PHP</span>, or YATheme template file.</li>
+</ul>
+
+<h3>Attributes</h3>
+
+<p>All attributes are read-only</p>
+
+<ul>
+<li>dbaccess &#8211; DBAccess &#8211; access to the database</li>
+<li>file_name &#8211; string &#8211; the file name of the renderable file &#8211; which
+must be located someplace on the <span class="caps">PHP</span> include path</li>
+<li>file_path &#8211; string &#8211; absolute path to file. Only valid if <em>file_exists</em>
+is &#8216;Y&#8217;. This is set when the file is parsed.</li>
+<li>rendered_content &#8211; string &#8211; the value of <em>path</em> after rendering
+it and all <em>included</em> files. This is a mix of <span class="caps">HTML</span> with embedded
+<span class="caps">PHP</span> as produced by YAThemeFile::render().</li>
+<li>file_exists &#8211; string &#8211; either &#8216;Y&#8217; or &#8216;N&#8217;. [A third value of
+&#8216;Unknown&#8217; is used internally and should never be seen]</li>
+<li>refresh_timestamp &#8211; DateTime &#8211; timestamp of last refresh</li>
+<li>included_files &#8211; join &#8211; list of files included in this template. Used
+for refreshing and invalidating the yatheme cache</li>
+<li>access_flag &#8211; string &#8211; one of YATheme::LOGIN_REQUIRED, YATheme::NOT_AUTHORIZED,
+or YATheme::ACCESS_OK &#8211; which are string constants. Valid after instantiation.</li>
+<li>caching &#8211; string &#8211; One of <em>on, off</em>, and <em>compress</em>.</li>
+<li>required_authority &#8211; set &#8211; array of authority tokens or <span class="caps">ANY</span> or <span class="caps">FALSE</span>.</li>
+</ul>
+
+<h3>Class Methods</h3>
+
+<ul>
+<li>flush_entire_cache($dbaccess) &#8211; deletes all cache entries.</li>
+<li>invalidate_stale_cache_entries($dbaccess) &#8211; wanders through the cache table and discards
+any cached entries which are out of date. Should be used as
+an off-line process run as a cron job or on demand.</li>
+</ul>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>flush_from_cache() &#8211; deletes <em>this</em> from cache</li>
+<li>render() &#8211; returns the current cached value of <em>$this->file_name</em>.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

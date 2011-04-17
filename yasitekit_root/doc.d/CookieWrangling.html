@@ -1,0 +1,191 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>CookieWrangling.textile</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>Cookie-Wrangling &#8211; the Art of knowing what&#8217;s going on</h1>
+
+<p>YASiteKit uses cookies to maintain (relatively) secure
+session data. It also uses cookies to maintain a relationship with users
+between sessions.</p>
+
+<p>In fact, we&#8217;re so dependent on cookies, YASiteKit sites won&#8217;t run without them.</p>
+
+<p>Also, we like to run with Javascript on. We like that so much we <em>require</em> it
+for administrative work &#8211; Admin, Staff, Vendors, etc. Clients don&#8217;t have to
+turn on Javascript, but they are losing out.</p>
+
+<p>So, we need to know if the client is cooperating. It turns out that&#8217;s not easy.</p>
+
+<h2>Possible Client States</h2>
+
+<p>There are four possible client states we are interested in:</p>
+
+<table>
+<tr>
+<td>Cookies</td>
+<td>Javascript</td>
+<td>Results In . . .</td>
+</tr>
+<tr>
+<td>Yes</td>
+<td>Yes</td>
+<td>Good &#8211; everything works fine</td>
+</tr>
+<tr>
+<td>No</td>
+<td>Yes</td>
+<td>Bad &#8211; we can maintain state, but the session isn&#8217;t secure</td>
+</tr>
+<tr>
+<td>Yes</td>
+<td>No</td>
+<td>Medium Poor &#8211; Secure session but not-so-snazzy Site. We don&#8217;t put up with this for admin accounts</td>
+</tr>
+<tr>
+<td>No</td>
+<td>No</td>
+<td>Disgusting &#8211; we have insecure sessions and a Web 0.5 site</td>
+</tr>
+</table>
+
+<h2>What we&#8217;ll put up with</h2>
+
+<p>Anyone with an Account &#8211; Admins, Staff, Artists, etc &#8211; <em>must</em> enable both
+Cookies and Javascript. If they don&#8217;t like it, they can just take their
+ball and go home.</p>
+
+<p>End of Story.</p>
+
+<p>For &#8216;non-privileged users&#8217; &#8211; the really important people who may actually want to
+use the site for something (like buy some stuff) we will put up with no Javascript,
+but we&#8217;re not comfortable selling them stuff &#8211; or getting any sensitive information &#8211; without a secure session.</p>
+
+<p>[Just to be clear: by &#8216;secure session&#8217; we&#8217;re not talking about an encrypted connection.
+That is a good thing, but a secure session can <em>only</em> be implemented using cookies.
+Even if you&#8217;re running <span class="caps">SSL</span>, you&#8217;re insecure if you put the session id in the Query String.
+We&#8217;re making the unjustified assumption that the bulk of session hijacking will be done
+by inspecting query strings &#8211; from logs, spoofing, physhing or network snooping of some
+sort &#8211; so we&#8217;re not concerned about <span class="caps">SSL</span> <em>here</em>. That&#8217;s for later]</p>
+
+<p>If we allow sessions without Cookies, then we have to accept that we are
+<em>allowing sessions which can be hijacked</em>.</p>
+
+<p>YASiteKit Central has decided that this is not acceptable. [it also turns out to
+be too hard to deal with]</p>
+
+<p>Here&#8217;s what finally pushed us over that edge:</p>
+
+<ol>
+<li>At least one browser (Safari 4) does not flush cookies when the user turns them
+off <span class="caps">AND</span> it just sends back any it has lying around for your domain with the request.</li>
+<li>Thus, it&#8217;s not possible to tell if a browser is actually accepting Cookies until
+you make a round trip with some sort of &#8216;detector&#8217; cookie &#8211; i.e. something with a
+changing time stamp or a random value.</li>
+<li>You can&#8217;t tell if the previous &#8216;detector&#8217; cookie was actually set without comparing
+it to the previous value which was sent.</li>
+<li>The previous value has to be stored in the Session Store</li>
+<li>Sessions must be active to look in the session store</li>
+<li>You can&#8217;t be sure to activate the right session store without giving it a Session Id.</li>
+<li>The only place to get a Session Id w/o cookies is from the Query String or $_COOKIE,
+so you will probably end up using stale cookie or a hijacked one.</li>
+<li>If you don&#8217;t have a Stale Cookie in $_COOKIE, you still have to set up sessions.
+<span class="caps">PHP</span> will do that but it either has to send the session id as in cookie
+or put it in the <span class="caps">URL</span>. If it uses a cookie, we won&#8217;t get it back unless cookies are
+turned on in the client (a classic &#8216;catch 22&#8217;), so it will have to go into the <span class="caps">URL</span>.</li>
+<li>Once you&#8217;ve started the session, you can&#8217;t turn off cookies in the <span class="caps">URL</span> &#8211; which is
+what you want to avoid in the first place!</li>
+<li>So, if you go that route &#8211; end up with a session id in the <span class="caps">URL</span> &#8211; you have to
+destroy the session, expire that cookie, and start over. You can then set the new
+session cookie and redirect again &#8211; now knowing that that cookies work.</li>
+</ol>
+
+<p>It&#8217;s too complicated, so there&#8217;s no way <em>reasonable</em> to avoid publishing the session
+id for in the <span class="caps">URL</span> without <em>never</em> putting it in there in the first place.</p>
+
+<p>This has all been verified (at least to my satisfaction) by painful experimentation
+using <span class="caps">PHP</span> 5.3.3.</p>
+
+<p>(BTW: <span class="caps">PHP</span> is nice enough to issue a warning after when we changed the php.ini parameters after
+the session was up and running. It lets you change them and <em>ini_get()</em> returned the
+new values, but the changes don&#8217;t affect how the session works. Moral: Monitor the Apache Error Log!)</p>
+
+<h2>So What&#8217;s the Plan</h2>
+
+<p>Facts:</p>
+
+<ol>
+<li>we need to observe a detector cookie round trip</li>
+<li>we must never put the session id in the Query String</li>
+<li>we need a way to detect see if a <em>setcookie()</em> worked.</li>
+<li>we are woking under Web rules &#8211; which means each request is completely
+self contained with no history natural history. We have to add the bread
+crumbs, as it were.</li>
+</ol>
+
+<h3>Case One</h3>
+
+<p>We&#8217;ll start with 3. If we don&#8217;t see any cookies or a cookie (think we) we
+have previously set, then we&#8217;ll redirect to ourselves while:</p>
+
+<ol>
+<li>setting an identifiable token in the query string</li>
+<li>setting three cookies: a user cookie, a session cookie, and a detector cookie</li>
+<li>saving the value of the detector cookie in the session store.</li>
+</ol>
+
+<p>Then, when we get a request w/o cookies, but with the identifiable token in the query
+string, we know cookies aren&#8217;t working OR this is a hijack attempt.
+If the token is valid, then we tell the Client to turn on cookies or we won&#8217;t play.
+If not, we&#8217;ll assume that it&#8217;s a hijack and pretend we&#8217;re down or call the cops or something.</p>
+
+<h3>Case Two</h3>
+
+<p>Now let&#8217;s say we get a request and there are cookies. If we are missing the cookies
+(think we) we have previously set, then we&#8217;re back to Case One &#8211; just as though there weren&#8217;t
+any cookies. So we can go to Case One &#8211; at the place where we check the query string (look
+at the diagram below, it&#8217;ll make more sense).</p>
+
+<h3>Case Three</h3>
+
+<p>Now let&#8217;s say we get a request, there are cookies and the session cookie and detector
+cookie are set. Then we can start the session and see if the detector cookie matches
+the one we got from the client.</p>
+
+<p>If it matches, it&#8217;s a pretty good bet we know who we&#8217;re talking to and can proceed with
+the rendering the page. If not, then we really don&#8217;t know if the client is accepting
+and setting cookies, so it&#8217;s off to Case One again.</p>
+
+<h3>Here&#8217;s the Flow Chart</h3>
+
+<p><img src="/doc.d/img/CookieWranglingDiagram.jpg" alt="" /></p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

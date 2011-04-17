@@ -1,0 +1,55 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>render_tpl.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> render_yatheme &#8211; <span class="caps">HTML</span> Page dispatcher and renderer</h1>
+
+<p>Created by  on 2010&#8211;03-15.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p><strong>render_yatheme.php</strong> render viewable yatheme conten when the site is in Online or Read-Only
+mode. It handles all <span class="caps">PHP</span>, in those modes, which render <span class="caps">HTML</span>.</p>
+
+<p>It also the implements access control mechanism. Access control is
+both session and account based. Each page controls its own level of access
+by setting the page object attribute <em>required_access</em> to <span class="caps">NULL</span> or
+one or more account authority characters. [multiple authorities may
+be assigned simultaneously as a comma separated list or an array of
+authority characters. See <a href="/doc.d/system-objects/Account.html">Account.php</a>,
+<a href="/doc.d/system-objects/Page.html">Page.php</a> and
+<a href="/doc.d/OverView.html#creating_a_page">YASiteKit Overview</a> for more details]</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

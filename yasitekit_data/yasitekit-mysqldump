@@ -1,0 +1,704 @@
+-- MySQL dump 10.13  Distrib 5.1.42, for apple-darwin10.2.0 (i386)
+--
+-- Host: mike-shared    Database: yasitekit
+-- ------------------------------------------------------
+-- Server version	5.1.42
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `_dbaccess`
+--
+
+DROP TABLE IF EXISTS `_dbaccess`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `_dbaccess` (
+  `tag` varchar(255) NOT NULL DEFAULT '',
+  `value` text,
+  PRIMARY KEY (`tag`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_dbaccess`
+--
+
+LOCK TABLES `_dbaccess` WRITE;
+/*!40000 ALTER TABLE `_dbaccess` DISABLE KEYS */;
+INSERT INTO `_dbaccess` VALUES ('on_line','F'),('database_valid','T'),('archive_stale','F'),('model_mismatch','T');
+/*!40000 ALTER TABLE `_dbaccess` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `_encryptors`
+--
+
+DROP TABLE IF EXISTS `_encryptors`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `_encryptors` (
+  `name` varchar(255) NOT NULL DEFAULT '',
+  `key_size` int(11) DEFAULT NULL,
+  `iv_len` int(11) DEFAULT NULL,
+  `key_value` text,
+  PRIMARY KEY (`name`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_encryptors`
+--
+
+LOCK TABLES `_encryptors` WRITE;
+/*!40000 ALTER TABLE `_encryptors` DISABLE KEYS */;
+INSERT INTO `_encryptors` VALUES ('cookietrack',32,16,'t+iEvi7i2uf9G/pasAbPyV2CanEjKflMADEx+NHLOKIJWLqsFGycNRk7/1aDdMY4'),('image',32,16,'tONst5MhiYLkIt+N76Fp39xyMl1doEhN7FgWzifedFdP+dasw0/7PwgYHbo6WcH6'),('grouping',32,16,'a0WhsviEEnJDAP3kF0BTx6oDHfZDICibENJspxQ2rAc0RoWo4gHqX4+8meeco1E2'),('articlegroup',32,16,'cQqx1Nr0gTT4X2dWTXhhrZky53g7Ngm9+9wu/ZXWRIgsRwl/l/kKpAP5QX+DJtqw'),('productgrouping',32,16,'Hmcfow1sSO2tAFcJxk2NkHiYWGyDYNbrX9Tbx6y9CRGiL46MQBz97WYR04RzPLRX'),('product',32,16,'G17c4ssGppoGkclTsdud1HeMdAfjzkPXBL2EUh4Jz/7MtL6+AZyyuJkr2BuWQZHJ'),('account',32,16,'JDMIvSeOP4RbDUsXvFrdHCFiswCk/uMZq+2vpVHRaEZ5GK5yULqYI1w7fu3Rm8+O'),('article',32,16,'8oVmcVzhgVQ68n7ry/mQtenY1Fz8/C7GwrNHYTP5S5yoXFeNWxGtTlyMpXMtgK8v'),('message',32,16,'CKJo9T67JXmBBPgu/W0mKcYU375+l9/2R1D/uwxjOsodiGkND24mlZDqyo/9k9u9'),('subscription',32,16,'/sjsQwPlqWlRJ/FO98QJ/ij7npikiKfPSWSyWx+r7uByYkEzpLG3dPvSB13fnz+G'),('newsletter',32,16,'VxtYaT0MSUhoiiExR5yJXzBFhK0EJhkgqrFCk16Z4rVuvtZkV/tV4cHUaSMD++ag'),('productorder',32,16,'ENWdse3kUj8DAijnJ2E3gVNbidvFm5JmtmnDj2xz9jSCIiEO5gxihIvJtaK6mliM'),('rma',32,16,'yuSm8ePiWZI8DJEgC8Q8MCMmmQhn8m9wmjIha0iHbK7Yyj+s1oRiTmKItliZAL/y'),('downloadauthorization',32,16,'6PsKLFdpIZUIKJkX3asT91cgAWbuB/umiYtDIH04T4cHhj5zVP6nDbFFN70Uv8Lr'),('pageview',32,16,'W5ogyOFK1iupJ/3jq857TcMniIxRBsIWjQHy5ataQlb26oVGo0Fc7w6iJUCcTgVJ'),('productview',32,16,'7HQIu967zsqP248h0Kkef6d9qwk8GVssqk9fgtp9H4ao+/CO/TSVyuhMluR1DMZO'),('shoppingcart',32,16,'+DqE+p29PWFHQ/XHosQwgsRWMPuOArZDVW9GOv/44hvHyZcctCZ68BZ/z/JPpNkJ');
+/*!40000 ALTER TABLE `_encryptors` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `_j1`
+--
+
+DROP TABLE IF EXISTS `_j1`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `_j1` (
+  `_f0` varchar(40) NOT NULL DEFAULT '',
+  `_f1` varchar(40) NOT NULL DEFAULT '',
+  PRIMARY KEY (`_f0`,`_f1`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_j1`
+--
+
+LOCK TABLES `_j1` WRITE;
+/*!40000 ALTER TABLE `_j1` DISABLE KEYS */;
+INSERT INTO `_j1` VALUES ('admin','w[1_HH]Vc&3uj.>zdrNC?%%&X-%mA&c:apv):T]z');
+/*!40000 ALTER TABLE `_j1` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `_j2`
+--
+
+DROP TABLE IF EXISTS `_j2`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `_j2` (
+  `_f0` varchar(40) NOT NULL DEFAULT '',
+  `_f1` varchar(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`_f0`,`_f1`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_j2`
+--
+
+LOCK TABLES `_j2` WRITE;
+/*!40000 ALTER TABLE `_j2` DISABLE KEYS */;
+/*!40000 ALTER TABLE `_j2` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `_j3`
+--
+
+DROP TABLE IF EXISTS `_j3`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `_j3` (
+  `_f0` varchar(40) NOT NULL DEFAULT '',
+  `_f1` varchar(40) NOT NULL DEFAULT '',
+  PRIMARY KEY (`_f0`,`_f1`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_j3`
+--
+
+LOCK TABLES `_j3` WRITE;
+/*!40000 ALTER TABLE `_j3` DISABLE KEYS */;
+/*!40000 ALTER TABLE `_j3` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `_j4`
+--
+
+DROP TABLE IF EXISTS `_j4`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `_j4` (
+  `_f0` varchar(255) NOT NULL DEFAULT '',
+  `_f1` varchar(40) NOT NULL DEFAULT '',
+  PRIMARY KEY (`_f0`,`_f1`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_j4`
+--
+
+LOCK TABLES `_j4` WRITE;
+/*!40000 ALTER TABLE `_j4` DISABLE KEYS */;
+/*!40000 ALTER TABLE `_j4` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `_j5`
+--
+
+DROP TABLE IF EXISTS `_j5`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `_j5` (
+  `_f0` varchar(255) NOT NULL DEFAULT '',
+  `_f1` varchar(40) NOT NULL DEFAULT '',
+  PRIMARY KEY (`_f0`,`_f1`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_j5`
+--
+
+LOCK TABLES `_j5` WRITE;
+/*!40000 ALTER TABLE `_j5` DISABLE KEYS */;
+/*!40000 ALTER TABLE `_j5` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `_join_map`
+--
+
+DROP TABLE IF EXISTS `_join_map`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `_join_map` (
+  `left_class_name` varchar(255) NOT NULL DEFAULT '',
+  `right_class_name` varchar(255) NOT NULL DEFAULT '',
+  `tablename` varchar(255) DEFAULT NULL,
+  `tableindex` varchar(255) DEFAULT NULL,
+  `field_map` text,
+  `field_definitions` text,
+  PRIMARY KEY (`left_class_name`,`right_class_name`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_join_map`
+--
+
+LOCK TABLES `_join_map` WRITE;
+/*!40000 ALTER TABLE `_join_map` DISABLE KEYS */;
+INSERT INTO `_join_map` VALUES ('Account','CookieTrack','_j1','1','a:2:{s:14:\"account.userid\";s:3:\"_f0\";s:18:\"cookietrack.cookie\";s:3:\"_f1\";}','a:2:{i:0;a:3:{i:0;s:3:\"_f0\";i:1;s:11:\"varchar(40)\";i:2;b:1;}i:1;a:3:{i:0;s:3:\"_f1\";i:1;s:11:\"varchar(40)\";i:2;b:1;}}'),('ArticleGroup','Article','_j2','2','a:2:{s:17:\"articlegroup.name\";s:3:\"_f0\";s:12:\"article.name\";s:3:\"_f1\";}','a:2:{i:0;a:3:{i:0;s:3:\"_f0\";i:1;s:11:\"varchar(40)\";i:2;b:1;}i:1;a:3:{i:0;s:3:\"_f1\";i:1;s:12:\"varchar(255)\";i:2;b:1;}}'),('ProductGrouping','Account','_j3','3','a:2:{s:20:\"productgrouping.name\";s:3:\"_f0\";s:14:\"account.userid\";s:3:\"_f1\";}','a:2:{i:0;a:3:{i:0;s:3:\"_f0\";i:1;s:11:\"varchar(40)\";i:2;b:1;}i:1;a:3:{i:0;s:3:\"_f1\";i:1;s:11:\"varchar(40)\";i:2;b:1;}}'),('Product','Account','_j4','4','a:2:{s:12:\"product.name\";s:3:\"_f0\";s:14:\"account.userid\";s:3:\"_f1\";}','a:2:{i:0;a:3:{i:0;s:3:\"_f0\";i:1;s:12:\"varchar(255)\";i:2;b:1;}i:1;a:3:{i:0;s:3:\"_f1\";i:1;s:11:\"varchar(40)\";i:2;b:1;}}'),('Product','ProductGrouping','_j5','5','a:2:{s:12:\"product.name\";s:3:\"_f0\";s:20:\"productgrouping.name\";s:3:\"_f1\";}','a:2:{i:0;a:3:{i:0;s:3:\"_f0\";i:1;s:12:\"varchar(255)\";i:2;b:1;}i:1;a:3:{i:0;s:3:\"_f1\";i:1;s:11:\"varchar(40)\";i:2;b:1;}}');
+/*!40000 ALTER TABLE `_join_map` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `_parameters`
+--
+
+DROP TABLE IF EXISTS `_parameters`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `_parameters` (
+  `cls` varchar(255) NOT NULL DEFAULT '',
+  `parameters` text,
+  PRIMARY KEY (`cls`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_parameters`
+--
+
+LOCK TABLES `_parameters` WRITE;
+/*!40000 ALTER TABLE `_parameters` DISABLE KEYS */;
+INSERT INTO `_parameters` VALUES ('Account','a:1:{s:10:\"webservice\";s:1:\"F\";}'),('Article','a:1:{s:10:\"webservice\";s:1:\"T\";}'),('ArticleGroup','a:1:{s:10:\"webservice\";s:1:\"T\";}'),('CookieTrack','a:1:{s:10:\"webservice\";s:1:\"F\";}'),('DownloadAuthorization','a:3:{s:8:\"max_uses\";i:3;s:8:\"max_days\";s:1:\"5\";s:10:\"webservice\";s:1:\"F\";}'),('Message','a:1:{s:10:\"webservice\";s:1:\"F\";}'),('Newsletter','a:1:{s:10:\"webservice\";s:1:\"T\";}'),('PageView','a:1:{s:10:\"webservice\";s:1:\"F\";}'),('Product','a:1:{s:10:\"webservice\";s:1:\"T\";}'),('ProductGrouping','a:1:{s:10:\"webservice\";s:1:\"T\";}'),('ProductOrder','a:1:{s:10:\"webservice\";s:1:\"F\";}'),('ProductView','a:1:{s:10:\"webservice\";s:1:\"F\";}'),('RMA','a:1:{s:10:\"webservice\";s:1:\"F\";}'),('ShoppingCart','a:1:{s:10:\"webservice\";s:1:\"F\";}'),('Subscription','a:1:{s:10:\"webservice\";s:1:\"F\";}');
+/*!40000 ALTER TABLE `_parameters` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `account`
+--
+
+DROP TABLE IF EXISTS `account`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `account` (
+  `userid` varchar(40) NOT NULL DEFAULT '',
+  `password` varchar(255) DEFAULT NULL,
+  `salt` char(2) DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `cookie` varchar(255) DEFAULT NULL,
+  `prev_access` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `latest_access` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `authority` char(1) DEFAULT NULL,
+  `state` char(1) DEFAULT NULL,
+  `failed_login_attempts` int(11) DEFAULT NULL,
+  PRIMARY KEY (`userid`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `account`
+--
+
+LOCK TABLES `account` WRITE;
+/*!40000 ALTER TABLE `account` DISABLE KEYS */;
+INSERT INTO `account` VALUES ('admin','FL2gg2+dUoOya8FqVPDAcWpf9+qvcVjrFAJBzzv//RrTKLj4ELB+gkl92zkZT1/U','81','8LrwJicd1vkXnxbW2MVlgyz4XtDgSnG3nSK7ggk=','','','2010-06-13 02:11:42','2010-06-13 04:08:36','X','A',0),('staff','wiuLrDYWJFfhe3Ro84QNmN/23cDkZwk3uzEiwsNeudlqvWEfaE/rWWRpDL7EOUJm','1p','vxSxd4wyh5p3AFQwFElD56s3GFKr','','','2010-06-07 18:00:33','2010-06-07 18:00:39','S','A',0),('artist','vRmsWU+Uk7aa4+BKBV+Nt8j4BJF0ZRSgHbidkh5/C0ELo3+umZkScKvJT+UXfFe9','EC','uJ03eTZ2yrxgodRSzPcfib1cjYHGqQ==','','','0000-00-00 00:00:00','2010-06-02 20:17:33','A','',0),('author','57E6wW0s9HfOxzbEmpwt0/k0LgGvuQbyFrbfVjHOfyXMdVgp3FzsQkXxSq303Lo9','%:','eHbGa9oAu0Izs1CO3uC5DHh5FfX+HQ==','','','0000-00-00 00:00:00','2010-06-02 20:17:33','W','',0),('merchant','J7kforEaODudFlGaI+ruNaKlR1CfCJ47QeDmuWVeJxnctmqcHXDvE0lyxGr2AKTi','Ba','jHUE6VqyQG40Pai4GIHAvRyToGQpXd/r','','','0000-00-00 00:00:00','2010-06-02 20:17:33','M','',0),('cust','PHMqe9anmPZvbcQ8ogtQ+Y5aSeb5qz0RaBKq9uxeyDNZPSA7WS0GbWtxdZ2jn1tZ','be','YBceJXIgylHBxJvoWw/sfOCTOTlvdCjDure0G/8=','','','0000-00-00 00:00:00','2010-06-02 20:17:33','C','',0);
+/*!40000 ALTER TABLE `account` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `article`
+--
+
+DROP TABLE IF EXISTS `article`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `article` (
+  `name` varchar(255) NOT NULL DEFAULT '',
+  `article_group` text,
+  `follow_index` char(1) DEFAULT NULL,
+  `article_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `title` varchar(255) DEFAULT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `article_body` text,
+  PRIMARY KEY (`name`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `article`
+--
+
+LOCK TABLES `article` WRITE;
+/*!40000 ALTER TABLE `article` DISABLE KEYS */;
+INSERT INTO `article` VALUES ('home','a%3A1%3A%7Bs%3A4%3A%22name%22%3Bs%3A14%3A%22infrastructure%22%3B%7D','Y','2010-05-26 06:00:00','YASiteKit Home','Home Page Content','<p><img class=\"box\" style=\"float: left;\" src=\"/img/Waving.png\" alt=\"YAM\" /></p>\r\n<p><span style=\"font-size: medium;\"><strong>Welcome to the Home of YASiteKit</strong></span></p>\r\n<p>YASiteKit is Yet Another Site Kit - a Web Page construction kit.</p>\r\n<p>(this is YAM - Yet Another Mascott - the YASiteKit icon (tm))</p>\r\n<p>YASiteKit is a LAMP based, Open Source project licensed under the terms of LGPL version 3 - with some parts which are licensed under other, but equally liberal terms.</p>\r\n<p>It is designed by and for programmers and designers, but does <em>not</em> yet have a graphical interfacee. You have to actually <em>write code</em> in order to use it.</p>\r\n<p>&nbsp;</p>'),('about','a%3A1%3A%7Bs%3A4%3A%22name%22%3Bs%3A14%3A%22infrastructure%22%3B%7D','Y','2010-05-26 06:00:00','About YASiteKit','A Quick Article about YASiteKit','<p><img style=\"float: left;\" title=\"Waving.png\" src=\"/images/admin/Waving.png\" alt=\"Waving.png\" width=\"54\" height=\"79\" /></p>\r\n<p>YASiteKit is Yet Another Site Kit - a colleciton of stuff for building web sites.</p>\r\n<p>The status is early to medium Alpha - but that is mostly because I\'m afraid to call it Beta.</p>\r\n<p>Is it in use?</p>\r\n<p>Yes - this site is running using the kit - as are about 3 or 4 more</p>'),('privacy','a%3A1%3A%7Bs%3A4%3A%22name%22%3Bs%3A14%3A%22infrastructure%22%3B%7D','Y','2010-06-02 06:00:00','Privacy Policy','YASiteKit Privacy Policy','<p>We encrypt private stuff - such as email addresses, passwords, etc.<img style=\"float: right;\" title=\"Shhh.png\" src=\"/images/admin/Shhh.png\" alt=\"Shhh.png\" width=\"57\" height=\"83\" /></p>\r\n<p>Otherwise we really don\'t have any privacy policy, except that we don\'t use anyone\'s information for anything except controlling access to the site and sending messages to registered members.</p>\r\n<p>Use at your own risk.</p>'),('terms','a%3A1%3A%7Bs%3A4%3A%22name%22%3Bs%3A14%3A%22infrastructure%22%3B%7D','Y','2010-06-02 06:00:00','Terms and Conditions','','<p><img style=\"float: left;\" title=\"LookingFront.png\" src=\"/images/admin/LookingFront.png\" alt=\"LookingFront.png\" width=\"51\" height=\"79\" /></p>\r\n<p>This software is released under LGPL Version 3. [some segments - in particular tinyMCE and jQuery have their own licenses and terms which superceed ours. Refer to their documentation for details]</p>\r\n<p>The following is stolen from the GNU Emacs Copying legal boilerplate - and applies to YASiteKit in total.</p>\r\n<p>15. Disclaimer of Warranty.</p>\r\n<p>&nbsp;THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BYAPPLICABLE LAW.&nbsp; EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHTHOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTYOF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULARPURPOSE.&nbsp; THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAMIS WITH YOU.&nbsp; SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OFALL NECESSARY SERVICING, REPAIR OR CORRECTION.</p>\r\n<p>16. Limitation of Liability.</p>\r\n<p>IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITINGWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYSTHE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANYGENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THEUSE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OFDATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRDPARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OFSUCH DAMAGES.</p>'),('help-side-bar','a%3A1%3A%7Bs%3A4%3A%22name%22%3Bs%3A4%3A%22help%22%3B%7D','Y','2010-06-02 06:00:00','Viewing Side Bar','How to Unview the Side Bar','<p>The side bar comes up partially hidden.</p>\r\n<p>You can bring it forward in two ways:</p>\r\n<p><img class=\"box\" style=\"float: left; margin-right: .5em;\" title=\"SideBarHelp-1.png\" src=\"/images/admin/SideBarHelp-1.png\" alt=\"SideBarHelp-1.png\" width=\"125\" height=\"91\" /></p>\r\n<p>1. if you have a modern browser with mouse - touch screens don\'t work for this - just move your mouse over the side-bar and it should pop forward.</p>\r\n<p>2. If you\'re browser has Javascript enabled, then you can \'click\' anywhere in the side-bar and it will come forward. Click it again to send it back.</p>\r\n<p>3. There is no 3 - sorry.</p>\r\n<p>That\'s all folks . . .</p>'),('login-help','a%3A1%3A%7Bs%3A4%3A%22name%22%3Bs%3A4%3A%22help%22%3B%7D','Y','2010-06-03 06:00:00','Login Help','Login Form Description','<p><img style=\"float: left; margin-right: .5em;\" title=\"LoginForm.png\" src=\"/images/admin/LoginForm.png\" alt=\"LoginForm.png\" width=\"150\" height=\"76\" /></p>\r\n<p><span style=\"font-size: large;\">Login Help</span></p>\r\n<p>The login form has three basic parts:</p>\r\n<p>First - user id. This is where you type your userid. Userid\'s are more or less words. We call them \'symbols with no embedded blanks and made up of letters, digits, and the underscore character (_)\'</p>\r\n<p>Second - you password. This is your super secret password which you keep next to the poison capsule on the chain around your neck. Keep it safe and only use it here.</p>\r\n<p>Finrally, there is the reCaptcha box, which has a bunch of parts.</p>\r\n<p>The top half has two (2) words which are munged up so that computers and graphical analysis algorithms have fits, but you can (usually) read them. Type <em>both</em> words in the blank area below. Separate them with a space. Then, when you hit the Login button, we will send them off to the recaptcha web site to see if you got them correct.</p>\r\n<p>BTW - recaptcha.net provides this service for free. They do it because one of those words you see didn\'t make it through the optical-character-reader program someplace, so they\'re asking us for help. In particular, you\'re helping translate machine read text into computer bits by helping decode a word they had trouble with.</p>\r\n<p>That\'s it, except for the three buttons in the middle below the words. They are:</p>\r\n<p>the arrows - if you really can\'t make out the words, then click it and reCaptcha will send you two more.</p>\r\n<p>the speaker - click it to have new words read to you. This is supposed to help if you\'re blind, but then you have to click the button, so I\'m not really sure how well it works.</p>\r\n<p>the Question Mark - click it and reCaptcha will pop up a help window - if you will let them.</p>\r\n<p>So, to login, get to the login form (click the help button on the footer), fill in the form, and then click <span style=\"font-size: small;\">Submit</span>.</p>\r\n<p>What? you don\'t have a userid and password? Send us a note and tell us why you\'d like one.</p>');
+/*!40000 ALTER TABLE `article` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `articlegroup`
+--
+
+DROP TABLE IF EXISTS `articlegroup`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `articlegroup` (
+  `name` varchar(40) NOT NULL DEFAULT '',
+  `title` varchar(255) DEFAULT NULL,
+  `description` text,
+  PRIMARY KEY (`name`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `articlegroup`
+--
+
+LOCK TABLES `articlegroup` WRITE;
+/*!40000 ALTER TABLE `articlegroup` DISABLE KEYS */;
+INSERT INTO `articlegroup` VALUES ('infrastructure','Infrastructure','Permanent Site Articles'),('help','Help Articles','General Help Articles - that is, how to use the site');
+/*!40000 ALTER TABLE `articlegroup` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `cookietrack`
+--
+
+DROP TABLE IF EXISTS `cookietrack`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `cookietrack` (
+  `cookie` varchar(40) NOT NULL DEFAULT '',
+  `first_access` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `prev_access` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `latest_access` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`cookie`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `cookietrack`
+--
+
+LOCK TABLES `cookietrack` WRITE;
+/*!40000 ALTER TABLE `cookietrack` DISABLE KEYS */;
+INSERT INTO `cookietrack` VALUES ('w[1_HH]Vc&3uj.>zdrNC?%%&X-%mA&c:apv):T]z','2010-05-26 09:38:25','2010-06-13 02:11:43','2010-06-13 04:08:37');
+/*!40000 ALTER TABLE `cookietrack` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `downloadauthorization`
+--
+
+DROP TABLE IF EXISTS `downloadauthorization`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `downloadauthorization` (
+  `auth_number` char(32) NOT NULL DEFAULT '',
+  `email` varchar(255) DEFAULT NULL,
+  `product_key` varchar(255) DEFAULT NULL,
+  `expires_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `expired` char(1) DEFAULT NULL,
+  `uses_left` int(11) DEFAULT NULL,
+  PRIMARY KEY (`auth_number`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `downloadauthorization`
+--
+
+LOCK TABLES `downloadauthorization` WRITE;
+/*!40000 ALTER TABLE `downloadauthorization` DISABLE KEYS */;
+/*!40000 ALTER TABLE `downloadauthorization` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `message`
+--
+
+DROP TABLE IF EXISTS `message`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `message` (
+  `email` varchar(255) NOT NULL DEFAULT '',
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `name` varchar(255) DEFAULT NULL,
+  `ordernumber` varchar(255) DEFAULT NULL,
+  `subject` varchar(255) DEFAULT NULL,
+  `message` text,
+  PRIMARY KEY (`email`,`timestamp`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `message`
+--
+
+LOCK TABLES `message` WRITE;
+/*!40000 ALTER TABLE `message` DISABLE KEYS */;
+/*!40000 ALTER TABLE `message` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `newsletter`
+--
+
+DROP TABLE IF EXISTS `newsletter`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `newsletter` (
+  `letter_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `headline` varchar(255) DEFAULT NULL,
+  `description` text,
+  `newsletter_body` text,
+  PRIMARY KEY (`letter_date`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `newsletter`
+--
+
+LOCK TABLES `newsletter` WRITE;
+/*!40000 ALTER TABLE `newsletter` DISABLE KEYS */;
+/*!40000 ALTER TABLE `newsletter` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pageview`
+--
+
+DROP TABLE IF EXISTS `pageview`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pageview` (
+  `cookie` varchar(40) NOT NULL DEFAULT '',
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `url` text,
+  PRIMARY KEY (`cookie`,`timestamp`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pageview`
+--
+
+LOCK TABLES `pageview` WRITE;
+/*!40000 ALTER TABLE `pageview` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pageview` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `product`
+--
+
+DROP TABLE IF EXISTS `product`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `product` (
+  `name` varchar(255) NOT NULL DEFAULT '',
+  `product_owner` text,
+  `product_group` text,
+  `title` varchar(255) DEFAULT NULL,
+  `description` text,
+  `fullfilment_url` varchar(255) DEFAULT NULL,
+  `available` char(1) DEFAULT NULL,
+  `on_hand` int(11) DEFAULT NULL,
+  `sold_count` int(11) DEFAULT NULL,
+  `downloadable` char(1) DEFAULT NULL,
+  `price` float DEFAULT NULL,
+  `weight` float DEFAULT NULL,
+  `weight_units` char(2) DEFAULT NULL,
+  `length` float DEFAULT NULL,
+  `width` float DEFAULT NULL,
+  `breadth` float DEFAULT NULL,
+  `length_units` char(2) DEFAULT NULL,
+  `paypal_buy_now_buttonid` varchar(255) DEFAULT NULL,
+  `paypal_buy_now_websitecode` text,
+  `paypal_buy_now_emaillink` varchar(255) DEFAULT NULL,
+  `paypal_add_to_cart_buttonid` varchar(255) DEFAULT NULL,
+  `paypal_add_to_cart_websitecode` text,
+  `paypal_add_to_cart_emaillink` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`name`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `product`
+--
+
+LOCK TABLES `product` WRITE;
+/*!40000 ALTER TABLE `product` DISABLE KEYS */;
+INSERT INTO `product` VALUES ('coffe_cup','a%3A1%3A%7Bs%3A6%3A%22userid%22%3Bs%3A5%3A%22admin%22%3B%7D','a%3A1%3A%7Bs%3A4%3A%22name%22%3Bs%3A5%3A%22stuff%22%3B%7D','YAM on a Cup','<p>The Official YASiteKit Coffee Cup.</p>\r\n<p>Featuring YAM - Yet Another Mascot - both Front and Back views.</p>\r\n<p><img class=\"box\" style=\"float: left;\" title=\"fancy-mug.jpg\" src=\"/images/admin/fancy-mug.jpg\" alt=\"fancy-mug.jpg\" width=\"150\" height=\"150\" /></p>','http://www.zazzle.com/yasitekit_fancy_mug-168141982602565841?gl=yasitekit','Y',0,0,'N',0,0,'lb',0,0,0,'in','','','','','','');
+/*!40000 ALTER TABLE `product` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `productgrouping`
+--
+
+DROP TABLE IF EXISTS `productgrouping`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `productgrouping` (
+  `name` varchar(40) NOT NULL DEFAULT '',
+  `title` varchar(255) DEFAULT NULL,
+  `userid` text,
+  `description` text,
+  PRIMARY KEY (`name`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `productgrouping`
+--
+
+LOCK TABLES `productgrouping` WRITE;
+/*!40000 ALTER TABLE `productgrouping` DISABLE KEYS */;
+INSERT INTO `productgrouping` VALUES ('stuff','YASiteKit Stuff','a%3A1%3A%7Bs%3A6%3A%22userid%22%3Bs%3A5%3A%22admin%22%3B%7D','<p>Coffee Cups, Shirts, Mouse Pads, Hats and stuff like that From Zazzle Store.</p>');
+/*!40000 ALTER TABLE `productgrouping` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `productorder`
+--
+
+DROP TABLE IF EXISTS `productorder`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `productorder` (
+  `order_number` varchar(40) NOT NULL DEFAULT '',
+  `email` varchar(255) DEFAULT NULL,
+  `product_name` varchar(255) DEFAULT NULL,
+  `buyer_name` varchar(80) DEFAULT NULL,
+  `shipping_address` text,
+  `payment_method` varchar(255) DEFAULT NULL,
+  `invoice` text,
+  `purchase_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `ship_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `receive_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`order_number`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `productorder`
+--
+
+LOCK TABLES `productorder` WRITE;
+/*!40000 ALTER TABLE `productorder` DISABLE KEYS */;
+/*!40000 ALTER TABLE `productorder` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `productview`
+--
+
+DROP TABLE IF EXISTS `productview`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `productview` (
+  `cookie` varchar(255) NOT NULL DEFAULT '',
+  `product_name` varchar(255) NOT NULL DEFAULT '',
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `view_count` int(11) DEFAULT NULL,
+  PRIMARY KEY (`cookie`,`product_name`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `productview`
+--
+
+LOCK TABLES `productview` WRITE;
+/*!40000 ALTER TABLE `productview` DISABLE KEYS */;
+/*!40000 ALTER TABLE `productview` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `rma`
+--
+
+DROP TABLE IF EXISTS `rma`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `rma` (
+  `rma_number` varchar(40) NOT NULL DEFAULT '',
+  `order_number` varchar(40) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `product_name` varchar(255) DEFAULT NULL,
+  `buyer_name` varchar(80) DEFAULT NULL,
+  `purchase_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `rma_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `receive_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `received_condition` char(1) DEFAULT NULL,
+  `notes` text,
+  `received_photo` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`rma_number`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `rma`
+--
+
+LOCK TABLES `rma` WRITE;
+/*!40000 ALTER TABLE `rma` DISABLE KEYS */;
+/*!40000 ALTER TABLE `rma` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sessions`
+--
+
+DROP TABLE IF EXISTS `sessions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sessions` (
+  `id` varchar(255) NOT NULL DEFAULT '',
+  `latest_access` varchar(255) DEFAULT NULL,
+  `data` text,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sessions`
+--
+
+LOCK TABLES `sessions` WRITE;
+/*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
+INSERT INTO `sessions` VALUES ('jokrgfkunrorihn185elnjd1m3','1276317353','time_now|i:1276317353;session_timeout|i:1276360553;inactivity_timeout|i:1276319153;messages|s:102:\"Hi Administrator, you don\'t have administrative authority - please log in under an admin account name\n\";product_menu_mode|s:8:\"products\";user_cookie_value|s:40:\"w[1_HH]Vc&3uj.>zdrNC?%%&X-%mA&c:apv):T]z\";userid|s:5:\"admin\";logged_in|s:1:\"Y\";failure_count|i:0;'),('8gibg06mlf8k067j7f0b7jbq87','1276395569','time_now|i:1276395569;session_timeout|i:1276438769;inactivity_timeout|i:1276397369;user_cookie_value|s:40:\"w[1_HH]Vc&3uj.>zdrNC?%%&X-%mA&c:apv):T]z\";userid|s:5:\"admin\";product_menu_mode|s:8:\"products\";logged_in|s:1:\"Y\";failure_count|i:0;'),('dg7fgh7vk3jr3r9hqek3ij1ri6','1276433986','time_now|i:1276433986;session_timeout|i:1276477186;inactivity_timeout|i:1276435786;user_cookie_value|s:40:\"w[1_HH]Vc&3uj.>zdrNC?%%&X-%mA&c:apv):T]z\";userid|s:5:\"admin\";product_menu_mode|s:8:\"products\";logged_in|s:1:\"N\";failure_count|i:0;');
+/*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `shoppingcart`
+--
+
+DROP TABLE IF EXISTS `shoppingcart`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `shoppingcart` (
+  `order_number` varchar(255) NOT NULL DEFAULT '',
+  `userid` text,
+  `state` char(1) DEFAULT NULL,
+  `open_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `commit_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `production_start_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `final_ship_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `final_receipt_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `rma_close_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`order_number`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `shoppingcart`
+--
+
+LOCK TABLES `shoppingcart` WRITE;
+/*!40000 ALTER TABLE `shoppingcart` DISABLE KEYS */;
+/*!40000 ALTER TABLE `shoppingcart` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `subscription`
+--
+
+DROP TABLE IF EXISTS `subscription`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `subscription` (
+  `email` varchar(255) NOT NULL DEFAULT '',
+  `userid` varchar(255) DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `active` char(1) DEFAULT NULL,
+  `start_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `end_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `include_pics` char(1) DEFAULT NULL,
+  `cancel_reason` char(1) DEFAULT NULL,
+  PRIMARY KEY (`email`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `subscription`
+--
+
+LOCK TABLES `subscription` WRITE;
+/*!40000 ALTER TABLE `subscription` DISABLE KEYS */;
+/*!40000 ALTER TABLE `subscription` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2010-06-13  7:50:31

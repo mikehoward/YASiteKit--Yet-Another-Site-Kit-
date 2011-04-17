@@ -1,0 +1,61 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>DisplayArticle.tpl</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> DisplayArticle.tpl &#8211; Renders Article content</h1>
+
+<p>Created by  on 2010&#8211;02-10.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>Displays the article specified by the <em>name</em> field in the <span class="caps">URL</span> http://site/article/name.</p>
+
+<h2>Variables</h2>
+
+<p>These variables (which <em>default_template.tpl</em> expects) are defined as:</p>
+
+<ul>
+<li>$page_header &#8211; from Article <em>title</em> field</li>
+<li>$page_title &#8211; Globals::$site_name plus Article <em>title</em> field</li>
+<li><span class="caps">ROBOTS</span> meta tag &#8211; set using <em>folow_index</em> field</li>
+<li><span class="caps">DESCRIPTION</span> meta tag &#8211; contains Article <em>description</em> field</li>
+<li>$canonical &#8211; set to absolute <span class="caps">URL</span> if article is defined, otherwise not set.
+Creates the Google specified <em>canonical</em> link</li>
+</ul>
+
+<p>If the article specified does not exist or no article is specified, then these
+variables are filled in using generic information.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

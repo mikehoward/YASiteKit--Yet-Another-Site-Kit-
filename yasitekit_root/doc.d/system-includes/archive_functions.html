@@ -1,0 +1,105 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>archive_functions.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>archive_functions.php &#8211; functions used to dump and recreate database</h1>
+
+<blockquote>
+<p>(c) Copyright 2010 Mike Howard. All Rights Reserved.
+Licensed under <span class="caps">GNU</span> <span class="caps">LGPL</span> Version 3</p>
+</blockquote>
+
+<p>This is a collection of functions used to dump and recreate the database. It is
+used in &#8216;ReloadDB.php&#8217; and various command line scripts.</p>
+
+<h2>Functions</h2>
+
+<ul>
+<li>dump directory checkers. All return <span class="caps">TRUE</span> if the directory passes the tests, otherwise
+and error string. So, to use them, use the tripple equals or not: = = = or ! = =
+<ul>
+<li>dump_dir_readable($dump_dir) &#8211; checks to make sure <em>$dump_dir</em> exists, is a directory, and
+is readable.</li>
+<li>dump_dir_writable($dump_dir) &#8211; makes sure dump_dir is both readable and writable.</li>
+<li>dump_dir_ok($dump_dir) &#8211; checks <em>$dump_dir</em> for existence, readability, writability
+and the existence of required infrastructure files.</li>
+<li>dump_dir_ok_readable($dump_dir) &#8211; same as <em>dump_dir_ok()</em> except it does not check for
+writability.</li>
+</ul>
+</li>
+<li>backup_database_archive($dump_dir) &#8211; creates a subdirectory of <em>$dump_dir</em> and copies all files to it.
+The subdirectory name is the date formed as YYYYMMDDHHmmss.x, where x is an integer starting with 0
+and is used to resolve conflicts when attempting to create two directories within the same second.</li>
+<li>package_objects() and object_file_ar() are service routines used by <em>make_database_archive()</em>.
+They both return arrays of array(object-name, include-path) &#8211; where <em>include-path</em> is
+the correct relative path to put in a <span class="caps">PHP</span> <em>include</em> or <em>require</em> directive.
+<ul>
+<li>package_objects($package_root) &#8211; finds all object files in package directories of
+<em>$package_root</em>. Returns an array of array(object-name, include-path).</li>
+<li>object_file_ar($dir, $include_prefix = &#8217;&#8217;) &#8211; scans <em>$dir</em> for files which conform to the
+YASiteKit object file syntax &#8211; ^[A-Z]\w+\.php$ &#8211; and returns an array of array(object-name, include-path),
+where <em>object-name</em> is the file name with the <em>.php</em> suffix removed and <em>include-path</em>
+is the proper relative path to use in a <span class="caps"><span class="caps">PHP</span></span> <em>include</em> or <em>require</em> statement. [if <em>$include_prefix</em>
+is empty, then it is the file name; if <em>$include_prefix</em> is non-empty then it is used
+to construct the relative path]</li>
+</ul>
+</li>
+<li>make_database_archive($dbaccess, $dump_dir, $private_data_root) &#8211; creates an archive of the specified
+<em>$dbaccess</em> in the specified dump directory (<em>$dump_dir</em>) for all persistent objects in
+<em>$private_data_root / objects</em> and <em>$private_data_root / system / objects</em>.
+Returns <span class="caps">TRUE</span> on success and <span class="caps">FALSE</span> on failure. Echo&#8217;s output wrapped in a &lt;div&gt; in class <em>dump-output</em>.
+<ul>
+<li>$dbaccess &#8211; must be an open DBAccess object</li>
+<li>$dump_dir &#8211; must be a directory path. The function will attempt to create the directory if it
+does not exist.</li>
+<li>$private_data_root &#8211; must be a directory path. It is expected to contain two subdirectories:
+<ul>
+<li>private_data_root / objects &#8211; which contains site-specific objects</li>
+<li>private_data_root / system / objects &#8211; which contains YASiteKit system objects.</li>
+<li><span class="caps"><span class="caps"><span class="caps">NOTE</span></span></span>: it does not matter if a site-specific object shadows a YASiteKit system object. The
+site-specific object definition will be saved &#8211; because of include order &#8211; and the data in the
+database will correctly match.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>rebuild_infrastructure($dbaccess, $dump_dir, $drop_first) &#8211; recreates infrastructure files
+for site using the files: &#8216;_aclass_attribute_defs.php&#8217;, &#8216;_aclass_create_tables.php&#8217;,
+&#8216;_encryptor.php&#8217;, &#8216;_join_tables.php&#8217;, &#8216;_sessions.php&#8217;, &#8216;Parameters.dump&#8217;.
+<em>$drop_first</em> is a boolean which controls whether the tables are dropped and recreated.</li>
+<li>reload_database($dbaccess, $dump_dir, $private_data_root, $drop_first) &#8211; Reloads the database
+data from all of the &#8217;.dump&#8217; files in the dump directory. Creates a new archive after successfully
+reloading the data. <em>$drop_first</em> is a boolean which controls whether tables are dropped and
+recreated.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

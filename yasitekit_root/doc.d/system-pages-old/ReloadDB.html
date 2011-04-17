@@ -1,0 +1,206 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>ReloadDB.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> ReloadDB.php &#8211; Admin Screen for dumping and rebuilding the database</h1>
+
+<p>Created by  on 2010&#8211;04-09.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p><strong>ReloadDB.php</strong> manages archiving and unarchiving the database during
+system upgrades or database engine changes, etc.</p>
+
+<p>It is capable of</p>
+
+<ol>
+<li>creating an archive of the database in a database neutral format which
+is suitable to rebuild the database using any engine supported by DBAccess.</li>
+<li>Reloading the infrastructure of the database. This consists of the structures
+and values which never &#8211; or almost never &#8211; change between database modifications:
+<ol>
+<li>session data &#8211; so sessions can continue accross database rebuilds</li>
+<li>data table definitions</li>
+<li>encryptor definitions and values used in last incarnation
+of the database (necessary to read the data in encrypted fields)</li>
+<li>join table data &#8211; this feature is kind of semi-experimental. Not because
+it doesn&#8217;t work, but because it&#8217;s not clear it is all that useful for web sites.</li>
+</ol>
+</li>
+<li>Detecting changes to the definition of database objects. Creating a map function
+which allows columns to be renamed and the data to be carried over. Detecting
+and announcing changes in data types and assessing the risk involved.</li>
+<li>Reloading the data into the modified database.</li>
+</ol>
+
+<p>This is an interactive program which requires Administrative access in order to
+run.</p>
+
+<p><span class="caps">WARNING</span>: there are still some &#8216;issues&#8217; which haven&#8217;t been completely worked out.</p>
+
+<h2>Access Control and States</h2>
+
+<p>The state of the site is managed by of four database global variables &#8211; which are implemented
+as attributes of the DBAccess object. This is fully discussed in
+<a href="/doc.d/DatabaseState.html">Database State</a> and summarized here</p>
+
+<ul>
+<li>on_line &#8211; T or F &#8211; T if the database can be accessed by regular applications. It is
+momentarily set to F while archiving, rebuilding, and reloading</li>
+<li>database_valid &#8211; T or F &#8211; Set to F just before starting to rebuild the infrastructure.
+Set to T after successfully reloading the data.</li>
+<li>archive_stale &#8211; T or F &#8211; T if the current archive is stale. This prohibits recreating
+the infrastructure or reloading the database</li>
+<li>model_mismatch &#8211; F, T, or X &#8211; Must be F after rebuilding infrastructure. May be
+F or T prior to rebuilding database structure. Database may not be modified if is X.</li>
+</ul>
+
+<p>Only the following combinations of states are legal:</p>
+
+<table style="border:1px solid black;padding:5px;">
+<tr>
+<th style="text-decoration:underline;">on_line</th>
+<th style="text-decoration:underline;">database_valid</th>
+<th style="text-decoration:underline;">archive_stale</th>
+<th style="text-decoration:underline;">model_mismatch</th>
+<th style="text-decoration:underline;">Allowed Actions</th>
+</tr>
+<tr align="center">
+<td>T</td>
+<td>T</td>
+<td>T or F</td>
+<td>F</td>
+<td>use site;</td>
+</tr>
+<tr align="center">
+</tr>
+<tr align="center">
+<td>T</td>
+<td>-</td>
+<td>T</td>
+<td>-</td>
+<td align="left">Create Archive</td>
+</tr>
+<tr align="center">
+<td>T</td>
+<td>T</td>
+<td>F</td>
+<td>F</td>
+<td align="left">Nothing</td>
+</tr>
+<tr align="center">
+<td>F</td>
+<td>F</td>
+<td>F</td>
+<td>F</td>
+<td align="left">Reload Data</td>
+</tr>
+<tr align="center">
+<td>F</td>
+<td>T</td>
+<td>T</td>
+<td>T</td>
+<td align="left">Rebuild Infrastructure, Create Map</td>
+</tr>
+<tr align="center">
+<td>F</td>
+<td>T</td>
+<td>T</td>
+<td>F</td>
+<td align="left">Rebuild Infrastructure</td>
+</tr>
+<tr align="center">
+<td>F</td>
+<td>T</td>
+<td>F</td>
+<td>T</td>
+<td align="left">Create Map</td>
+</tr>
+<tr align="center">
+<td>F</td>
+<td>T</td>
+<td>F</td>
+<td>F</td>
+<td align="left">Reload Data</td>
+</tr>
+<tr align="center">
+<td>-</td>
+<td>F</td>
+<td>-</td>
+<td>-</td>
+<td align="left">Nothing</td>
+</tr>
+</table>
+
+<p>In other words:</p>
+
+<ul>
+<li>if database is <span class="caps">NOT</span> on line, then we can&#8217;t do anything &#8211; so we return</li>
+<li>if the archive is <em>stale</em> the only thing we can do is create an archive</li>
+<li>if the database is <span class="caps">NOT</span> stale, then
+<ul>
+<li>if the database is valid, we can rebuild the infrastructure</li>
+<li>if the database is invalid
+<ul>
+<li>if a map is required and we don&#8217;t have one &#8211; we can create one, but we can&#8217;t
+reload data</li>
+<li>if a map is required and we have one &#8211; we can create one <span class="caps"><span class="caps"><span class="caps">AND</span></span></span> we can reload
+data</li>
+<li>if a map is <span class="caps"><span class="caps"><span class="caps">NOT</span></span></span> required, then we can reload data</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<h2 id="functions">Functions</h2>
+
+<ul>
+<li>render_site_state_form() &#8211; outputs the state of the site and presents
+options to take the site off line or on line.</li>
+<li>render_archive_form() &#8211; outputs a form which presents the state of
+the current archive. If it is stale, presents the choice to create a
+new archive. Also presents the necessity of a map and legality of
+the site. If a map is required, presents the form needed to create one.
+If the map function is defined, presents a description of what it does
+as well as the map creation form.</li>
+<li>render_rebuild_db_form() &#8211; presents the opportunity to rebuild the database,
+if possible. Examines the state of the archive, necessity of a map function,
+state of the map function, legality of the site, and online/offline mode of site.
+If the stars are favorable, then there is a Rebuild Site button. If not, then
+there are instructions detailing what must be done to expose the magic button.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

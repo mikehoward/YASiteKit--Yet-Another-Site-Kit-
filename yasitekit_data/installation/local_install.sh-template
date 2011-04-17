@@ -1,0 +1,27 @@
+#! /bin/sh
+# This script is run on the local system.
+# it works on Mac OS X and should work on *nix machines
+# You will need to re-write it if you're on windows
+
+PROGNAME="`basename $0`"
+
+cp config-dir/index.php-{site_installation}  {document_root}/index.php
+cp config-dir/htaccess-{site_installation}   {document_root}/.htaccess
+cp config-dir/config.php-{site_installation} {private_data_root}/config.php
+
+if [ -s fix_perms.out ] ; then
+	. fix_perms.out
+else
+	HTTPD_UID="`ps -el | grep httpd | awk '$1 != 0 { print $1 ; exit ;}'`"
+	SCRIPT_USER="\$3 == $HTTPD_UID { print \$1 ; exit ;}"
+	HTTPD_USER="`awk -F: "$SCRIPT_USER" /etc/passwd`"
+	SCRIPT_GID="\$3 == $HTTPD_UID { print \$4 ; exit ;}"
+	HTTPD_GID="`awk -F: "$SCRIPT_GID" /etc/passwd`"
+	SCRIPT_GROUP="\$3 == $HTTPD_GID { print \$1 ; exit ; }"
+	HTTPD_GROUP="`awk -F: "$SCRIPT_GROUP" /etc/group`"
+fi
+
+test -d {document_root}/images || mkdir {document_root}/images
+test -d {document_root}/products || mkdir {document_root}/products
+sudo chgrp ${HTTPD_GROUP} {document_root}/images {document_root}/products
+sudo chmod 775 {document_root}/images {document_root}/products

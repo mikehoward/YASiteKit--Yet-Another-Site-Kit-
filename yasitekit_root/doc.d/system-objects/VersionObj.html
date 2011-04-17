@@ -1,0 +1,216 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>VersionObj.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> VersionObj.php &#8211; VersionObj supports version management for YASiteKit sites &#8211; with support for concurrent access</h1>
+
+<p>Created by  on 2010&#8211;06-17.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved. Licensed under the terms of the <span class="caps">GNU</span> Lesser
+<span class="caps">GNUL</span> License, version 3.  See <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a> for details.</p>
+</blockquote>
+
+<blockquote>
+<p><span class="caps">THIS</span> <span class="caps">SOFTWARE</span> <span class="caps">HAS</span> NO <span class="caps">WARRANTEE</span> OR <span class="caps">REPRESENTATION</span> <span class="caps">FOR</span> <span class="caps">FITNESS</span> OF <span class="caps">PURPOSE</span>.
+<span class="caps">USE</span> AT <span class="caps">YOUR</span> <span class="caps">OWN</span> <span class="caps">RISK</span>.</p>
+</blockquote>
+
+<p>The VersionObj class encapsulates a versioning method used to track changes
+in YASiteKit models. The method attempts to avoid version errors by restricting
+the actions which can be applied to a version instance.</p>
+
+<p>First of all, versions are of two types: master and dev (for development).
+All versions carry two version numbers: <em>master_version</em> and <em>dev_version</em>.
+Increment rules are: <em>master</em> instances only increment <em>master_version</em>,
+wherease <em>development</em> versions increment <em>dev_version</em>. The idea here is that
+when a copy of the <em>master</em> is checked out, the <em>dev_version</em> will indicate the
+changes to Persistent objects in the Development version and the <em>master_version</em>
+stays constant to show where it started from. Occational &#8216;hg updates&#8217; will bring
+in new <em>master_version</em> numbers, so that the versioning in the development version
+can be made to track along the master repository.</p>
+
+<p>Further, version instances are stored in the site database table &#8211; in the
+table named &#8216;_version&#8217; and in the &#8216;_version&#8217; file of each archive which is
+created.</p>
+
+<p>The Version numbers &#8211; <em>master_version</em> and <em>dev_version</em> &#8211; are read-only
+attributes. They must be incremented using the <em>inc()</em> method. The <em>inc()</em>
+method will also automatically save the version object if it is was obtained
+from the database. If it was obtained from a file, then <em>inc()</em> will neither
+update the version number nor save the instance.</p>
+
+<p>Version numbers are simple, monotonically increasing integers &#8211; beginning
+with 1 (except that <em>dev_version</em> is 0 in a <em>master</em> instance).</p>
+
+<ul>
+<li><a href="#instantiation">Instantiation</a></li>
+<li><a href="#attributes">Attributes</a></li>
+<li><a href="#class_methods">Class Methods</a></li>
+<li><a href="#instance_methods">Instance Methods</a></li>
+</ul>
+
+<h2 id="instantiation">Instantiation</h2>
+
+<p>Cannot be created using the <strong>new</strong> operator. Use one of the <a href="#class_methods">class methods</a>
+below.</p>
+
+<h2 id="attributes">Attributes</h2>
+
+<p>Attribute access is controlled via <span class="caps">PHP</span> Magic methods. In short, all attributes
+are read-only and can only be initialized (which happens automatcally).
+<em>master_version</em> and <em>dev_version</em> may only be incremented using the
+<em>inc()</em> method. Nothing can be unset and only these attributes can be tested with isset().</p>
+
+<ul>
+<li>master &#8211; boolean &#8211; <span class="caps">TRUE</span> if this is the one and only master version. Else <span class="caps">FALSE</span></li>
+<li>owner &#8211; string &#8211; a userid satisfying [a-z][_a-z0&#8211;9]* which is normally the userid
+of some human responsible for this versioning instance. If <em>master</em> is <span class="caps">TRUE</span>, then
+it may make sense for <em>owner</em> to be the <em>site_id</em> (<a href="/doc.d/config.html#site_info">see config.php</a>
+for details).</li>
+<li>master_version &#8211; int &#8211; master version number &#8211; montonically increasing beginning at 1.
+This is the number incremented if <em>master</em> is <span class="caps">TRUE</span>.</li>
+<li>dev_version &#8211; int &#8211; this is a development version number. In a <em>master</em> instance, it will
+always be zero (0). In a <em>development</em> version it will also a monotonically
+increasing integer beginning with 1. This is the number incremented if <em>master</em> is <span class="caps">FALSE</span>.</li>
+<li>save_param &#8211; one of <span class="caps">FALSE</span>, a file path (string), or a DBAccess object</li>
+</ul>
+
+<h2 id="class_methods">Class Methods</h2>
+
+<p>Instantiation Methods:</p>
+
+<ul>
+<li>initialize_versioning($master, $owner, $master_version = 1, $dev_version = 1) &#8211; returns a shiney new
+initialized from thin air VersionObj object OR throws an exception. The <em>dev_version</em>
+attribute is set to 0 if <em>$master</em> is <span class="caps">TRUE</span>, else 1. This method is designed to use
+to initialize a the versioning information for a master or development site.</li>
+<li>get_from_db($dbaccess) &#8211; returns a VersionObj instance using data in the
+database table &#8217;<em>versioning&#8217;. This method saves _$dbaccess</em> in the object so that
+<em>inc()</em> knows to both increment something and write it to the database.</li>
+<li>get_from_file($path) &#8211; reads and parses the versioning file at <em>$path</em> and
+returns a VersionObj instance or throws a VersionObjException exception.
+This method saves the version path in the VersionObj instance so that <em>inc()</em>
+knows to ignore attempts to change the version number or overwrite the file.
+See <a href="#file_format">File Format</a> for to understand the contents and format of VersionObj files.</li>
+</ul>
+
+<p>Other Class Methods:</p>
+
+<ul>
+<li>versioning_path($dir_path) &#8211; returns the name of a VersionObj file in or to create in
+<em>$dir_path</em> OR <span class="caps">FALSE</span> if <em>$dir_path</em> is not a directory. Does <span class="caps">NOT</span> check for writability
+or existence of versioning file.</li>
+<li>new_version_obj_form($action, $submit_val, $save_to) &#8211; returns a string containing a form which can be used
+to create a new VersionObj and save it in either a database or a file. <em>$save_to</em> must be
+either &#8216;file&#8217; or &#8216;db&#8217;. <em>$submit_val</em> is the string which will be submitted with the form
+under the name &#8216;submit&#8217;.</li>
+<li>process_ver_obj_form($rc, $dbaccess) &#8211; processes the results of submitting a versioning_obj_form.
+<em>$rc</em> is a <a href="/doc.d/system-includes/request_cleaner.html">RequestCleaner</a>. <em>$dbaccess</em>
+is a <a href="/doc.d/system-includes/dbaccess.html">DBAccess instance</a>. The object will be saved
+according to the instructions in the form.</li>
+</ul>
+
+<h2 id="instance_methods">Instance Methods</h2>
+
+<ul>
+<li>inc() &#8211; if <em>save_param</em> is a DBAccess instance, then this method
+adds 1 to either the <em>master_version</em> number or <em>dev_version</em>, depending on
+the value <em>master</em> <span class="caps">AND</span> writes the updated object to the database. Otherwise, it silently
+returns.</li>
+<li>write(save_param, comment = <span class="caps">FALSE</span>) &#8211; writes the VersionObj object to a storage medium.
+If the <em>save_param</em> attribute of the instance is <span class="caps">NULL</span>, then it is set to the <em>save_param</em>
+argument. This value then determines how <em>inc()</em> works from then on. See Correct Way . . . below.
+<em>save_param</em> can be either a path to a file or a DBAccess object. <em>comment</em> is a comment
+string which will be written at the head of the file IF <em>save_param</em> is a file path. <em>comment</em>
+is ignored for DBAccess storage. Throws lots of VersionObjException&#8217;s.</li>
+</ul>
+
+<h2 id="correct_usage">The Correct Way to Do Things</h2>
+
+<p>The correct way to initialize versioning for a site &#8211; either development or database &#8211; is to create a fresh VersionObj using <em>initialize_versioning()</em> and then <em>immediately</em>
+write it to the database.</p>
+
+<p>The correct way to increment a version after finding a model mismatch is:</p>
+
+<ol>
+<li>update the archive &#8211; this will update the data without touching the old <em>AClass</em>
+definitions. This will write the current VersionObj in the database to the archive</li>
+<li>inc() the current VersionObj &#8211; this will increment the version number and write through
+to the database</li>
+<li>backup the archive and flush the archive directory</li>
+<li>Create a new archive &#8211; which will write the updated version number to the new archive</li>
+</ol>
+
+<h2 id="data_storage">VersionObj Data Storage</h2>
+
+<p>VersionObj information can be saved and retrieved from a database or file.</p>
+
+<h3 id="database_format">Database Format</h3>
+
+<p>Data is saved in a database in the table &#8216;_versioning&#8217;, which has four fields:</p>
+
+<ul>
+<li>master &#8211; char(1) &#8211; either T or F</li>
+<li>owner &#8211; char(40) &#8211; note the hard limit on the length of owner userid&#8217;s</li>
+<li>master_version &#8211; int</li>
+<li>dev_version &#8211; int</li>
+</ul>
+
+<p>The <em>owner</em> field is the key field, hence version&#8217;s are uniquely specified by owner.</p>
+
+<h3 id="file_format">VersionObj File Format</h3>
+
+<p>A VersionObj file is a text file containing several lines of data.
+Each line is a variable definition, a comment, or blank.</p>
+
+<ul>
+<li>comments begin with the hash mark (#) (optionally preceeded by white space)
+and extend to the end of the line</li>
+<li>blank lines consist entirely of white space characters</li>
+<li>variable definitions consist of a variable name followed by an equal sign (=)
+followed by the definition. Both variable names and definitions are single tokens
+with no embedded blanks or punctuation. Only the following variable names are recognized
+(possible values are given as regular expressions):
+<ul>
+<li>master &#8211; value satisfies [TF]</li>
+<li>owner &#8211; value satisfies [a-z][_a-z0&#8211;9]*</li>
+<li>master_version &#8211; value satisfies \d+</li>
+<li>dev_version &#8211; value satisfies \d+</li>
+</ul>
+</li>
+</ul>
+
+<p>Anything else is illegal.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

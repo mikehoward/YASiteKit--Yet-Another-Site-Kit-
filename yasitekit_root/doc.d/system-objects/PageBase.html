@@ -1,0 +1,218 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>PageBase.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> PageBase.php &#8211; The Base Class for <span class="caps">HTML</span> Page Abstraction &#8211; a container for PageSeg and</h1>
+
+<p>Created by  on 2010&#8211;03-15.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<h2 id="page">PageBase Class</h2>
+
+<p>The PageBase is not a complete page. It is designed to be extended by a single
+Page class object which defines the layout of a page and then uses the
+resources defined PageBase to implement page specialization, access control, and
+rendering.</p>
+
+<p>All dynamic YASiteKit pages are constructed as a heirarchic tree of PageSeg
+objects. Briefly there are four types of PageSeg elements:</p>
+
+<ul>
+<li>PageSegText &#8211; which contain static text</li>
+<li>PageSegFile &#8211; which interpolate and execute an includeable file</li>
+<li>PageSegList &#8211; which are lists of PageSeg objects &#8211; allowing arrays</li>
+<li>PageSegElt &#8211; an extension of PageSegList which wraps a list of PageSeg
+objects in an <span class="caps">HTML</span> Element &#8211; making it convenient to create &lt;div&gt;, etc
+elements programatically.</li>
+</ul>
+
+<p>See <a href="/doc.d/system-objects/PageSeg.html">PageSeg.php</a> for details.</p>
+
+<h3>Subclassing</h3>
+
+<pre>class Page extends PageBase {
+&nbsp;  public function __construct($page_name)
+&nbsp;  {
+&nbsp;    parent::__construct($page_name);
+&nbsp;    #page layout definition
+&nbsp;    $this-&gt;prepare('name of content segment' (defaults to 'content'));
+&nbsp;  } // end of __construct()
+}
+</pre>
+
+<p>where <em>$page_name</em> is the name of a file in the include path which
+contains the main content of the page.</p>
+
+<p>Laying out pages can be</p>
+
+<p>The Page object inherits special methods for handling meta and style sheet links.
+Using these allows the Page object to define defaults which individual pages
+may redefine as necessary.</p>
+
+<p>The default meta tags are named:</p>
+
+<ul>
+<li>content-type &#8211; value is &#8216;text/html; charset=utf-8&#8217;</li>
+<li>imagetoobar &#8211; value is &#8216;no&#8217;</li>
+<li>robots &#8211; value is &#8216;noindex, nofollow&#8217;</li>
+</ul>
+
+<p>The default style sheets are expected to be:</p>
+
+<ul>
+<li>stylesheets_screen &#8211; path: /css/screen.css &#8211; media: screen</li>
+<li>stylesheets_print &#8211; path: /css/print.css &#8211; media: print</li>
+<li>stylesheets_ie &#8211; path: /css/ie.css &#8211; media: screen &#8211; (default element contains conditional)
+comments</li>
+<li>stylesheets_handheld &#8211; path: /css/handheld.css &#8211; media: handheld</li>
+</ul>
+
+<h3>Attributes</h3>
+
+<p>Predefined attributes are:</p>
+
+<ul>
+<li>page_title &#8211; string &#8211; optional &#8211; defines the <em>title</em> content in the <em>head</em> element of
+the page. Defaults to the name of the page content file with underscores (_) translated
+into spaces, the extension stripped, and all words in Title case.</li>
+<li>page_heading &#8211; string &#8211; optional &#8211; defines the string used in the {page_heading} token.
+Typically used in the content part of the page enclosed in the top level <em>h1</em> element.
+Defaults to <em>page_title</em>.</li>
+<li>required_authority &#8211; special &#8211; optional &#8211; specifies the minimum required authority
+for a logged in account in order to access this page. Default is <span class="caps">NULL</span> &#8211; which allows
+the page to be displayed without a logged in account.
+<ul>
+<li>the value can be either a comma separated list in a string or an array. The values
+are legal Account::authority values.</li>
+</ul>
+</li>
+</ul>
+
+<p>Additional attributes may be created within the page-content-file. These attributes
+can be used to fill in &#8216;template&#8217; parameters within the page &#8211; both in the
+page content and all rendered parts of the page. <a href="#page_templating">see page templating</a></p>
+
+<h3>Class Methods</h3>
+
+<p>None</p>
+
+<h3>Instance Methods</h3>
+
+<ul>
+<li>get_by_name(segment-name) &#8211; returns the segment object specified. See
+<a href="PageSeg.html">PageSeg</a> for details.</li>
+<li>format_meta($name, $content) &#8211; returns a properly formatted a meta element.
+The <em>$name</em> part is looked up and generates either a <em>name</em> or <em>http-equivalent</em>
+attribute, as is appropriate.</li>
+<li>add_meta($name, $content) &#8211; appends a meta tag to the <em>meta</em> segment of the
+<em>head</em> segment. Overwrites any pre-existing, identically named element.</li>
+<li>format_style_sheet($path, $media) &#8211; returns a properly formatted style
+sheet length.</li>
+<li>add_style_sheet($name, $path, $media, $ie = <span class="caps">NULL</span>) &#8211; creates a PathSegText element
+named &#8216;style_sheets_{name}&#8217; and adds a link element  to the <em>stylesheets</em>
+segment of the <em>head</em> segment. Uses <em>format_style_sheet()</em> to create the
+link element. Overwrites any pre-existing, identically named element.
+<em>$ie</em> is the Microsoft IE conditional which will be literally dropped into
+the conditional comment for conditional style sheets.
+For example, if <em>$ie</em> is &#8216;LT 6&#8217;, the link will begin with  &lt;!&#8212;if LT 6>&gt;</li>
+<li>displayableP($accont_obj = <span class="caps">FALSE</span>) &#8211; returns <span class="caps">TRUE</span> if this page is displayable by
+the specified account, else <span class="caps">FALSE</span>.</li>
+<li>render() &#8211; returns the page rendered properly.</li>
+<li>dump(msg=&#8217;&#8217;) &#8211; returns a diagnostic string describing the Page object.</li>
+</ul>
+
+<h3>Default Page Segments as Specialized for YASiteKit.org</h3>
+
+<p>The page is made up of a collection of objects derived from the PageSeg class.
+They may be accessed by getting the object by name and then using the
+<span class="caps">API</span> described in the PageSeg documentation.</p>
+
+<p>Defined segments are:</p>
+
+<ul>
+<li>html_page &#8211; PageSegList &#8211; basic html element contains three elements
+<ul>
+<li>doctype &#8211; PageSegText &#8211; defaults to <span class="caps"><span class="caps">HTML</span></span> 4.01 Transitional</li>
+<li>head &#8211; PageSegElt &#8211; <ul>
+<li>title &#8211; PageSegText &#8211; just contains the title element</li>
+<li>meta &#8211; PageSegText &#8211; initialized with defaults, but can be augmented using the
+<em>add_meta(name, content)</em> method</li>
+<li>stylesheets &#8211; PageSegText &#8211; initialized with defaults, but can be augmented using the
+<em>add_style_sheet(path, media)</em> method.</li>
+</ul>
+</li>
+<li>body &#8211; PageSegElt &#8211; contains the body
+<ul>
+<li>header &#8211; PageSegFile &#8211; interpolates the &#8216;header.php&#8217; file</li>
+<li>content-container &#8211; PageSegElt (div) &#8211; is a wrapper for the content
+<ul>
+<li>content &#8211; PageSegElt (div) &#8211; container for content file
+<ul>
+<li>content_file &#8211; PageSegFile &#8211; interpolates file specified in the
+Page constructor. Typically the value in Globals::$page_name.</li>
+<li>account-nav &#8211; PageSegFile &#8211; interpolates &#8216;account_nav.php&#8217;</li>
+</ul>
+</li>
+<li>image-menu &#8211; PageSegFile &#8211; interpolates &#8216;product_menu.php&#8217;</li>
+</ul>
+</li>
+<li>main-nav &#8211; PageSegFile &#8211; interpolates &#8216;main_namv.php&#8217;</li>
+<li>footer &#8211; PageSegFile &#8211; interpolates &#8216;footer.php&#8217;</li>
+<li>javascript &#8211; PageSegList &#8211; a place to add javascript
+<ul>
+<li>jquery &#8211; PageSegFile &#8211; interpolates &#8216;javascript.php&#8217;</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<h2 id="page_templating">Page Templating</h2>
+
+<p>Pages are constructed by concatenating a number of chunks together &#8211; each of which
+is encapsulated in a PageSeg object. The final PageSeg rendering may contain
+tokens of the form {foo}, where <em>foo</em> is expected to be an attribute name defined
+for the current Page object and &#8217;{&#8217; &#8217;}&#8217; are literally left and right brace characters.
+<span class="caps">NOTE</span>: no white space may occur within the attribute name or between the attribute
+name and either brace.</p>
+
+<p>After all PageSegs have been rendered and their renderings concatenated,
+the Page object then performs a substitution of all sustitution <em>tokens</em> using
+the definitions of all currently defined attributes.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

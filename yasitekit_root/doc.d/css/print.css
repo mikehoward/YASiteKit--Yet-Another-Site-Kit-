@@ -1,0 +1,117 @@
+/*
+#doc-start
+bq. Copyright Mike Howard, 2008-2009. All Rights Reserved.
+Licenced for general use under the terms of the GNU Lesser Public License, Version3.
+See "www.gnu.org":http://www.gnu.org/licenses/ for details
+#doc-end
+*/
+/* general selector setups */
+
+body {
+    margin: 0;
+    padding: 0;
+    background: #eee;
+}
+img { page-break-inside: avoid;}
+h1 { font-size: 1.3em; font-family: sans-serif; font-weight:bolder; color:#001080; background-color: #ddddd0}
+h2 { font-size: 1.10em; font-family: sans-serif; font-weight:medium; background-color: #dddd00;}
+h3 { font-size: 1.10em; font-family: sans-serif; font-style: italic; background-color: #dd9999}
+h4 { font-size: 1em; font-family: sans-serif; font-style: italic; background-color: #44aa44}
+h5 { padding-left: 1em;font-size: 0.9em; font-family: sans-serif; font-weight:normal;font-style: italic;background-color:#CCCCCC;}
+ul ul, ol ul { list-style: square;}
+
+/* forms */
+form {
+  padding: 5px;
+  margin: 5px;
+  border: #ddd solid 1px;
+  background: #eee;
+}
+form ul, form ol { margin-left: -2em; margin-right:1em;}
+form li { list-style: none outside; clear:both}
+form input { color: inherit; background-color: inherit;}
+form li label { float: left; font-weight: bold; color:inherit ; width: 15em;}
+.field-width-15em { width: 15em;}
+form li input { color: inherit; background-color: white;}
+
+.inline-form {
+  display:inline-block; /* This might maybe should be 'inline' instead */
+  background:inherit;
+  padding:0
+}
+/* named sections */
+#header { display:none;}
+#left { display:none;}
+#footer { display:none;}
+
+#content-container {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+li label, li input { color: inherit; background-color: inherit;}
+
+
+/* colors used in striping */
+.light-medium-gray {background:#eee;}
+.medium-light-gray {background:#ddd;}
+.medium-gray {background:#aaa;}
+.red { background:red;}
+.light-medium-red {background:#ffeeee;}
+.medium-light-red {background:#ffdddd;}
+.medium-red {background:#ffaaaa;}
+.light-medium-green {background:#eeffee;}
+.medium-light-green {background:#ddffdd;}
+.medium-green {background:#aaffaa;}
+.green {background:#00ff00;}
+.light-medium-blue {background:#eeeeff;}
+.medium-light-blue {background:#ddddff;}
+.medium-medium-blue {background:#ccccff;}
+.medium-blue {background:#aaaaff;}
+.blue {background:#0000ff;}
+.yellow {background:yellow;}
+
+/* text classes */
+.text-red { color: red;}
+.text-blue { color:blue;}
+.text-green { color:green;}
+.text-magenta { color:magenta;}
+.text-cyan {color:cyan;}
+.text-yellow { color:yellow;}
+.text-black {color:black;}
+.bold { font-weight: bold;}
+.italic { font-style: italic;}
+.smaller { font-size: smaller;}
+.bigger { font-size: large;}
+
+/* form table styling */
+table th { text-align: left;}
+
+/* formatting elements */
+.line { margin:0; padding:0; border-top: solid #aaa 1px; height: 1px;}
+/* float classes */
+.clear { clear:both ;}
+.clear-left { clear:left ;}
+.clear-right { clear:right ;}
+.float-left { float: left;}
+.float-right { float: right;}
+/* vertical alignment classes*/
+.valign-top { vertical-align: top;}
+.valign-middle { vertical-align: middle;}
+.valign-middle { vertical-align: bottom;}
+/* li classes */
+.li-none { list-style: none outside; }
+/* box stuff */
+.underline { margin-bottom: 3px; border-bottom: 1px solid black;}
+.outline { margin: 3px; border: 1px solid black; padding:3px;}
+.outline-thick, .thick-outline { margin: 3px; border: 2px solid black; padding:3px;}
+/* text alignment */
+.text-right { text-align:right;}
+.text-left { text-align:left;}
+.text-center { text-align:center;}
+
+/* Article Navigation */
+.next_prev { float: right; padding:6px; border: solid brown 1px;}
+.next_prev li { display: inline; list-style: none; padding-left: 4px; border-left: solid 2px brown; font-style: italic;}
+.next_prev li form { display: inherit; background: inherit;}
+.next_prev li form input { font-style: italic;}
+.next_prev li:first-child { border-left: none; }

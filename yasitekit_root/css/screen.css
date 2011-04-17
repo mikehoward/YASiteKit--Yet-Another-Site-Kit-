@@ -1,0 +1,342 @@
+/* screen.css */
+body {
+  position:relative;
+  background: #fff;
+  color:#000;
+  margin:0 .5em;
+  padding:0;
+  min-width: 40em;
+}
+
+/* header div */
+#header {
+/*  font-size:2em; */
+  background: #fff;
+  position:relative;
+  height:7em;
+/*  outline: 1px solid red; /* */
+}
+#header #logo {
+  background: #555;
+  position:absolute;
+  top: -.2em;
+  left:.5em;
+  font-size: 1.5em;
+  line-height: 1.7em;
+}
+#header a img { background:#ddd; border:3px solid black; }
+#header a:hover img { background: #fff; }
+#header h1 { font-size:2em; }
+
+/* main navigation sty`ng */
+#main-nav {
+  list-style:none inside;
+  position: absolute;
+  top: 3.2em;
+  width:auto;
+  height:auto;
+}
+#main-nav-home, #main-nav-info, #main-nav-doc, #main-nav-view-by, #main-nav-help { position: relative;}
+#main-nav > ul >li { display: block; width:auto;}
+#main-nav >ul > li > ul { display: none;}
+#main-nav > ul > li { 
+  /* outline: blue 3px dotted; /* */
+  border:1px solid #ddddff;
+  float:left; margin:0 1em; width:9em;
+}
+/* #main-nav:hover { width:auto;} /* */
+#main-nav:hover ul { background-color: #fff;}
+/* #main-nav:hover > ul > li { width: auto;} /* */
+#main-nav:hover > ul > li:hover > ul { display: block; }
+/* #main-nav:hover > ul > li:hover > ul > li { background-color:#fff;} /* */
+
+#main-nav .level-1:hover { background: #ddd; color:#111;}
+#main-nav .level-2 {
+  display:none;
+  width:12em; /* */
+  position: absolute;
+  top:20%;
+  left:20%;
+  margin-left: -0.5em;
+  padding-left: 0;
+  list-style-type: none;
+  list-style-position: inside;
+}
+#main-nav .level-1:hover .level-2 { display:block; z-index: 30; } /* background-color:#fff; color:#ddd; } */
+#main-nav .level-1:hover .level-2 a {
+  color: #000000;
+  font-size:smaller;
+  padding: 2px;
+  border:1px solid black;
+}
+#main-nav .level-1:hover .level-2 a:hover { color: #111; background-color:#fff; }
+
+#main-nav #main-nav-home { width: 4em;}
+
+#main-nav-help li {
+  background-color: transparent;
+  color: #000000;
+}
+/*#main-nav-help li:hover { color:#111; background-color: #eee; }*/
+
+#secondary-menu {
+  position:absolute;
+  background-color:#ffffff;
+  border: 1px solid #aaa;
+  top:0;
+  left:0;
+  margin-right:40%;
+  padding-right: .5em;
+  height:100%;
+  overflow:auto;
+  z-index:10;
+}
+#secondary-menu:hover { z-index:30; } /* */
+
+#secondary-nav a, #product-menu a { background:#ffffff; border:1px black solid;}
+#secondary-nav a:hover, #product-menu a:hover { background:#dddddd; color:#111111;}
+
+
+a { color: #000000; text-decoration: none; }
+.hover { color:inherit; text-decoration:none; background:inherit;}
+a:hover, .hover:hover { color: #111; background: #ddd;}
+input[type=submit]:hover, input[type=reset]:hover {
+  cursor:pointer;
+}
+
+/* account navigation styling */
+#account-nav { 
+  position:absolute;
+/*  top:-.5em;
+  left:-.5em;
+*/
+  top:.5em;
+  right: .5em;
+  background:#eee;
+  margin-right: .5em;
+  z-index: 1000;
+}
+#account-nav ul {
+  display:none;
+  margin-left:0;
+  margin-right:1em;
+  padding:5px;
+  border:1px solid black;
+  background: #ddd;
+  color:#000000;
+}
+#account-nav:hover ul { display:block;;}
+#account-nav ul li.title {
+  text-align:center;
+  border-bottom:1px solid white;
+  padding:5px;
+  font-weight:bold;
+}
+
+/* content box */
+#content-container {
+  position: relative;
+  background:inherit;
+  margin:0;
+  border:none;
+  padding:0;
+  width:100%;
+  height:38em; /* */
+  z-index:0;
+}
+#content-container #content {
+  background:#fff;
+  min-height:40em;
+  position: relative; /* absolute; /* */
+  margin-left: 10%; /* */
+  margin-bottom: .5em;
+  overflow: auto;
+  right:0;
+  width: 90%;
+  /* height:100%; */
+  float: right; /* */
+  z-index:20;
+}
+#content-container #content #metadata {
+  padding-top: 0;
+  margin-right: 65%;
+  list-style: none;
+}
+
+#content-container #product-menu-title { margin:.2em .4em; font-weight:bold;font-size:larger;}
+#content-container #product-menu li { text-align:left;} /* */
+#content-container #content #metadata li li { border: 1px solid #ddddff; padding:2px; margin:1px 0;}
+#content-container #content #purchase-info input[type=submit] { background:#555; color: #000000; text-decoration: none;}
+#content-container #content #purchase-info input[type=submit]:hover { background:#ddd; color: #111; cursor:pointer;}
+#content-container #content #product-title  {
+  float:right;
+  position: relative;
+  width:60%;
+/*  outline: red 1px dashed; /* */
+}
+#content-container #content #product-title p {
+  margin:0;
+  margin-top: .5em;
+  margin-bottom: .5em;
+  padding:0;
+}
+
+#content-container #content #image {
+  clear: both;
+  float:right;
+  position: relative;
+  width:60%;
+/*  outline: red 1px dashed; /* */
+}
+
+/* footer styling */
+#footer { list-style: none; text-align:center;}
+#footer li { list-style: none; display:inline; padding-left:1em;}
+
+
+
+/* list styling */
+ul li { list-style: none;}
+ul li label { margin-right: 1em;}
+ul li input { margin-left: 1em;}
+
+/* Styling for specific id's */
+#login-form form { width: 30em;}
+
+/* display classes */
+.inline {display:inline;}
+.block {display:block;}
+.inline-block {display:inline-block;}
+
+.dump-output {
+  clear: both;
+  white-space:pre;
+  text-indent: 2em;
+  background: #aa8888;
+  color: black;
+  border: 1px dashed black;
+  padding:5px;
+  width:auto;
+  margin: 5px 2px;
+}
+
+/* float control */
+.float-left {float:left;}
+.float-right {float:right;}
+.clear {clear:both;}
+.clear-left {clear:left;}
+.clear-right {clear:right;}
+
+/* text styling */
+.sans-serif { font-family: Verdana, Helvetica, Arial, sans-serif;}
+.serif { font-family: Georgia, Palatino, serif;}
+.center { text-align: center;}
+.underline { text-decoration: underline;}
+.line-through { text-decoration: line-through;}
+.padded { padding: .5em 1em;}
+.italic { font-style: italic;}
+.bold { font-weight: bold;}
+.smaller { font-size: smaller;}
+.larger { font-size: larger;}
+.vcenter { vertical-align: middle;}
+.super { vertical-align: super; font-size:small;}
+.sub { vertical-align: sub; font-size: small;}
+
+/* box-ie stuff */
+.box { border:1px solid #111; padding:.2em;}
+.lower-line { border-bottom: 1px solid #111; padding-bottom: .2em;}
+.upper-line { border-top: 1px solid #111; padding-top: .2em;}
+.left-line { border-left: 1px solid #111; padding-left: .2em;}
+.right-line { border-right: 1px solid #111; padding-right: .2em;}
+
+/* semantic classes */
+.required { color: red;}
+
+/* width control - by percent */
+.width-5 { width:5%;}
+.width-10 { width:10%;}
+.width-15 { width:15%;}
+.width-20 {width:20%;}
+.width-25 {width:25%;}
+.width-30 {width:30%;}
+.width-35 {width:35%;}
+.width-40 {width:40%;}
+.width-45 {width:45%;}
+.width-50 {width:50%;}
+.width-55 {width:55%;}
+.width-60 { width:60%; overflow:auto;}
+.width-65 { width:60%; overflow:auto;}
+.width-70 { width:70%;}
+.width-75 { width:75%;}
+.width-80 { width:80%;}
+.width-85 { width:85%;}
+.width-90 { width:90%;}
+.width-95 { width:95%;}
+
+/* object display / edit */
+.obj-edit-form { float:left; border:1px solid white; padding:5px;}
+.obj-display-form { }
+
+/* error message styling */
+.error-fixed-format {
+  white-space:pre-wrap;
+  background: #eee;
+  padding:.2em;
+  border: .1em red solid;
+  color:red;
+/*  width:30%;
+  position:absolute;
+*/
+  top:0;
+  right:0;
+}
+.ok {
+    background: #ae0;
+    padding:.2em;
+    border: .1em green solid;
+    color:#62f;
+/*  //  width:30%;
+  //  position:absolute;
+*/
+    top:0;
+    right:0;
+}
+.error, .error-formatable {
+    background: #eee;
+    padding:.2em;
+    border: .1em red solid;
+    color:red;
+/*  //  width:30%;
+  //  position:absolute;
+*/
+    top:0;
+    right:0;
+}
+.warning, .advisory {
+  padding:.2em;
+  border: .1em black solid;
+  top:0;
+  right:0;
+}
+.warning {
+    background: #fdd;
+    color:#600;
+    border-color: red;
+}
+.advisory {
+  color: #000000;
+  background: #ffc000;
+  border-color: #0000ff;
+}
+
+/* special styling */
+li.do-paypal-api {
+  padding-top:1em;
+  padding-bottom:1em;
+  float:right;
+}
+button.do-paypal-api { 
+  background:green;
+  color:yellow;
+  padding:5px;
+}

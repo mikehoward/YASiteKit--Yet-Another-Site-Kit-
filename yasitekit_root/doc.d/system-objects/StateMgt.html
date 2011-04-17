@@ -1,0 +1,116 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>StateMgt.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>StageMgt.php &#8211; the State Management Object</h1>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>This module defines the site state management object <a href="#state_mgt">StateMgt</a>,
+which is used to control the state of the system and coordinate the current
+model with the database, safe archiving, etc etc.</p>
+
+<p>It is rarely used, so it is only included in those files and functions where needed.</p>
+
+<h2 id="state_mgt">State Management</h2>
+
+<p><strong>StateMgt</strong> is an object which cannot be instantiated. This makes it sort of a
+cheap singleton &#8211; for those into Patterns. It only has static methods</p>
+
+<p>State is maniuplated by responding to program generated &#8216;events&#8217;. Events are
+defined as a prescribed set of strings which are passed to the <em>handle_event</em>
+method. This method examines the event transition table and either makes the
+required state transition or throws an exception.</p>
+
+<h3>Events</h3>
+
+<ul>
+<li>GO_OFFLINE &#8211; Take site offline</li>
+<li>GO_ONLINE &#8211; take site on line</li>
+<li>SAVE_RECORD &#8211; a persistent data object which has changed is written to the database</li>
+<li>REFRESH_ACLASS_HASHES &#8211; the aclass hash values have been refreshed. The hashes are
+used to detect changes in the model. This event signals the successful refresh
+of the hashes after the model and database have been synchronized</li>
+<li>MODEL_MISMATCH_EDIT &#8211; an AClass model change has been detected which invalidates
+the data definitions in the database. The change can be corrected by a mechanical
+rebuild of the database. Typical cause is adding or deleting a field from a model
+object.</li>
+<li>ILLEGAL_EDIT &#8211; an AClass model change has been detected which invalidates
+the data definitions in the database. Database rebuild is impossible without
+correction. This must be corrected by editing the model. Typical cause is changing
+the definition of the key field(s) of an AClass object</li>
+<li>RESTORATIVE_EDIT &#8211; A privious version of the site model has been restored and
+so it matches the AClass hashes</li>
+<li>START_REBUILD &#8211; The start of a database rebuild</li>
+<li>FINISH_REBUILD &#8211; Database rebuild has finihed</li>
+<li>CREATE_ARCHIVE &#8211; An archive has been successfully created. Archives can only
+be created if the site is off line, the current archive is invalid, and the database
+is valid. Further, the model and database must be either in sync or differ only
+by a legal edit.</li>
+</ul>
+
+<h3>Attributes</h3>
+
+<p>None</p>
+
+<h3>Class Methods</h3>
+
+<ul>
+<li>StateMgt::events() &#8211; returns an array containing all the names of defined
+events.</li>
+<li>StateMgt::change_state_value($state_name, $new_value) &#8211; changes database
+state <em>$state_name</em> to <em>$new_value</em>. Rolls back if resulting state is illegal.
+Throws exceptions on errors in state name, value, and legality of new state.</li>
+<li>StateMgt::legal_state_changeP($state_name, $next_val) &#8211; returns <span class="caps">TRUE</span> if changing
+state <em>state_name</em> to <em>next_val</em> is a legal given the current state of the system.
+<span class="caps">NOTE</span>: this does not guarantee that the resulting state is legal.</li>
+<li>StateMgt::state_transitions_for(event) &#8211; returns the map from site state
+as defined as a 4-tuple (see <a href="/doc.d/StateTransitions3.html">State Transitions 3</a>).
+The returned array has state tuples as keys and arrays of state variable changes
+as values. [empty arrays indicate a legal state for the given event, but no variable
+changes required &#8211; see SAVE_RECORD for an example]</li>
+<li>StateMgt::handle_event(event) &#8211; changes the state of the system in response to the event.
+Throws exception if the event is not defined or the site is not in a state which
+can handle the event</li>
+<li>StateMgt::rollback() &#8211; restores the previous state of the system. This is useful if a process
+failure results in not changing the state of the site. (see REFRESH_ACLASS_HASHES for
+an example of the use of <em>rollback()</em>).</li>
+</ul>
+
+<h3>Instance Methods</h3>
+
+<p>None</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

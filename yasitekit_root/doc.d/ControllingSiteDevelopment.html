@@ -1,0 +1,374 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>ControllingSiteDevelopment.textile</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="./css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1>Development-Control &#8211; Controlling Site Development</h1>
+
+<p style="clear:both;" class="advisory"><span class="caps">NOTE</span>: This is a Work In Progress. This Document is
+a Draft Document.</p>
+
+<p style="clear:both;padding-top:1em;">Site development almost always follows the same pattern:</p>
+
+<ol>
+<li>copy the demo site</li>
+<li>change the name of the site to a new name and change the root and private data
+directory names</li>
+<li>edit the config.php file(s)</li>
+<li>hack the local apache configuration files to point to the development site so it
+can be served. Usually as a Virtual Host</li>
+<li>add the site name to /etc/hosts or equivalent</li>
+<li>bring up the site in a browser to see what you&#8217;ve got. Then swear a little, fix
+errors and repeat until it comes up</li>
+<li>sign on as Admin and write the basic articles &#8211; About, Home, Terms, Privacy,
+and help articles.</li>
+<li>create your first Archive</li>
+<li>take a nap</li>
+</ol>
+
+<p>After the nap, you start hacking. If you don&#8217;t need any new AnInstance objects &#8211; like a specialized Product or fancy new Newsletter, you just hack away at the
+<span class="caps">CSS</span>, Menu definitions and maybe a few more pages. Put them in the private data
+subdirectories named for those purposes. <strong>don&#8217;t touch anything below <em>system</em></strong></p>
+
+<p>You do this and save down your data by creating new archives every once in a while.</p>
+
+<p>Life is simple.</p>
+
+<p><span class="caps">BUT</span> if you need to add a persistent object or create a custom version of one,
+then you need to understand <strong>Site Versioning</strong> and <strong>Maps</strong>.</p>
+
+<p>First, the rules for creating new AnInstance Objects.</p>
+
+<ol>
+<li>The objects go in <em>private-data / objects</em>. This is first on the
+include path, so your definitions override the system. There are
+no name collisions.</li>
+<li>The Management Page goes in <em>private-data / pages</em></li>
+<li>Don&#8217;t delete anything from <em>system / objects</em> or <em>system / pages</em></li>
+<li>steal as much codes as possible</li>
+<li>you can usually make do what you want by defining new fields and/or
+changing the data type of existing fields.</li>
+<li>it&#8217;s <span class="caps">ILLEGAL</span> to change the definition of any of the key fields of an
+existing object. You can do what you want copying the existing object
+and giving it a new name.</li>
+<li>read the <a href="/doc.d/system-includes/aclass.html">aclass.php</a> documentation if you
+have questions.</li>
+</ol>
+
+<p>Now that you&#8217;ve changed something in the model structure (by creating a modified
+version of a previously existing object), you have to instruct the
+Archive and Restore system how to do it&#8217;s job. This is called &#8216;creating
+a map&#8217; and &#8216;System Conversion&#8217;.</p>
+
+<p>In order to do this, we have to get complicated and introduce Site Versioning.</p>
+
+<p>Site Versioning refers to the general process of managing changes to the
+data structure of a site. It does not refer to the evolution of data in
+the site, but it does facilitate converting data between versions of the
+site.</p>
+
+<p>It gets a bit complex in the general case, so we use a deliberately simplified
+method and rely on judgement to avoid creating unworkable messes.</p>
+
+<h2>Concurrent Development Issues</h2>
+
+<p>This model doesn&#8217;t work well with two or more developers working simultaneously.</p>
+
+<p>How to patch it up?</p>
+
+<h3 id="master_slave_concurrent_dev">Master site integration Method</h3>
+
+<p>We have a master site which has it&#8217;s own version number &#8211; again, a simple,
+monotonically increasing integer.</p>
+
+<p>We have one site for each developer. The developer &#8216;checks out&#8217; a copy of
+the master site, complete with master site version number (&#8216;master site version N&#8217;)
+and starts hacking. The checked out site is now &#8216;developer version 1&#8217;.</p>
+
+<p>Developer does something which causes a version increment. This becomes
+&#8216;developer version 2&#8217;, but stays at &#8216;master site version N&#8217;.</p>
+
+<p>Continues, eventually developer is happy and decides to check in his work to
+the master site, so he/she/it sends it to the master Master, who is in charge
+of checking in changes.</p>
+
+<p>At this point, Master sees that the main site is at &#8216;master site version M&#8217; &#8211; an increase of (M-N) versions beyond the developer&#8217;s version. Master has a
+big snit fit and throws the code in the waste basket.</p>
+
+<p>Plan B: Before sending his developed site to master Master, developer creates
+an archive of his local site. He pulls down a copy of the code from the master
+site and does a merge. Several days later, he staggers to his feet and repeats
+this process. When the code is stable, he quickly (so as not to lose his window
+of opportunity) does a <a href="#site_restore_convert"><strong>Site Conversion</strong></a> using his
+local archive as the <a href="#map"><strong>Source</strong></a> and the merged code as <a href="#map"><strong>Target</strong></a>.
+He archives this and ships an <strong>Update Package</strong>:#update_package_ to master Master.</p>
+
+<p>master Master then checks the version numbers of the submitted patch.</p>
+
+<ol>
+<li>If the submitted <strong>Update Package</strong> is at a lower &#8216;master version number&#8217; than
+the current &#8216;master version number&#8217;, the master Master rejects the update
+and tells the developer to start over.</li>
+<li>if the submitted &#8216;master version number&#8217; is greater than the current &#8216;master
+version number&#8217;, master Master shoots the developer or laughs at the joke &#8211; 50&#8211;50
+odds, determined by flipping &#8216;the unbiased coin&#8217;</li>
+<li>if the &#8216;master version number&#8217; matches the current &#8216;master version number&#8217;
+and the developer version number is &#8216;1&#8217;, then master Master concludes that
+no AnInstance objects have been harmed, and so simply updates the master code
+and increments the &#8216;master code version number&#8217; (WHAT!!!! &#8211; where did this come from????)</li>
+<li>finally, if &#8216;master version number&#8217;s match and &#8216;developer version number&#8217; >= 2,
+then master Master performs a <strong>Site Conversion</strong>:#site_restore_convert and
+prays that nothing malicious has happened.</li>
+</ol>
+
+<h4 id="update_package">Update Package for Concurrent Development</h4>
+
+<p><span class="caps">TBD</span></p>
+
+<p>It will contain &#8211; at the least:</p>
+
+<ul>
+<li>version numbers: master version number and developer version number.</li>
+<li>attribute definitions and properties for all defined AnInstance objects</li>
+<li>A Code patch which will update between the master version and the submitted
+revision.</li>
+</ul>
+
+<h3 id="distributed_concurrent_dev">Distributed Version Method</h3>
+
+<p>This is too hard.</p>
+
+<h2>Definitions and Functional Rquirements</h2>
+
+<p>This section defines several technical terms:</p>
+
+<ul>
+<li><a href="#site_versioning">Site Versioning</a></li>
+<li><a href="#version_archive">Version Archive</a></li>
+<li><a href="#version_number">Version Number</a></li>
+<li><a href="#site_version">Site Version</a></li>
+<li><a href="#site_restore_convert">Site Restoration and Conversions</a></li>
+<li>a <a href="#map">Map</a></li>
+<li>a <a href="#map_template">Map Template</a></li>
+<li><a href="#create_map">Map Creation</a></li>
+<li><a href="#map_review">Map Review/Approval</a></li>
+</ul>
+
+<p>These Definitions constitute the Functional Requirements for Site Versioning and Site
+Conversion.</p>
+
+<h3 id="site_versioning">Site Versioning</h3>
+
+<p><strong>Site Versioning</strong> refers to the data needed to completely characterize a site
+at a specific point in time and with a specific data model.</p>
+
+<h3 id="version_archive">Version Archive</h3>
+
+<p>A <strong>Version Archive</strong> is a collection of site data, data model parameters, and
+database table definitions. The collection is sufficiently complete so that
+it is possible to:</p>
+
+<ol>
+<li>recreate the site at that version &#8211; assuming a compatible software base is available</li>
+<li>given a different version of the site, determine if a map can be created to load
+the data from this archive into the different version</li>
+<li>create a map &#8211; if required &#8211; to coordinate the data load into the different site</li>
+</ol>
+
+<p><strong>Version Archive</strong> physically consist of a collection of files in a directory.
+The name of the directory is constructed from the site name and version number
+of the archive. For example, if the site is named &#8216;foo&#8217; and the <strong>Version Number</strong>
+is &#8216;12, then the <strong>Version Archive</strong> will be in a directory named &#8216;foo-12&#8217;.</p>
+
+<h3 id="version_number">Version Number</h3>
+
+<p>A <strong>Version Number</strong> is a monotonically increasing integer which specifies the
+version of a <strong>Version Archive</strong>. Version numbers are incremented when a <strong>Version Archive</strong>
+is created and an analysis of the most recently versioned archive indicates that
+a map will be required to convert between them.</p>
+
+<p>The first <strong>Version Number</strong> is 1.</p>
+
+<p>The <strong>Version Number</strong> of the live system is either the highest existing version number
+or the highest plus 1, in the case of a model mismatch between the highest versioned
+archive and the live system.</p>
+
+<h3 id="site_version">Site Version</h3>
+
+<p>A <strong>Site Version</strong> consists of the <strong>Version Number</strong> and the information necessary to
+create the models used in the site. This consists of the AnInstance object definitions
+for every AnInstance object in the site. The definitions consist of two arrays:</p>
+
+<ul>
+<li>attribute_defs &#8211; which defines the attributes &#8211; name, data type, and display name</li>
+<li>attribute_properties &#8211; which define all the ancillary information for each field,
+including specifying which fields are key fields.</li>
+</ul>
+
+<h3 id="site_restore_convert">Site Restoration and Conversion</h3>
+
+<p>A <strong>Site Restoration</strong> is the process of creating a database from a specified
+<strong>Version Archive</strong> for a site with the same <strong>Site Version</strong> as the archive.</p>
+
+<p>A <strong>Site Conversion</strong> is the process of creating a database from a specified
+<strong>Version Archive</strong> for a site with a <span class="caps">DIFFERENT</span> <strong>Site Version</strong> than the
+archive is for.</p>
+
+<h3 id="map">Map</h3>
+
+<p><a href="img/MapConstructionWorkflow.jpg?target=:blank"><img src="img/MapConstructionWorkflow.jpg" style="width:30%;padding:.5em;float:right;" title="Map Construction Workflow" alt="Map Construction Workflow" /></a></p>
+
+<p><strong>Map</strong> functions are <em>only</em> required for <strong>Site Conversions</strong>. The chosen <strong>Version Archive</strong>
+which is the source of the data is called the <strong>Source</strong>. The <strong>Site Version</strong>
+which the database is being created for is called the <strong>Target</strong>.</p>
+
+<p>A <strong>Map</strong> is a function which takes the values of an AnInstance object from the <strong>Source</strong>
+and returns an associative array of data for an <em>insert_into_table()</em> function. The
+purpose of the <em>map</em> is to convert data to the model used in the <strong>Target</strong>.
+Most frequently it will be used to convert between the latest <strong>Version Archive</strong> and
+the <strong>live site</strong> during development. It may also be used to upgrade an alpha, beta,
+release candidate, or production site to a trial or release version.</p>
+
+<p>The application of the <strong>Map</strong> function to data is called <em>mapping</em>.</p>
+
+<p>AnInstance objects which occur in the <strong>Source</strong>, but not in the <strong>Target</strong> are noted
+with a message, but no mapping will be done.</p>
+
+<p>AnInstance objects which are not in the <strong>Source</strong>, but which are in the <strong>Target</strong>
+are also noted with a message, no mapping will be done.</p>
+
+<p>The <em>map</em> can perform three actions on its input:</p>
+
+<ul>
+<li>discard data fields</li>
+<li>initialize new fields to some default value (usually <span class="caps">NULL</span>)</li>
+<li>rename fields</li>
+</ul>
+
+<p>The <strong>Map</strong> function is named <em>map</em> and has the signature <em>map(object_name, values)</em> where:</p>
+
+<ul>
+<li>object_name &#8211; is the class name of an AnInstance object</li>
+<li>values &#8211; is an associative array of values from <em>object_name</em>&#8216;s data in the <strong>Version Archive</strong>.</li>
+</ul>
+
+<h3 id="map_template">Map Template</h3>
+
+<p>A <strong>Map Template</strong> is an <span class="caps">HTML</span> form which may be used to construct a <strong>Map</strong> function. It
+is produced automatically by analyzing the differences in the AnInstance object definitions
+between a live system (which is currently running and for which the <strong>Map</strong> is being created)
+and a set of saved definitions.</p>
+
+<p>Prior to displaying the map, the model definitions in both the <strong>Source</strong> and the <strong>Target</strong>
+an analyzed for Illegal model changes. If any are detected, then the form is
+not displayed. Instead, a list of the violations is displayed along with a message
+explaining that the conversion is not possible without modifying the <strong>Target</strong>
+model.</p>
+
+<p>If no Illegal model changes are detected, then the form is created.</p>
+
+<p>The <strong>Map Template</strong> contains input elements for each field of each object which
+is missing from or new in the <strong>Target</strong>.</p>
+
+<ul>
+<li>missing field &#8211; a <em>select</em> element with options to delete the element or rename it
+to one of the newly defined fields</li>
+<li>new field &#8211; choices for the initial value. Choices will be either <span class="caps">NULL</span> or a specific
+value which is defined using a <em>text</em> input element.</li>
+</ul>
+
+<p>The template also contains analysis messages for all fields which have changed data
+type. These messages will be either advisory, warnings, or errors.</p>
+
+<ul>
+<li>advisory messages are notices that the type change is OK and that there will be
+no data loss.</li>
+<li>warning messages are notices that the type change will work, but that there may
+be data loss &#8211; typically possible truncation of string data</li>
+<li>error message are notices that the type change is incompatible and that no map
+will be produced.</li>
+</ul>
+
+<h3 id="create_map">Creating a Map</h3>
+
+<p>A <strong>Map</strong> is created by interactively making choices in the <strong>Map Template</strong> form and then
+executing the form.</p>
+
+<p>In executing the map, the mapping choices are analyzed to make sure that they can
+be performed. Illegal choices which are trapped are:</p>
+
+<ul>
+<li>mapping two or more missing fields to the same new field</li>
+<li>an illegal initializer for a new field</li>
+</ul>
+
+<p>If an Illegal choice is detected, the form is redisplayed with a message indicating
+the problem.</p>
+
+<p><strong>Maps</strong> are stored in a pair of files. Each is named _map-site_id-source_version-target_version.ext.</p>
+
+<ul>
+<li>The first five characters are the literals: &#8216;_map-&#8217;</li>
+<li><em>site_id</em> is the site id defined in the site&#8217;s <em>config.php</em> file and which is also used
+in the <strong>Version Archive</strong> directory name</li>
+<li><em>source_version</em> is the <strong>Version Number</strong> of <strong>Source</strong></li>
+<li><em>target_version</em> is the <strong>Version Number</strong> of <strong>Target</strong></li>
+<li><em>ext</em> is either:
+<ul>
+<li>php &#8211; for the actual map</li>
+<li>txt &#8211; for the map description</li>
+</ul>
+</li>
+</ul>
+
+<h3 id="map_review">Reviewing a Map</h3>
+
+<p>Maps are displayed as a simple, textual description of their actions. Each object
+in the <strong>Source</strong> or <strong>Target</strong> for which there is a mapping action will have a section.
+Each field which is mapped will have an entry describing the effect. Advisory
+messages will have a light green background; Warning messages will have
+an orange background.</p>
+
+<p>The purpose of displaying a map is to review it and take one of two actions:</p>
+
+<ul>
+<li>Approve the map &#8211; indicated by clicking the Approve button. This will set
+some <span class="caps">YET</span>-TO-BE-DEFINED persistent datum to indicate approval. This communicates
+to the <strong>Site Conversion</strong> software that it is allowed to proceed.
+<span class="caps">FIXME</span>: resolve this.</li>
+<li>Recreate the map &#8211; indicated by clicking the ReMap button.</li>
+<li>Delete the map &#8211; indicated by clicking the Delete button.</li>
+</ul>
+
+<p>If a requested map does not exist, then the <strong>Map Template</strong> is displayed along with
+an explanatory message.</p>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

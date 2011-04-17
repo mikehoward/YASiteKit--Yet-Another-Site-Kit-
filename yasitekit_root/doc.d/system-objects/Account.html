@@ -1,0 +1,147 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Account.php</title>
+<meta name="Content-Type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/screen.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="/css/print.css" type="text/css" media="print" charset="utf-8">
+
+</head>
+<body>
+<a href="/index.php" class="float-left" style="background:transparent;margin-right:.5em;"
+    title="YASiteKit Home">
+  <img src="/img/YASiteKitLogo.png" alt="YASiteKit.org Home" class="img-link" >
+</a>
+<a href="/doc.d/index.php" class="float-left" title="YASiteKit Doc">
+  <img src="/img/ReadDoc.png" alt="Doc Index" class="img-link">
+</a>
+
+<h1> Account.php &#8211; Account Object</h1>
+
+<p>Created by  on 2010&#8211;02-13.</p>
+
+<blockquote>
+<p>Copyright Mike Howard and Clove Technologies, Inc, 2008&#8211;2010.
+All Rights Reserved.</p>
+</blockquote>
+
+<p>This module defines 2 classes:</p>
+
+<ul>
+<li>Account &#8211; which manages user, artist, staff, and administrator accounts</li>
+<li>AccountManager &#8211; which manages the form used for managing account records.</li>
+</ul>
+
+<h1>Account Class</h1>
+
+<p>The account class holds all the information necessary to identify an account
+and control access to various parts of the site</p>
+
+<h2>Attributes</h2>
+
+<ul>
+<li>userid &#8211; string &#8211; account userid &#8211; must be unique in the system</li>
+<li>password &#8211; string &#8211; salted hash of user&#8217;s passsword</li>
+<li>salt &#8211; char(2) &#8211; salt &#8211; randomly generated &#8211; read only</li>
+<li>name &#8211; string &#8211; user&#8217;s name</li>
+<li>email &#8211; string &#8211; user&#8217;s email address</li>
+<li>cookie &#8211; string &#8211; value of cookie in current, or latest, session</li>
+<li>prev_access &#8211; DateTime &#8211; timestamp of previous access</li>
+<li>latest_access &#8211; DateTime &#8211; timestamp of current access</li>
+<li>authority &#8211; char(1) &#8211; Authority token &#8211; C-Customer, M-Merchant, W-Author,
+A-Artist, S-Staff, X-Administrator</li>
+<li>state &#8211; char(1) &#8211; State token &#8211; A-Active, L-Locked, D-Disabled</li>
+<li>failed_login_attempts &#8211; int &#8211; number of consecutive failed login attempts. Reset
+to 0 upon successful login</li>
+</ul>
+
+<h2>Class Methods</h2>
+
+<ul>
+<li>cmp_latest_access(left, right) &#8211; returns -1, 0, or 1 depending if accounts <em>left</em>
+has a latest_access time earlier, the same, or later than <em>right</em>. Throws exception
+if either are not Account instances. Returns 0 if same account.</li>
+<li>existP(dbaccess, attr_ar) &#8211; returns <span class="caps">TRUE</span> if the Account object exists in
+database <em>dbaccess</em> which corresponds to the attributes in <em>attr_ar</em>. This is
+a convenience method which calls AnInstance::existP()</li>
+<li>list_of_cookied_accounts(dbaccess, cookie_track) &#8211; returns array of accounts which are joined
+to the CookieTrack instance. Sorted in by latest_access &#8211; soonest at head of list.
+Throws exception if <em>cookie_track</em> is not a CookieTrack. <em>dbaccess</em> is an instance of
+DBAccess.</li>
+</ul>
+
+<h2>Instance Methods</h2>
+
+<ul>
+<li>select_account($element_name, $selected, $classes = <span class="caps">NULL</span>, $attributes = <span class="caps">NULL</span>) &#8211; returns a <em>select</em> element populated by all the accounts in the system. The account
+with <em>userid</em> == <em>$selected</em> is marked &#8216;selected&#8217;. Arguments <em>$classes</em> and <em>$attributes</em>
+are added to the openning <em>select</em> tag.</li>
+<li>process_form() &#8211; processes results of an account edit taking into account the authority
+of the logged in account. This allows Staff and Administrators to modify other accounts,
+but restricts normal accounts to only changing their passwords.</li>
+<li>set_password($plain_text_password) &#8211; sets the password to the supplied plain text
+password.</li>
+<li>verify_password(plain-text-password) &#8211; hashes arg and compares with Account value.
+Returns <span class="caps">TRUE</span> if same, else <span class="caps">FALSE</span></li>
+<li>do_failure_pause() &#8211; causes the program to sleep a specified time which increases
+with each failed login attempt.</li>
+<li>increment_failed_login_attempts() &#8211; increments the <em>failed_login_attempts</em> counter
+and pauses a quadratically increases number of seconds before returning</li>
+<li>set_state(new_state) &#8211; sets the state to one of A, L, or D or throws an exception.</li>
+<li>has_authority(required_authority) &#8211; returns Boolean <span class="caps">TRUE</span> or <span class="caps">FALSE</span> &#8211; returns <span class="caps">TRUE</span> if <em>required_authority</em> is false.
+Otherwise, <em>required_authority</em> is either a string containing a comma separated list
+of authority values OR and array of authority values. In this case <em>has_authority()</em>
+only returns <span class="caps">TRUE</span> if:
+<ul>
+<li>account authority is X</li>
+<li>or account authority is S and <em>required_authority</em> is anything but a single X</li>
+<li>or required_authority is C and account authority is anything</li>
+<li>or the account authority is listed in the <em>required_authority</em></li>
+</ul>
+</li>
+<li>logged_in() &#8211; return <span class="caps">TRUE</span> or <span class="caps">FALSE</span> [peeks at Globals::$session_obj->logged_in]</li>
+<li>login() &#8211; marks this account as logged in. Clears various failure counts and forces
+Globals::$account_obj to be <em>this</em></li>
+<li>logout &#8211; marks this account as not logged in.</li>
+<li>dump(msg) &#8211; addes the login state of the account to the normal AnInstance dump()
+output.</li>
+</ul>
+
+<h1>AccountManager Class</h1>
+
+<p>The account manager class extends the AManager class and manages hand editting
+Account data.</p>
+
+<h2>Attributes</h2>
+
+<p>None</p>
+
+<h2>Class Methods</h2>
+
+<p>None</p>
+
+<h2>Instance Methods</h2>
+
+<ul>
+<li>render_form($rc) &#8211; extends and specializes the AManager <em>render_form()</em> method
+to account classes. It exposes appropriate fields depending on the authority
+of the class of account Globals::$account_obj. It also guards against account
+editting by non-logged in users.</li>
+</ul>
+<?php if (Globals::$site_installation != 'development'): ?>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1411156-8");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+<?php endif; ?>
+</body>
+</html>

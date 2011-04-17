@@ -1,0 +1,535 @@
+<h1>imgupload &#8211; Design, Configuration, and Installation</h1>
+
+<p><strong>imgupload</strong> is a tinyMCE plugin which adds file upload to the list of choices
+available to a tinyMCE editor instance. It was written in compliance with
+tinyMCE 3.3.5.1 &#8211; as I understand them, using www.tinymce.com documentation,
+reverse engineering, and trial and error.</p>
+
+<p><strong>imgupload</strong> will work both with jQuery and without. It automatically detects
+the presence of jQuery and will work with either the tinyMCE jQuery plugin
+or using plain, vanilla tinyMCE.</p>
+
+<p>This plugin was developed in the &#8216;approved manner&#8217;: by copying the plugin called <em>example</em>
+and hacking it up. Much of the code follows <em>example</em> very closely except that is handles
+installations with and w/o jQuery and does a lot of event handling and form rewriting
+to create a &#8216;better user experience&#8217;. Aside from that and a bunch of <span class="caps">CSS</span>, they are
+almost identical.</p>
+
+<h2>Licensing</h2>
+
+<p>Licensed under the Lesser <span class="caps">GNU</span> Public License, version 3. See <span class="caps">LGPL</span>-3.txt for details.</p>
+
+<p style="font-weight:bold;"><span class="caps">WARNING</span>: <span class="caps">USING</span> <span class="caps">THIS</span> <span class="caps">CODE</span> IS <span class="caps">INHERENTLY</span> <span class="caps">DANGEROUS</span> <span class="caps">BECAUSE</span> IT <span class="caps">ALLOWS</span> <span class="caps">USERS</span> TO <span class="caps">UPLOAD</span>
+<span class="caps">FILES</span> TO <span class="caps">YOUR</span> <span class="caps">SERVER</span>. IT <span class="caps">HAS</span> NO <span class="caps">MEANINGFUL</span> <span class="caps">SECURITY</span>. <span class="caps">USE</span> AT <span class="caps">YOUR</span> <span class="caps">OWN</span> <span class="caps">RISK</span>.</p>
+
+<p style="font-weight:bold;"><span class="caps">THIS</span> <span class="caps">SOFTWARE</span> IS <span class="caps">MADE</span> <span class="caps">AVAILABLE</span> <span class="caps">WITHOUT</span> <span class="caps">WARRANTY</span>. <span class="caps">USE</span> AT <span class="caps">YOUR</span> <span class="caps">OWN</span> <span class="caps">RISK</span>.</p>
+
+<p style="font-weight:bold;">The following warranty disclaimer and limitation of liability are &#8216;borrowed&#8217;
+from the copying provisions from <span class="caps">GNU</span> Emacs and <span class="caps">EXPLICITLY</span> apply
+to this code:</p>
+
+<blockquote style="font-weight:bold;">
+<p>Disclaimer of Warranty.</p>
+</blockquote>
+
+<blockquote style="font-weight:bold;">
+<p><span class="caps">THERE</span> IS NO <span class="caps">WARRANTY</span> <span class="caps">FOR</span> <span class="caps">THE</span> <span class="caps">PROGRAM</span>, TO <span class="caps">THE</span> <span class="caps">EXTENT</span> <span class="caps">PERMITTED</span> BY
+<span class="caps">APPLICABLE</span> <span class="caps">LAW</span>.  <span class="caps">EXCEPT</span> <span class="caps">WHEN</span> <span class="caps">OTHERWISE</span> <span class="caps">STATED</span> IN <span class="caps">WRITING</span> <span class="caps">THE</span> <span class="caps">COPYRIGHT</span>
+<span class="caps">HOLDERS</span> <span class="caps">AND</span>/OR <span class="caps">OTHER</span> <span class="caps">PARTIES</span> <span class="caps">PROVIDE</span> <span class="caps">THE</span> <span class="caps">PROGRAM</span> &#8220;AS IS&#8221; <span class="caps">WITHOUT</span> <span class="caps">WARRANTY</span>
+OF <span class="caps">ANY</span> <span class="caps">KIND</span>, <span class="caps">EITHER</span> <span class="caps">EXPRESSED</span> OR <span class="caps">IMPLIED</span>, <span class="caps">INCLUDING</span>, <span class="caps">BUT</span> <span class="caps">NOT</span> <span class="caps">LIMITED</span> TO,
+<span class="caps">THE</span> <span class="caps">IMPLIED</span> <span class="caps">WARRANTIES</span> OF <span class="caps">MERCHANTABILITY</span> <span class="caps">AND</span> <span class="caps">FITNESS</span> <span class="caps">FOR</span> A <span class="caps">PARTICULAR</span>
+<span class="caps">PURPOSE</span>.  <span class="caps">THE</span> <span class="caps">ENTIRE</span> <span class="caps">RISK</span> AS TO <span class="caps">THE</span> <span class="caps">QUALITY</span> <span class="caps">AND</span> <span class="caps">PERFORMANCE</span> OF <span class="caps">THE</span> <span class="caps">PROGRAM</span>
+IS <span class="caps">WITH</span> <span class="caps">YOU</span>.  <span class="caps">SHOULD</span> <span class="caps">THE</span> <span class="caps">PROGRAM</span> <span class="caps">PROVE</span> <span class="caps">DEFECTIVE</span>, <span class="caps">YOU</span> <span class="caps">ASSUME</span> <span class="caps">THE</span> <span class="caps">COST</span> OF
+<span class="caps">ALL</span> <span class="caps">NECESSARY</span> <span class="caps">SERVICING</span>, <span class="caps">REPAIR</span> OR <span class="caps">CORRECTION</span>.</p>
+</blockquote>
+
+<blockquote style="font-weight:bold;">
+<p>Limitation of Liability.</p>
+</blockquote>
+
+<blockquote style="font-weight:bold;">
+<p>IN NO <span class="caps">EVENT</span> <span class="caps">UNLESS</span> <span class="caps">REQUIRED</span> BY <span class="caps">APPLICABLE</span> <span class="caps">LAW</span> OR <span class="caps">AGREED</span> TO IN <span class="caps">WRITING</span>
+<span class="caps">WILL</span> <span class="caps">ANY</span> <span class="caps">COPYRIGHT</span> <span class="caps">HOLDER</span>, OR <span class="caps">ANY</span> <span class="caps">OTHER</span> <span class="caps">PARTY</span> <span class="caps">WHO</span> <span class="caps">MODIFIES</span> <span class="caps">AND</span>/OR <span class="caps">CONVEYS</span>
+<span class="caps">THE</span> <span class="caps">PROGRAM</span> AS <span class="caps">PERMITTED</span> <span class="caps">ABOVE</span>, BE <span class="caps">LIABLE</span> TO <span class="caps">YOU</span> <span class="caps">FOR</span> <span class="caps">DAMAGES</span>, <span class="caps">INCLUDING</span> <span class="caps">ANY</span>
+<span class="caps">GENERAL</span>, <span class="caps">SPECIAL</span>, <span class="caps">INCIDENTAL</span> OR <span class="caps">CONSEQUENTIAL</span> <span class="caps">DAMAGES</span> <span class="caps">ARISING</span> <span class="caps">OUT</span> OF <span class="caps">THE</span>
+<span class="caps">USE</span> OR <span class="caps">INABILITY</span> TO <span class="caps">USE</span> <span class="caps">THE</span> <span class="caps">PROGRAM</span> (INCLUDING <span class="caps">BUT</span> <span class="caps">NOT</span> <span class="caps">LIMITED</span> TO <span class="caps">LOSS</span> OF
+<span class="caps">DATA</span> OR <span class="caps">DATA</span> <span class="caps">BEING</span> <span class="caps">RENDERED</span> <span class="caps">INACCURATE</span> OR <span class="caps">LOSSES</span> <span class="caps">SUSTAINED</span> BY <span class="caps">YOU</span> OR <span class="caps">THIRD</span>
+<span class="caps">PARTIES</span> OR A <span class="caps">FAILURE</span> OF <span class="caps">THE</span> <span class="caps">PROGRAM</span> TO <span class="caps">OPERATE</span> <span class="caps">WITH</span> <span class="caps">ANY</span> <span class="caps">OTHER</span> <span class="caps">PROGRAMS</span>),
+<span class="caps">EVEN</span> IF <span class="caps">SUCH</span> <span class="caps">HOLDER</span> OR <span class="caps">OTHER</span> <span class="caps">PARTY</span> <span class="caps">HAS</span> <span class="caps">BEEN</span> <span class="caps">ADVISED</span> OF <span class="caps">THE</span> <span class="caps">POSSIBILITY</span> OF
+<span class="caps">SUCH</span> <span class="caps">DAMAGES</span>.</p>
+</blockquote>
+
+<p>Menu:</p>
+
+<ul>
+<li><a href="#file_structure">File Structure</a></li>
+<li><a href="#function">Function</a></li>
+<li><a href="#config">Configuration</a></li>
+<li><a href="#client">Client Code</a></li>
+<li><a href="#server">Server Code</a></li>
+</ul>
+
+<h2 id="security">Secruity Issues</h2>
+
+<p>While it is <em>possible</em> to modify this code to make it relatively secure in
+specific instances, this is not possible for a general distribution. This
+is because authentication, authorization, and file de-lousing are beyond
+the scope of this project.</p>
+
+<p>Here are some suggestions which could be implemented in order to reduce the
+risk of allowing users to upload files. Risk cannot be completely eliminated.</p>
+
+<p>As always, either consult a security expert or become one yourself before
+trying any of these.</p>
+
+<ol>
+<li>limit use of the utility to humans. The issue here is to avoid denial of
+service attacks by Internet robots, scanners, etc. There are many techniques
+which have been used to do this &#8211; with different levels of effectiveness.</li>
+<li>implement a system of identifying users &#8211; such as user accounts. This also
+has its problems in safeguarding user id&#8217;s, passwords, pass phrases, host
+keys, etc. Again, there are many known techniques for doing so &#8211; again with
+varying levels of effectiveness and risk.</li>
+<li>implement a system for securely authenticating users &#8211; such as a carefully
+designed login method and session control</li>
+<li>secure and segregate uploaded files</li>
+<li>take steps to make sure all uploaded files are not executable. Some simple
+steps include removing execute permission from uploaded files or possibly
+mangling them using some encryption technology so that they cannot be executed
+as they reside on the server.</li>
+<li>implement stringent tests of the file content to ensure that the uploaded
+files contain acceptable content.</li>
+</ol>
+
+<p>In other words: <span class="caps">USE</span> AT <span class="caps">YOUR</span> <span class="caps">OWN</span> <span class="caps">RISK</span>. and I&#8217;M <span class="caps">NOT</span> <span class="caps">RESPONSIBLE</span> OR <span class="caps">LIABLE</span> <span class="caps">FOR</span>
+<span class="caps">ANYTHING</span> <span class="caps">THAT</span> <span class="caps">HAPPENS</span>.</p>
+
+<h2 id="file_structure">File Structure</h2>
+
+<p>The plugin follows the required tinyMCE plugin structure:</p>
+
+<pre>
+imgupload/ - (root directory for plugin - the name is signficant)
+     /dialog.htm - the html for the popup form
+     /editor_plugin.js - the javascript which initializes the plugin - compressed
+     /editor_plugin_src.js - development version of initialization plugin - source of editor_plugin.js
+     /upload-file.php - PHP script which handles server side of file upload
+     /Spec.textile - this document in Textile format
+
+<p>/css/ &#8211; (directory for plugin css)
+     /css/imgupload.css &#8211; css for plugin</p>
+
+<p>/img/ &#8211; (directory for images used by plugin)
+     /img/buttons.png &#8211; local copy of the button background sprite
+     /img/icon.gif &#8211; button icon which activates the plugin &#8211; derived from the <strong>image</strong> icon source
+     /img/icon.psd &#8211; photoshop source for icon.gif</p>
+
+<p>/js/ &#8211; (javascript directory)
+     /js/dialog.js &#8211; javascript which initializes popup and handles popup events</p>
+
+<p>/langs/ &#8211; (language pack directory &#8211; add translations here)
+     /langs/en.js &#8211; plugin initialization language phrases &#8211; US English
+     /langs/en_dlg.js _ popup language phrases &#8211; US English</p>
+
+<p>/Slides/ &#8211; directory for presentation slides
+     /Slides/tinyMCE-jQuery-plugin.ai &#8211; Adobe Illustrator version of slides explaining the plugin design
+</pre></p>
+
+<h2 id="function">Function</h2>
+
+<p>This plugin allows a user to upload a file to a server from within a tinyMCE editor.</p>
+
+<p>To clarify, tinyMCE is not a single editor, but it is a Javascript application which
+can create as many editors as desired for a given web page &#8211; where each separate editor
+provides rich text editing of a specific page element &#8211; typically a &lt;textarea&gt; element.</p>
+
+<p>All the editors are created when tinyMCE is initialized upon page load.</p>
+
+<p>It is not clear when the plugin is initialized, but it likely happens upon editor
+creation &#8211; for each editor. <a href="http://tinymce.moxiecode.com/">See the tinyMCE website</a>
+for detailed information.</p>
+
+<p>Each plugin instance manages a popup window. The popup windows are initialized when
+the user generates an event by clicking the button bound to the plugin and execute
+in their own window context. This necessitates passing some parameters to the
+popup initialization routine from the plugin initialization logic.</p>
+
+<p>Once initialized, this popup is completely event driven.</p>
+
+<h2 id="config">Configuration</h2>
+
+<p>Configuration is takes place in three places:</p>
+
+<ul>
+<li>in the tinyMCE editor configuration when loading tinyMCE</li>
+<li>in the client code &#8211; specifically the event service routine <em>dialog.js</em></li>
+<li>in the server side code &#8211; specifically seriously hacking the model upload
+server side utility: <em>upload-file.php</em></li>
+</ul>
+
+<h3>tinyMCE Configuration</h3>
+
+<ol>
+<li>Parameters &#8211; imgupload takes no parameters</li>
+<li>plugins list &#8211; add &#8216;imgupload&#8217; to the list</li>
+<li>theme_advanced_buttons? : add &#8216;imgupload&#8217; to the list you want the button icon
+to appear in</li>
+</ol>
+
+<p>Here is a sample snip from the tinyMCE configuration object:</p>
+
+<pre>
+  . . .
+
+<p>plugins: &#8217;...,imgupload&#8217;,
+   . . .
+   theme_advanced_buttons2: &#8217;...,anchor,image,imgupload,...&#8217;;
+   . . .
+</pre></p>
+
+<h3>client code &#8211; <em>dialog.js</em></h3>
+
+<p>Locate the lines contaning &#8216;upload-file.php&#8217; and change them to the <span class="caps">URL</span> for
+your specific server side code. There are two places and both are commented</p>
+
+<h3>server code</h3>
+
+<p>See <a href="#server_config">server configuration</a> below.</p>
+
+<h2 id="client">Client Side</h2>
+
+<h3>Plugin Initialization</h3>
+
+<p>The plugin is initialized by running &#8216;editor_plugin.js&#8217; &#8211; or &#8216;editor_plugin_src.js&#8217;,
+which is the development version of &#8216;editor_plugin.js&#8217;.</p>
+
+<p><strong>editor_plugin_src.js</strong> is responsible for:</p>
+
+<ul>
+<li>loading the correct language pack &#8211; which, for US English, is <em>imageupload/langs/en.js</em>. (see below)</li>
+<li>creating the plugin &#8211; by calling _tinymce.create(). (see below)</li>
+<li>adding the plugin to the PluginManager by calling tinymce.PluginManager.add()</li>
+</ul>
+
+<h4>Note on Language Packs</h4>
+
+<p>Loading a language pack seems to do two things:</p>
+
+<ol>
+<li>determines the language being used by the user and looks it up in <em>/langs/</em> using
+the standard two character language identifiers (e.g. <em>en</em> for US English)</li>
+<li>creates a Javascript object named <em>imgupload</em> which has all the attributes.</li>
+</ol>
+
+<p>If you look at /langs/en.js and /langs/en_dlg.js, you will see that those files
+actually create objects which are fields of the <em>en</em> object and the names of the
+language packs are the field names they define.</p>
+
+<h4>Creating the plugin</h4>
+
+<p>The result of creating the plugin consists of an identifier and a Javascript object.</p>
+
+<p>The identifier is the string &#8216;tinymce.plugins.ImgUploadPlugin&#8217;</p>
+
+<p>The Javascript object contains three functions:</p>
+
+<ul>
+<li>init(ed, url) &#8211; which initializes the editor
+<ul>
+<li>ed &#8211; is the editor we are initializing the plugin for</li>
+<li>url &#8211; is the <span class="caps"><span class="caps">URL</span></span> to the plugin root directory. Thus <em>url + &#8216;dialog.htm&#8217;</em> is the path
+to the popup window <span class="caps"><span class="caps">HTML</span></span></li>
+</ul>
+</li>
+<li>createControl(n, cm) &#8211; is a <span class="caps">NOP</span> in this case. See the code and tinymce doc for information</li>
+<li>getInfo() &#8211; returns some information about the plugin</li>
+</ul>
+
+<h4>Departures from Vanilla example plugin</h4>
+
+<p>tinymce.plugins.ImgUploadPlugin.init() creates a variable called <em>jQuery</em> which it passes
+to the plugin. This is done by checking to see if window.jQuery is defined or not.
+If not, the jQuery is set to <em>null</em>, otherwise to window.jQuery. This value is
+used in creating the closure passed to <em>ed.addCommand()</em>; this function is called
+every time the plugin popup window is openned.</p>
+
+<p>This is necessary because the popup window runs in a context which does not contain
+the jQuery object.</p>
+
+<h3>Popup</h3>
+
+<p>Once everything is set up, all the action happens in the Popup.</p>
+
+<p>The popup consists of three main pieces and some ancillary stuff:</p>
+
+<ul>
+<li>Main Pieces
+<ul>
+<li>dialog.htm &#8211; which defines the visible popup content and interaction with user</li>
+<li>js/dialog.js &#8211; which initializes the popup &#8211; every time invoked &#8211; and handles all events
+while the popup exists.</li>
+<li>upload-file.php &#8211; the server code which makes the thing actually work &#8211; on the server.
+<a href="#server">(see below)</a> for details.</li>
+</ul>
+</li>
+<li>Ancillary Stuff
+<ul>
+<li>langs/en_dlg.js &#8211; popup dialog entries. Only US English is provided. Feel free to
+translate.</li>
+<li>css/imgupload.css &#8211; controls the styling of the popup. Colors are managed by classes;
+everything else by id&#8217;s</li>
+<li>img/stuff &#8211; a button background image and the button icon</li>
+</ul>
+</li>
+</ul>
+
+<h4>Popup <span class="caps">HTML</span></h4>
+
+<p><em>dialog.htm</em> is a straight forward form with a couple of buttons. The only interesting
+departure is that the output of the form targets an <em>iframe</em> contained in <em>dialog.htm</em>
+rather than the user visible output.</p>
+
+<p>This is the <span class="caps">AJAX</span>-ish hack which allows us to display an animation during the file upload
+and to process the upload results in the client rather than on the server. This allows
+the plugin to be retargeted to other languages.</p>
+
+<h4>Popup Javascript</h4>
+
+<p><em>dialog.js</em> does three things:</p>
+
+<ul>
+<li>loads the appropriate language pack &#8211; this defines phrases identified as <em>imgupload_dlg.title</em>
+and similarly. See the dialog language pack: /langs/en_dlg.js for the implementation.</li>
+<li>creates an Javascript objected called ImgUploadDialog (see below)</li>
+<li>adds the name of this object and a call to it&#8217;s initialization method to tinyMCEPopup.</li>
+</ul>
+
+<h5>Popup Dialog Object</h5>
+
+<p>The popup dialog object <em>ImgUploadDialog</em> contains these attributes:</p>
+
+<ul>
+<li>Data Attributes:
+<ul>
+<li>jQuery_obj &#8211; set to the value passed in from editor_plugin.js.</li>
+<li>popup_url &#8211; the <span class="caps"><span class="caps">URL</span></span> required to get to the root directory of the popup. This
+is supplied by editor_plugin.js</li>
+<li>frm_elts &#8211; an internal dictionary of popup element objects. This is used
+to avoid repeated <span class="caps"><span class="caps">DOM</span></span> searches.</li>
+</ul>
+</li>
+<li>Event Handler Methods:
+<ul>
+<li>init &#8211; function which is called each time the popup pops up. This where all
+initialization happens</li>
+<li>upload_file_change &#8211; triggered by the <em>onchange</em> event for the file input field</li>
+<li>dest_fname_change &#8211; triggered by the <em>onchange</em> event for the destination file
+name field.</li>
+<li>upload &#8211; function which is fired by the popup form <em>submit</em> event or clicking the
+Upload / Replace button</li>
+<li>upload_finished &#8211; function which processes the results of the upload. The result
+of the upload is loaded into the <em>iframe</em>, so this function actually services the
+<em>onload</em> event for the <em>iframe</em></li>
+<li>user_finished &#8211; closes the popup when the user is finished reading the display &#8211; signaled
+by clicking the <em>close</em> button.</li>
+</ul>
+</li>
+<li>Internal Method:
+<ul>
+<li>test_on_server() &#8211; runs the server code in <em>test</em> mode via an <span class="caps"><span class="caps">AJAX</span></span> call.
+Called by <em>dest_fname_change()</em> and <em>upload_file_change()</em>.
+It manages all the updates to the popup window display prior to the actual upload. </li>
+</ul>
+</li>
+</ul>
+
+<p>Each event handler is responsible for binding and unbinding events and modifying the
+popup window as is appropriate.</p>
+
+<p>All of the methods have code which runs with and without jQuery. These two halves
+do the identical processing &#8211; within normal bugginess parameters.</p>
+
+<p>In more detail:</p>
+
+<h6>init()</h6>
+
+<p>Initializes the <em>frm_elts</em> dictionary. Hides all parts of the form except
+for upload file selection and Cancel button. Writes a nice message requesting the user
+to select a file.</p>
+
+<p>Sets up <em>upload_file_change()</em> to run when the upload file is defined</p>
+
+<h6>upload_file_change()</h6>
+
+<p>Copies the upload file name to the destination file field and runs <em>test_on_server()</em></p>
+
+<p>If the selected file is legal, then the destination file name and the
+Upload / Replace button are made visible.
+A message is written either saying the file can be uploaded or a warning that
+uploading now will replace it.</p>
+
+<p>Focus is transferred to the destination file field.</p>
+
+<p><em>dest_fname_change()</em> is set to respond to a change in destination file name</p>
+
+<p><em>upload()</em> is set to respond to clicking the Upload / Replace button or a submit
+of the form.</p>
+
+<p>If the selected file is not legal, then <em>dest_fname_change()</em> and <em>upload()</em>
+are blocked from firing, a warning message is written, and focus goes to
+the upload_file field</p>
+
+<h6>dest_fname_change()</h6>
+
+<p>Runs <em>test_on_server()</em>.</p>
+
+<p>This results in exactly the same final condition as detailed in <em>upload_file_change()</em>
+at the end of the previous paragraph.</p>
+
+<h6>upload()</h6>
+
+<p>Removes the upload_file and destination_file fields from the form.</p>
+
+<p>Removes event handlers for the form and upload_file and destination file fields.</p>
+
+<p>Writes an &#8216;Uploading&#8230;&#8217; message.</p>
+
+<p>Removes and disables the Upload/Replace and Cancel buttons</p>
+
+<p>Sets <em>upload_finished()</em> to run when the <em>iframe</em> receives the output of
+<em>file-upload.php</em></p>
+
+<p>Submits the form to <em>file-upload.php</em> on the server.</p>
+
+<p>{background:red}. <span class="caps">FIXME</span>: need to add a timeout to this thing so it will detect a hung server process</p>
+
+<h6>upload_finished()</h6>
+
+<p>Unwires all event handlers.</p>
+
+<p>Sets up <em>user_finished()</em> to run when the Close button is clicked (same button
+as is used to run <em>upload()</em>, but with different skin).</p>
+
+<p>Copies contents of <em>iframe</em> to message area of popup</p>
+
+<h6>user_finished()</h6>
+
+<p>Closes the popup window.</p>
+
+<h6>test_on_server()</h6>
+
+<p>This does the bulk of the work. It sends a Synchronous <span class="caps">AJAX</span> request to run <em>upload-file.php</em>
+and processes the result.</p>
+
+<p>If the result is a success, then it sets up the form to either modify the destination file
+name, do the upload, or cancel out.</p>
+
+<p>If the result is a failure, then it writes a message and disables upload and modification
+of the destination file name.</p>
+
+<h2 id="server">Server Code</h2>
+
+<p>The server code supplied is the single file: upload-file.php.</p>
+
+<p>It operates in two mode &#8211; specified by the <em>imgupload_command</em> <span class="caps">POST</span> variable:</p>
+
+<p>In addition to <em>imgupload_command</em>, <strong>upload-file.php</strong> requires two more <span class="caps">POST</span>
+variables defined: <em>imgupload_upload_file</em> and <em>imgupload_dest_fname</em>.</p>
+
+<ul>
+<li>imgupload_upload_file &#8211; defines the file which will be uploaded. It be either
+a <span class="caps">POST</span> or a <span class="caps">FILES</span> variable, depending on mode.</li>
+<li>imgupload_dest_fname &#8211; is the name the uploaded file will have on the server</li>
+</ul>
+
+<p>There are two significant variables which determine where the file will be
+dropped and what files may be uploaded. These are <em>$dest_dir</em> and <em>$legal_exts</em>.</p>
+
+<p>Here is a more detailed description:</p>
+
+<ul>
+<li>Upload Mode
+<ul>
+<li>imgupload_upload_file &#8211; key into $_FILES array for the uploaded file</li>
+<li>imgupload_dest_fname &#8211; name of destination file taken from the $_POST array</li>
+<li>$dest_dir &#8211; string &#8211; set inside the server side code &#8211; absolute path to destination directory for uploads.</li>
+<li>$legal_exts &#8211; string &#8211; set inside the server side code &#8211; containing a comma separated list of file extents
+which are allowed to be uploaded OR <span class="caps"><span class="caps">NULL</span></span> &#8211; in which case all file types
+are allowed. It is assumed that the file extents actually mean something.
+A file extent is a file suffix which is attached to the filename using a
+period (.). Thus, don&#8217;t put the periods in the list. For example: &#8216;jpg,gif,png&#8217;</li>
+</ul>
+</li>
+<li>Test Mode
+<ul>
+<li>imgupload_upload_file &#8211; key into $_POST array specifying the file name. This can
+be an entire path, but only the basename is used. This used to determine
+the correct file extension for the destination file</li>
+<li>imgupload_dest_fname &#8211; key into $_POST array specifying the destination file
+name. The extension may or may not be present. If absent, then it is
+derived from the upload file name.</li>
+<li>$legal_exts &#8211; see above</li>
+<li>$dest_dir &#8211; see above</li>
+</ul>
+</li>
+</ul>
+
+<h3 id="server_config">Configuration</h3>
+
+<p>Configuration requires hacking the upload utility. Read the comments in
+the supplied sample command: <strong>upload-file.php</strong>.</p>
+
+<p>Three things need to be done:</p>
+
+<p>First, the two parameters listed at the top of the script must be specicalized
+for your application.</p>
+
+<p>Second, you <span class="caps">SHOULD</span> add some sort of security. The supplied command is insecure.
+Aside from the rudimentary test of the file name extension, anything can be
+loaded into the file reception directory. This is a very, very bad idea.</p>
+
+<p>Finally, the server code needs to be someplace where the plugin can find it.
+As written, it expects to find the upload utility in the same directory the
+plugin lives in -</p>
+
+<p>Variables which need to be set:</p>
+
+<ul>
+<li>$dest_dir &#8211; is the absolute path to the file upload directory on the
+server. <span class="caps">NOTE</span>: uploading to subdirectories of <em>dest_dir</em> is <span class="caps">NOT</span> supported
+at this time.</li>
+<li>$legal_exts &#8211; is a regular expression created by the plugin which defines
+file types which may be uploaded. This is derived from the <em>imgupload_legal_exts</em>
+tinyMCE option string. <a href="#server">See above</a></li>
+</ul>
+
+<h3>Upload Command</h3>
+
+<p>Uploads the file specified in $_FILES[&#8216;upload_file&#8217;].</p>
+
+<p>After doing various tests and resolving the upload file name, this returns
+<span class="caps">HTML</span> which is dumped into the <em>form</em> target iframe. This is directly human
+readable and needs no translation.</p>
+
+<p>I decided to not use a <span class="caps">JSON</span> or <span class="caps">XML</span> response because (at least my current version
+of) Firefox (and other browsers) balk when receiving data of type application/json
+or application/xml and ask what to do. It seems simpler, faster, and generally
+better to pass the result directly to the user than to ask them what do do with
+the data <em>and then</em> reformat the result and ask them what to do.</p>
+
+<h3>Test Command</h3>
+
+<p>After performing pretty much the same tests and file name resolution, this returns
+a <span class="caps">JSON</span> structure. Naturally this is designed to be an <span class="caps">AJAX</span> call and is used to control
+the user experience &#8211; warning when the file may be overwritten, etc &#8211; prior to doing
+the upload.</p>
+
+<p>The returned <span class="caps">JSON</span> object has the following keys:</p>
+
+<ul>
+<li>result &#8211; either &#8216;success&#8217; or &#8216;failure&#8217;</li>
+<li>result_code &#8211; key into <em>imgupload_dlg</em> object</li>
+<li>explanation &#8211; untranslated text or codes expanding on failure</li>
+<li>upload_file &#8211; client name of uploaded file &#8211; not translated</li>
+<li>dest_fname &#8211; server name of uploaded file &#8211; not translated</li>
+</ul>

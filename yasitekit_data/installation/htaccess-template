@@ -1,0 +1,26 @@
+# Save this file as .htaccess in your document root directory
+{htaccess_text}
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_php5.c>
+  php_value magic_quotes_gpc 0
+  php_value magic_quotes_runtime 0
+  php_value magic_quotes_sybase 0
+#  php_flag 
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine on
+
+  RewriteRule ^ajax/([^/?#]+)/([^/?#]*)  index.php?renderer=render_ajax.php&data_format=$1&ajax_request=$2 [L,QSA]
+
+  RewriteRule ^(json|xml|rss|atom)/([^/?]*)  index.php?renderer=render_web_service.php&service_command=$2&service_type=$1&residual=$3 [L,QSA]
+  #
+	
+  # Rewrite URLs of the form 'index.php?q=x'.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ index.php?page_name=$1 [L,QSA]
+  
+</IfModule>

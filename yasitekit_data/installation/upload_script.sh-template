@@ -1,0 +1,28 @@
+#! /bin/sh
+# this script is run locally to upload and install the {site_installation} version of your site
+#  on your ISP's host.
+# You need 'ssh' access.
+
+TARDIR="../../../tarfiles"
+# VERSION="`cat ../../system/version`"
+# TARFILES="yasitekit-system-${VERSION}.tar.gz {site_id}-docroot.tar.gz {site_id}-private.tar.gz"
+TARFILES="`cat tarfile-list.txt`"
+
+# copy archive files plus scripts to remote host
+scp remote_install.sh-{site_installation} \
+  config.php-{site_installation} \
+  index.php-{site_installation} \
+  htaccess-{site_installation} \
+  tarfile-list.txt \
+  tarfile-list.sh \
+   {userid}@{host}:
+(
+  cd $TARDIR
+  scp ${TARFILES} {userid}@{host}:
+)
+
+# execute remost remote install script on remote host
+ssh {userid}@{host} /bin/sh ./remote_install.sh-{site_installation}
+
+# remove archives and remote scripts
+ssh {userid}@{host} rm ${TARFILES} remote_install.sh-{site_installation}

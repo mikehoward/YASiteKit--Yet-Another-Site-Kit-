@@ -1,0 +1,614 @@
+<html>
+  <head>
+    <title>foo</title>
+   <style> .dump-output { white-space:pre; } </style>
+  </head>
+<body>
+Testing with db_engine: sqlite
+test_common.php: db_engine: 'sqlite'
+test_common.php: dbaccess: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"
+sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"
+PASSED No DB Error: Created table for Account
+PASSED No DB Error: Created table for Category
+PASSED No DB Error: Created table for Address
+PASSED No DB Error: Created table for CountryCode
+PASSED No DB Error: Created table for CurrencyCode
+PASSED No DB Error: Created table for Product
+PASSED No DB Error: Created table for Deliverable
+PASSED No DB Error: Created table for TaxAuthority
+PASSED No DB Error: Created table for ShoppingCart
+PASSED No DB Error: Created table for ShoppingCartItem
+PASSED No DB Error: Created table for RMA
+Product(name:prod1)
+<div class="dump-output"> <!-- dump of Product(name:prod1) -->
+prod1
+AnInstance: Product(name:prod1)
+Class: Product, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => prod1
+ Attributes:
+  Attr: Product Name [name] (varchar): prod1
+  Attr: Artist User Id [product_owner] (join): 
+  Attr: Product Title [title] (varchar): Product 1
+  Attr: Product Categories [product_category] (category): product,product_image
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_image_free,deliverable_image_licensed
+  Attr: Product Description [description] (text): Product 1
+  Attr: Product Available [available] (enum): Y
+  Attr: Number Sold [sold_count] (int): 
+  Attr: Path to Product File [path] (file): 
+  Attr: Thumbnail [thumbnail] (file): 
+  Attr: Image 01 [image01] (file): 
+  Attr: Image 02 [image02] (file): 
+  Attr: Image 03 [image03] (file): 
+  Attr: Image 04 [image04] (file): 
+  Attr: Image 05 [image05] (file): 
+  Attr: Image 06 [image06] (file): 
+  Attr: Image 07 [image07] (file): 
+  Attr: Image 08 [image08] (file): 
+  Attr: Image 09 [image09] (file): 
+  Attr: Fulfillment URL [fulfillment_url] (varchar): http://foo.bar/prod1
+</div> <!-- end dump of Product(name:prod1) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:image_800x600) -->
+Deliverable in deliverable
+AnInstance: Deliverable(name:image_800x600)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => image_800x600
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): image_800x600
+  Attr: Title [title] (varchar): 800 by 600 Downloadable Image
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_image_downloadable
+  Attr: Unit Price [unit_price] (float): \$0.50
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): Y
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 0
+  Attr: Lead Time (days) [lead_time] (int): 0
+  Attr: Width (footprint or pixel width) [width] (float): 800.00
+  Attr: Height (footprint or pixel height) [height] (float): 600.00
+  Attr: Length Units [length_units] (enum): px
+  Attr: Length (non-downloadables) [length] (float): 0.00
+  Attr: Weight (physical product only) [weight] (float): 0.00
+  Attr: Weight Units [weight_units] (enum): no
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:image_800x600) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:image_1024x768) -->
+Deliverable in deliverable
+AnInstance: Deliverable(name:image_1024x768)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => image_1024x768
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): image_1024x768
+  Attr: Title [title] (varchar): 1024 by 768 Downloadble Image
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_image
+  Attr: Unit Price [unit_price] (float): \$1.98
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): Y
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 0
+  Attr: Lead Time (days) [lead_time] (int): 0
+  Attr: Width (footprint or pixel width) [width] (float): 1024.00
+  Attr: Height (footprint or pixel height) [height] (float): 768.00
+  Attr: Length Units [length_units] (enum): px
+  Attr: Length (non-downloadables) [length] (float): 0.00
+  Attr: Weight (physical product only) [weight] (float): 0.00
+  Attr: Weight Units [weight_units] (enum): no
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:image_1024x768) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:print_8x10) -->
+Deliverable in deliverable
+AnInstance: Deliverable(name:print_8x10)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => print_8x10
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): print_8x10
+  Attr: Title [title] (varchar): 8 by 10 Print
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_print
+  Attr: Unit Price [unit_price] (float): \$14.95
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): N
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 12
+  Attr: Lead Time (days) [lead_time] (int): 3
+  Attr: Width (footprint or pixel width) [width] (float): 10.00
+  Attr: Height (footprint or pixel height) [height] (float): 12.00
+  Attr: Length Units [length_units] (enum): in
+  Attr: Length (non-downloadables) [length] (float): 1.00
+  Attr: Weight (physical product only) [weight] (float): 1.00
+  Attr: Weight Units [weight_units] (enum): lb
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:print_8x10) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:licensed_image) -->
+Deliverable in deliverable
+AnInstance: Deliverable(name:licensed_image)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => licensed_image
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): licensed_image
+  Attr: Title [title] (varchar): Licenseable Image
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_image_licensed
+  Attr: Unit Price [unit_price] (float): \$194.95
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): Y
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 0
+  Attr: Lead Time (days) [lead_time] (int): 0
+  Attr: Width (footprint or pixel width) [width] (float): 0.00
+  Attr: Height (footprint or pixel height) [height] (float): 0.00
+  Attr: Length Units [length_units] (enum): px
+  Attr: Length (non-downloadables) [length] (float): 0.00
+  Attr: Weight (physical product only) [weight] (float): 0.00
+  Attr: Weight Units [weight_units] (enum): no
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:licensed_image) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:licensed_image) -->
+Deliverable in deliverable_image_licensed
+AnInstance: Deliverable(name:licensed_image)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => licensed_image
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): licensed_image
+  Attr: Title [title] (varchar): Licenseable Image
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_image_licensed
+  Attr: Unit Price [unit_price] (float): \$194.95
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): Y
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 0
+  Attr: Lead Time (days) [lead_time] (int): 0
+  Attr: Width (footprint or pixel width) [width] (float): 0.00
+  Attr: Height (footprint or pixel height) [height] (float): 0.00
+  Attr: Length Units [length_units] (enum): px
+  Attr: Length (non-downloadables) [length] (float): 0.00
+  Attr: Weight (physical product only) [weight] (float): 0.00
+  Attr: Weight Units [weight_units] (enum): no
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:licensed_image) -->
+Product(name:prod2)
+<div class="dump-output"> <!-- dump of Product(name:prod2) -->
+prod2
+AnInstance: Product(name:prod2)
+Class: Product, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => prod2
+ Attributes:
+  Attr: Product Name [name] (varchar): prod2
+  Attr: Artist User Id [product_owner] (join): 
+  Attr: Product Title [title] (varchar): Product 2
+  Attr: Product Categories [product_category] (category): product,product_image,product_print
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_print,deliverable_image_downloadable
+  Attr: Product Description [description] (text): Product 2 Desc
+  Attr: Product Available [available] (enum): Y
+  Attr: Number Sold [sold_count] (int): 
+  Attr: Path to Product File [path] (file): 
+  Attr: Thumbnail [thumbnail] (file): 
+  Attr: Image 01 [image01] (file): 
+  Attr: Image 02 [image02] (file): 
+  Attr: Image 03 [image03] (file): 
+  Attr: Image 04 [image04] (file): 
+  Attr: Image 05 [image05] (file): 
+  Attr: Image 06 [image06] (file): 
+  Attr: Image 07 [image07] (file): 
+  Attr: Image 08 [image08] (file): 
+  Attr: Image 09 [image09] (file): 
+  Attr: Fulfillment URL [fulfillment_url] (varchar): http://foo.bar/prod2
+</div> <!-- end dump of Product(name:prod2) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:image_800x600) -->
+Deliverable in deliverable
+AnInstance: Deliverable(name:image_800x600)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => image_800x600
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): image_800x600
+  Attr: Title [title] (varchar): 800 by 600 Downloadable Image
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_image_downloadable
+  Attr: Unit Price [unit_price] (float): \$0.50
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): Y
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 0
+  Attr: Lead Time (days) [lead_time] (int): 0
+  Attr: Width (footprint or pixel width) [width] (float): 800.00
+  Attr: Height (footprint or pixel height) [height] (float): 600.00
+  Attr: Length Units [length_units] (enum): px
+  Attr: Length (non-downloadables) [length] (float): 0.00
+  Attr: Weight (physical product only) [weight] (float): 0.00
+  Attr: Weight Units [weight_units] (enum): no
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:image_800x600) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:image_1024x768) -->
+Deliverable in deliverable
+AnInstance: Deliverable(name:image_1024x768)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => image_1024x768
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): image_1024x768
+  Attr: Title [title] (varchar): 1024 by 768 Downloadble Image
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_image
+  Attr: Unit Price [unit_price] (float): \$1.98
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): Y
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 0
+  Attr: Lead Time (days) [lead_time] (int): 0
+  Attr: Width (footprint or pixel width) [width] (float): 1024.00
+  Attr: Height (footprint or pixel height) [height] (float): 768.00
+  Attr: Length Units [length_units] (enum): px
+  Attr: Length (non-downloadables) [length] (float): 0.00
+  Attr: Weight (physical product only) [weight] (float): 0.00
+  Attr: Weight Units [weight_units] (enum): no
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:image_1024x768) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:print_8x10) -->
+Deliverable in deliverable
+AnInstance: Deliverable(name:print_8x10)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => print_8x10
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): print_8x10
+  Attr: Title [title] (varchar): 8 by 10 Print
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_print
+  Attr: Unit Price [unit_price] (float): \$14.95
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): N
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 12
+  Attr: Lead Time (days) [lead_time] (int): 3
+  Attr: Width (footprint or pixel width) [width] (float): 10.00
+  Attr: Height (footprint or pixel height) [height] (float): 12.00
+  Attr: Length Units [length_units] (enum): in
+  Attr: Length (non-downloadables) [length] (float): 1.00
+  Attr: Weight (physical product only) [weight] (float): 1.00
+  Attr: Weight Units [weight_units] (enum): lb
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:print_8x10) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:licensed_image) -->
+Deliverable in deliverable
+AnInstance: Deliverable(name:licensed_image)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => licensed_image
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): licensed_image
+  Attr: Title [title] (varchar): Licenseable Image
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_image_licensed
+  Attr: Unit Price [unit_price] (float): \$194.95
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): Y
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 0
+  Attr: Lead Time (days) [lead_time] (int): 0
+  Attr: Width (footprint or pixel width) [width] (float): 0.00
+  Attr: Height (footprint or pixel height) [height] (float): 0.00
+  Attr: Length Units [length_units] (enum): px
+  Attr: Length (non-downloadables) [length] (float): 0.00
+  Attr: Weight (physical product only) [weight] (float): 0.00
+  Attr: Weight Units [weight_units] (enum): no
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:licensed_image) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:print_8x10) -->
+Deliverable in deliverable_print
+AnInstance: Deliverable(name:print_8x10)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => print_8x10
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): print_8x10
+  Attr: Title [title] (varchar): 8 by 10 Print
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_print
+  Attr: Unit Price [unit_price] (float): \$14.95
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): N
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 12
+  Attr: Lead Time (days) [lead_time] (int): 3
+  Attr: Width (footprint or pixel width) [width] (float): 10.00
+  Attr: Height (footprint or pixel height) [height] (float): 12.00
+  Attr: Length Units [length_units] (enum): in
+  Attr: Length (non-downloadables) [length] (float): 1.00
+  Attr: Weight (physical product only) [weight] (float): 1.00
+  Attr: Weight Units [weight_units] (enum): lb
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:print_8x10) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:image_800x600) -->
+Deliverable in deliverable_image_downloadable
+AnInstance: Deliverable(name:image_800x600)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => image_800x600
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): image_800x600
+  Attr: Title [title] (varchar): 800 by 600 Downloadable Image
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_image_downloadable
+  Attr: Unit Price [unit_price] (float): \$0.50
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): Y
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 0
+  Attr: Lead Time (days) [lead_time] (int): 0
+  Attr: Width (footprint or pixel width) [width] (float): 800.00
+  Attr: Height (footprint or pixel height) [height] (float): 600.00
+  Attr: Length Units [length_units] (enum): px
+  Attr: Length (non-downloadables) [length] (float): 0.00
+  Attr: Weight (physical product only) [weight] (float): 0.00
+  Attr: Weight Units [weight_units] (enum): no
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:image_800x600) -->
+Product(name:prod3)
+<div class="dump-output"> <!-- dump of Product(name:prod3) -->
+prod3
+AnInstance: Product(name:prod3)
+Class: Product, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => prod3
+ Attributes:
+  Attr: Product Name [name] (varchar): prod3
+  Attr: Artist User Id [product_owner] (join): 
+  Attr: Product Title [title] (varchar): Product 3
+  Attr: Product Categories [product_category] (category): product,product_print
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_print
+  Attr: Product Description [description] (text): Product 3 Desc
+  Attr: Product Available [available] (enum): N
+  Attr: Number Sold [sold_count] (int): 
+  Attr: Path to Product File [path] (file): 
+  Attr: Thumbnail [thumbnail] (file): 
+  Attr: Image 01 [image01] (file): 
+  Attr: Image 02 [image02] (file): 
+  Attr: Image 03 [image03] (file): 
+  Attr: Image 04 [image04] (file): 
+  Attr: Image 05 [image05] (file): 
+  Attr: Image 06 [image06] (file): 
+  Attr: Image 07 [image07] (file): 
+  Attr: Image 08 [image08] (file): 
+  Attr: Image 09 [image09] (file): 
+  Attr: Fulfillment URL [fulfillment_url] (varchar): http://foo.bar/prod3
+</div> <!-- end dump of Product(name:prod3) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:image_800x600) -->
+Deliverable in deliverable
+AnInstance: Deliverable(name:image_800x600)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => image_800x600
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): image_800x600
+  Attr: Title [title] (varchar): 800 by 600 Downloadable Image
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_image_downloadable
+  Attr: Unit Price [unit_price] (float): \$0.50
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): Y
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 0
+  Attr: Lead Time (days) [lead_time] (int): 0
+  Attr: Width (footprint or pixel width) [width] (float): 800.00
+  Attr: Height (footprint or pixel height) [height] (float): 600.00
+  Attr: Length Units [length_units] (enum): px
+  Attr: Length (non-downloadables) [length] (float): 0.00
+  Attr: Weight (physical product only) [weight] (float): 0.00
+  Attr: Weight Units [weight_units] (enum): no
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:image_800x600) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:image_1024x768) -->
+Deliverable in deliverable
+AnInstance: Deliverable(name:image_1024x768)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => image_1024x768
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): image_1024x768
+  Attr: Title [title] (varchar): 1024 by 768 Downloadble Image
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_image
+  Attr: Unit Price [unit_price] (float): \$1.98
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): Y
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 0
+  Attr: Lead Time (days) [lead_time] (int): 0
+  Attr: Width (footprint or pixel width) [width] (float): 1024.00
+  Attr: Height (footprint or pixel height) [height] (float): 768.00
+  Attr: Length Units [length_units] (enum): px
+  Attr: Length (non-downloadables) [length] (float): 0.00
+  Attr: Weight (physical product only) [weight] (float): 0.00
+  Attr: Weight Units [weight_units] (enum): no
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:image_1024x768) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:print_8x10) -->
+Deliverable in deliverable
+AnInstance: Deliverable(name:print_8x10)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => print_8x10
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): print_8x10
+  Attr: Title [title] (varchar): 8 by 10 Print
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_print
+  Attr: Unit Price [unit_price] (float): \$14.95
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): N
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 12
+  Attr: Lead Time (days) [lead_time] (int): 3
+  Attr: Width (footprint or pixel width) [width] (float): 10.00
+  Attr: Height (footprint or pixel height) [height] (float): 12.00
+  Attr: Length Units [length_units] (enum): in
+  Attr: Length (non-downloadables) [length] (float): 1.00
+  Attr: Weight (physical product only) [weight] (float): 1.00
+  Attr: Weight Units [weight_units] (enum): lb
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:print_8x10) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:licensed_image) -->
+Deliverable in deliverable
+AnInstance: Deliverable(name:licensed_image)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => licensed_image
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): licensed_image
+  Attr: Title [title] (varchar): Licenseable Image
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_image_licensed
+  Attr: Unit Price [unit_price] (float): \$194.95
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): Y
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 0
+  Attr: Lead Time (days) [lead_time] (int): 0
+  Attr: Width (footprint or pixel width) [width] (float): 0.00
+  Attr: Height (footprint or pixel height) [height] (float): 0.00
+  Attr: Length Units [length_units] (enum): px
+  Attr: Length (non-downloadables) [length] (float): 0.00
+  Attr: Weight (physical product only) [weight] (float): 0.00
+  Attr: Weight Units [weight_units] (enum): no
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:licensed_image) -->
+<div class="dump-output"> <!-- dump of Deliverable(name:print_8x10) -->
+Deliverable in deliverable_print
+AnInstance: Deliverable(name:print_8x10)
+Class: Deliverable, DB: sqlite:sqlite_testdb:localhost:root::3306:/opt/local/var/run/mysql5/mysqld.sock:1, conn: "resource(8) of type (sqlite database)
+"  Doesn't need Saving
+ Record in Database
+ Keys and Values:
+  Key: name => print_8x10
+ Attributes:
+  Attr: Deliverable Name [name] (varchar): print_8x10
+  Attr: Title [title] (varchar): 8 by 10 Print
+  Attr: Deliverable Categories [deliverable_category] (category): deliverable,deliverable_print
+  Attr: Unit Price [unit_price] (float): \$14.95
+  Attr: Currency Code [currency_code] (link): CurrencyCode(currency_code:USD)
+  Attr: Downloadable [downloadable] (enum): N
+  Attr: Available [available] (enum): Y
+  Attr: Units on Hand [on_hand] (int): 12
+  Attr: Lead Time (days) [lead_time] (int): 3
+  Attr: Width (footprint or pixel width) [width] (float): 10.00
+  Attr: Height (footprint or pixel height) [height] (float): 12.00
+  Attr: Length Units [length_units] (enum): in
+  Attr: Length (non-downloadables) [length] (float): 1.00
+  Attr: Weight (physical product only) [weight] (float): 1.00
+  Attr: Weight Units [weight_units] (enum): lb
+  Attr: PayPal Buy Now Button Id [paypal_buy_now_buttonid] (varchar): buy-now-buttonid
+  Attr: PayPal Buy Now Website Code [paypal_buy_now_websitecode] (text): buy-now-websitecode
+  Attr: PayPal Buy Now Email Link [paypal_buy_now_emaillink] (varchar): buy-now-emaillink
+  Attr: PayPal Add-to-Cart Button Id [paypal_add_to_cart_buttonid] (varchar): add-to-cart-buttonid
+  Attr: PayPal Add-to-Cart Website Code [paypal_add_to_cart_websitecode] (text): add-to-cart-websitecode
+  Attr: PayPal Add to Cart Email Link [paypal_add_to_cart_emaillink] (varchar): add-to-cart-emaillink
+</div> <!-- end dump of Deliverable(name:print_8x10) -->
+</body>
+</html>
